@@ -5,8 +5,8 @@ struct ContentView: View {
     
     var body: some View {
         Group {
-            if !authService.isFirebaseReady {
-                // Splash screen while Firebase initializes
+            if !authService.isReady {
+                // ✅ Splash simple mientras el listener de auth se inicializa
                 SplashView()
             } else if authService.isAuthenticated {
                 MainTabView()
@@ -14,8 +14,8 @@ struct ContentView: View {
                 LoginView()
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: authService.isFirebaseReady)
-        .animation(.easeInOut(duration: 0.2), value: authService.isAuthenticated)
+        .animation(.easeInOut(duration: 0.25), value: authService.isReady)
+        .animation(.easeInOut(duration: 0.25), value: authService.isAuthenticated)
     }
 }
 

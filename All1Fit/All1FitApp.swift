@@ -1,27 +1,22 @@
 import SwiftUI
 import FirebaseCore
+import GoogleSignIn
 
-// MARK: - App Delegate
+// MARK: - App Delegate - CORRECTED VERSION
 class AppDelegate: NSObject, UIApplicationDelegate {
-    static var isFirebaseReady = false
-    
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-        // Configure Firebase on background thread - NO MAIN THREAD BLOCKING
-        DispatchQueue.global(qos: .userInitiated).async {
-            FirebaseApp.configure()
-            DispatchQueue.main.async {
-                AppDelegate.isFirebaseReady = true
-                NotificationCenter.default.post(name: .firebaseReady, object: nil)
-            }
-        }
+        // ✅ Firebase DEBE configurarse en main thread
+        FirebaseApp.configure()
         return true
     }
-}
-
-// MARK: - Firebase Ready Notification
-extension Notification.Name {
-    static let firebaseReady = Notification.Name("firebaseReady")
+    
+    // Required for Google Sign-In URL handling
+    func application(_ app: UIApplication,
+                     open url: URL,
+                     options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
+        return GIDSignIn.sharedInstance.handle(url)
+    }
 }
 
 // MARK: - Main App
