@@ -59,38 +59,12 @@ struct EjercicioFormView: View {
     
     var body: some View {
         NavigationStack {
-            Form {
-                // Name Field (only for new ejercicio)
-                if mode.showNameField {
-                    Section {
-                        TextField("Nombre del ejercicio", text: $name)
-                            .focused($focusedField, equals: .name)
-                            .textInputAutocapitalization(.words)
-                    } header: {
-                        Text("Ejercicio")
-                    } footer: {
-                        Text("Ej: Back Squat, Deadlift, Bench Press...")
-                    }
-                }
-                
-                // RM Value
-                Section {
-                    HStack {
-                        TextField("0", text: $rmValue)
-                            .focused($focusedField, equals: .rm)
-                            .keyboardType(.decimalPad)
-                            .font(.title2.bold())
-                        
-                        Text("kg")
-                            .foregroundStyle(.secondary)
-                            .font(.title3)
-                    }
-                } header: {
-                    Text("Peso Máximo (RM)")
-                } footer: {
-                    Text("Introduce el peso máximo que puedes levantar en una repetición")
-                }
-            }
+            FormContent(
+                mode: mode,
+                name: $name,
+                rmValue: $rmValue,
+                focusedField: $focusedField
+            )
             .navigationTitle(mode.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -102,13 +76,13 @@ struct EjercicioFormView: View {
                 
                 ToolbarItem(placement: .confirmationAction) {
                     Button(mode.buttonTitle) {
-                        if let rm = Double(rmValue) {
-                            focusedField = nil // Fecha teclado
-                            dismiss() // Cierra UI inmediatamente
-                            // Pequeño delay para dejar que la animación comience antes de cargar el hilo principal
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                onSave(name, rm)
-                            }
+                        guard let rm = Double(rmValue) else { return }
+                        let savedName = name
+                        focusedField = nil
+                        dismiss()
+                        // Ejecutar después de que el dismiss comience
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                            onSave(savedName, rm)
                         }
                     }
                     .fontWeight(.semibold)
@@ -123,11 +97,60 @@ struct EjercicioFormView: View {
                 }
             }
             .onAppear {
-                focusedField = mode.showNameField ? .name : .rm
+                // ✅ CLAVE: Retrasar el foco hasta que la animación del sheet termine
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                    focusedField = mode.showNameField ? .name : .rm
+                }
             }
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
+        .interactiveDismissDisabled(false)
+    }
+}
+
+// MARK: - Form Content (Separated for performance)
+private struct FormContent: View {
+    let mode: EjercicioFormMode
+    @Binding var name: String
+    @Binding var rmValue: String
+    var focusedField: FocusState<EjercicioFormView.Field?>.Binding
+    
+    var body: some View {
+        Form {
+            if mode.showNameField {
+                Section {
+                    TextField("Nombre del ejercicio", text: $name)
+                        .focused(focusedField, equals: .name)
+                        .textInputAutocapitalization(.words)
+                        .submitLabel(.next)
+                        .onSubmit {
+                            focusedField.wrappedValue = .rm
+                        }
+                } header: {
+                    Text("Ejercicio")
+                } footer: {
+                    Text("Ej: Back Squat, Deadlift, Bench Press...")
+                }
+            }
+            
+            Section {
+                HStack {
+                    TextField("0", text: $rmValue)
+                        .focused(focusedField, equals: .rm)
+                        .keyboardType(.decimalPad)
+                        .font(.title2.bold())
+                    
+                    Text("kg")
+                        .foregroundStyle(.secondary)
+                        .font(.title3)
+                }
+            } header: {
+                Text("Peso Máximo (RM)")
+            } footer: {
+                Text("Peso máximo en una repetición")
+            }
+        }
     }
 }
 

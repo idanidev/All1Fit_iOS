@@ -20,12 +20,12 @@
 		1A000000000000000000000B /* RMChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000000000000000000001B /* RMChartView.swift */; };
 		1A000000000000000000000C /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000000000000000000001C /* Extensions.swift */; };
 		1A000000000000000000000D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1A000000000000000000001D /* Assets.xcassets */; };
-		1A000000000000000000000E /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1A000000000000000000001E /* GoogleService-Info.plist */; };
 		1A000000000000000000000F /* LogoLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000000000000000000001F /* LogoLoader.swift */; };
 		1A00000000000000000000E1 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 1A00000000000000000000E0 /* FirebaseAuth */; };
 		1A00000000000000000000E3 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1A00000000000000000000E2 /* FirebaseFirestore */; };
 		1A00000000000000000000E5 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 1A00000000000000000000E4 /* GoogleSignIn */; };
 		1A00000000000000000000E7 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 1A00000000000000000000E6 /* GoogleSignInSwift */; };
+		335068772EF9FDAE0094B0E7 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 335068762EF9FDAE0094B0E7 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,8 +43,8 @@
 		1A000000000000000000001B /* RMChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RMChartView.swift; sourceTree = "<group>"; };
 		1A000000000000000000001C /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		1A000000000000000000001D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		1A000000000000000000001E /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		1A000000000000000000001F /* LogoLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogoLoader.swift; sourceTree = "<group>"; };
+		335068762EF9FDAE0094B0E7 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -73,8 +73,8 @@
 		1A0000000000000000000031 /* All1Fit */ = {
 			isa = PBXGroup;
 			children = (
+				335068762EF9FDAE0094B0E7 /* GoogleService-Info.plist */,
 				1A0000000000000000000011 /* All1FitApp.swift */,
-				1A000000000000000000001E /* GoogleService-Info.plist */,
 				1A0000000000000000000032 /* Models */,
 				1A0000000000000000000033 /* Services */,
 				1A0000000000000000000034 /* Views */,
@@ -226,7 +226,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1A000000000000000000000D /* Assets.xcassets in Resources */,
-				1A000000000000000000000E /* GoogleService-Info.plist in Resources */,
+				335068772EF9FDAE0094B0E7 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

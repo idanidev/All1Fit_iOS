@@ -2,16 +2,15 @@ import SwiftUI
 import FirebaseCore
 import GoogleSignIn
 
-// MARK: - App Delegate - CORRECTED VERSION
+// MARK: - App Delegate
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-        // ✅ Firebase DEBE configurarse en main thread
+        // ✅ Firebase se configura aquí, antes de que la UI cargue
         FirebaseApp.configure()
         return true
     }
     
-    // Required for Google Sign-In URL handling
     func application(_ app: UIApplication,
                      open url: URL,
                      options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
@@ -23,12 +22,23 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 @main
 struct All1FitApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    @StateObject private var authService = AuthService()
+    
+    // ✅ CLAVE: No crear AuthService aquí, crearlo lazy en ContentView
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(authService)
+            RootView()
         }
+    }
+}
+
+// MARK: - Root View (Lazy initialization of AuthService)
+struct RootView: View {
+    // ✅ AuthService se crea cuando la vista aparece, no al inicio de la app
+    @StateObject private var authService = AuthService()
+    
+    var body: some View {
+        ContentView()
+            .environmentObject(authService)
     }
 }

@@ -5,20 +5,23 @@ import AuthenticationServices
 import CryptoKit
 import GoogleSignIn
 
-// MARK: - Auth Service CORRECTED + Google Sign-In
+// MARK: - Auth Service (NON-BLOCKING)
 @MainActor
 class AuthService: ObservableObject {
-    @Published var user: User?
-    @Published var isAuthenticated = false
+    @Published private(set) var user: User?
+    @Published private(set) var isAuthenticated = false
     @Published var isLoading = false
     @Published var errorMessage: String?
-    @Published var isReady = false
+    @Published private(set) var isReady = false
     
     private var authStateListener: AuthStateDidChangeListenerHandle?
     private var currentNonce: String?
     
     init() {
-        setupAuthListener()
+        // ✅ NO bloquear init - hacer setup async
+        Task { @MainActor in
+            await setupAuthListenerAsync()
+        }
     }
     
     deinit {
@@ -27,14 +30,18 @@ class AuthService: ObservableObject {
         }
     }
     
-    // MARK: - Setup Auth Listener (SIMPLIFIED)
-    private func setupAuthListener() {
-        authStateListener = Auth.auth().addStateDidChangeListener { [weak self] _, user in
+    // MARK: - Setup Auth Listener (ASYNC - NON BLOCKING)
+    private func setupAuthListenerAsync() async {
+        // Pequeño delay para que la UI se renderice primero
+        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 segundos
+        
+        authStateListener = Auth.auth().addStateDidChangeListener { [weak self] _, firebaseUser in
             guard let self = self else { return }
             
             Task { @MainActor in
-                self.user = user
-                self.isAuthenticated = user != nil
+                self.user = firebaseUser
+                self.isAuthenticated = firebaseUser != nil
+                
                 if !self.isReady {
                     self.isReady = true
                 }
@@ -51,14 +58,13 @@ class AuthService: ObservableObject {
         
         isLoading = true
         errorMessage = nil
+        defer { isLoading = false }
         
         do {
             try await Auth.auth().signIn(withEmail: email, password: password)
         } catch let error as NSError {
             errorMessage = mapError(error)
         }
-        
-        isLoading = false
     }
     
     // MARK: - Register
@@ -70,6 +76,7 @@ class AuthService: ObservableObject {
         
         isLoading = true
         errorMessage = nil
+        defer { isLoading = false }
         
         do {
             let result = try await Auth.auth().createUser(withEmail: email, password: password)
@@ -81,8 +88,6 @@ class AuthService: ObservableObject {
         } catch let error as NSError {
             errorMessage = mapError(error)
         }
-        
-        isLoading = false
     }
     
     // MARK: - Password Reset
@@ -94,14 +99,13 @@ class AuthService: ObservableObject {
         
         isLoading = true
         errorMessage = nil
+        defer { isLoading = false }
         
         do {
             try await Auth.auth().sendPasswordReset(withEmail: email)
-            isLoading = false
             return true
         } catch let error as NSError {
             errorMessage = mapError(error)
-            isLoading = false
             return false
         }
     }
@@ -116,6 +120,7 @@ class AuthService: ObservableObject {
     func handleSignInWithApple(result: Result<ASAuthorization, Error>) async {
         isLoading = true
         errorMessage = nil
+        defer { isLoading = false }
         
         do {
             guard case .success(let authorization) = result,
@@ -123,7 +128,7 @@ class AuthService: ObservableObject {
                   let nonce = currentNonce,
                   let appleIDToken = appleIDCredential.identityToken,
                   let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
-                throw NSError(domain: "AppleSignIn", code: -1, userInfo: [NSLocalizedDescriptionKey: "Credenciales inválidas"])
+                throw AuthError.invalidCredentials
             }
             
             let credential = OAuthProvider.appleCredential(
@@ -134,20 +139,22 @@ class AuthService: ObservableObject {
             
             try await Auth.auth().signIn(with: credential)
         } catch {
-            errorMessage = error.localizedDescription
+            if let authError = error as? AuthError {
+                errorMessage = authError.localizedDescription
+            } else {
+                errorMessage = error.localizedDescription
+            }
         }
-        
-        isLoading = false
     }
     
     // MARK: - Sign in with Google
     func signInWithGoogle() async {
         isLoading = true
         errorMessage = nil
+        defer { isLoading = false }
         
         guard let clientID = FirebaseApp.app()?.options.clientID else {
             errorMessage = "Error de configuración"
-            isLoading = false
             return
         }
         
@@ -157,7 +164,6 @@ class AuthService: ObservableObject {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let rootViewController = windowScene.windows.first?.rootViewController else {
             errorMessage = "Error de ventana"
-            isLoading = false
             return
         }
         
@@ -165,7 +171,7 @@ class AuthService: ObservableObject {
             let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController)
             
             guard let idToken = result.user.idToken?.tokenString else {
-                throw NSError(domain: "GoogleSignIn", code: -1, userInfo: [NSLocalizedDescriptionKey: "Token inválido"])
+                throw AuthError.invalidToken
             }
             
             let credential = GoogleAuthProvider.credential(
@@ -175,13 +181,10 @@ class AuthService: ObservableObject {
             
             try await Auth.auth().signIn(with: credential)
         } catch {
-            // Don't show error if user cancelled
             if (error as NSError).code != GIDSignInError.canceled.rawValue {
                 errorMessage = error.localizedDescription
             }
         }
-        
-        isLoading = false
     }
     
     // MARK: - Sign Out
@@ -212,12 +215,25 @@ class AuthService: ObservableObject {
         switch code {
         case .invalidEmail: return "Email no válido"
         case .emailAlreadyInUse: return "Email ya registrado"
-        case .weakPassword: return "Contraseña muy débil"
+        case .weakPassword: return "Contraseña muy débil (mínimo 6 caracteres)"
         case .wrongPassword, .invalidCredential: return "Credenciales incorrectas"
         case .userNotFound: return "Usuario no encontrado"
-        case .tooManyRequests: return "Demasiados intentos"
+        case .tooManyRequests: return "Demasiados intentos. Espera un momento"
         case .networkError: return "Error de conexión"
         default: return error.localizedDescription
+        }
+    }
+}
+
+// MARK: - Auth Errors
+private enum AuthError: LocalizedError {
+    case invalidCredentials
+    case invalidToken
+    
+    var errorDescription: String? {
+        switch self {
+        case .invalidCredentials: return "Credenciales inválidas"
+        case .invalidToken: return "Token inválido"
         }
     }
 }

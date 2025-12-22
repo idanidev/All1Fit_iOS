@@ -14,7 +14,7 @@ enum AuthMode {
     }
 }
 
-// MARK: - Login View
+// MARK: - Login View (SIMPLIFIED - for debugging)
 struct LoginView: View {
     @EnvironmentObject var authService: AuthService
     
@@ -28,44 +28,138 @@ struct LoginView: View {
     
     var body: some View {
         ZStack {
-            // Background
-            LinearGradient(
-                colors: [
-                    Color(red: 0.1, green: 0.1, blue: 0.15),
-                    Color(red: 0.05, green: 0.05, blue: 0.1)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            // ✅ SIMPLIFIED: Solid color instead of gradient
+            Color(red: 0.08, green: 0.08, blue: 0.12)
+                .ignoresSafeArea()
             
             ScrollView {
-                VStack(spacing: 28) {
-                    Spacer(minLength: 40)
+                VStack(spacing: 24) {
+                    Spacer(minLength: 60)
                     
                     // Logo
-                    logoSection
+                    Image("Logo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 220)
                     
-                    // Form
-                    formSection
+                    Text(mode.title)
+                        .font(.title3)
+                        .foregroundColor(.gray)
+                    
+                    // ✅ SIMPLIFIED: Direct text fields with autocorrection disabled
+                    VStack(spacing: 16) {
+                        if mode == .register {
+                            TextField("Nombre", text: $name)
+                                .textFieldStyle(LoginTextFieldStyle())
+                                .textInputAutocapitalization(.words)
+                                .autocorrectionDisabled()
+                        }
+                        
+                        TextField("Email", text: $email)
+                            .textFieldStyle(LoginTextFieldStyle())
+                            .textInputAutocapitalization(.never)
+                            .keyboardType(.asciiCapable)
+                            .textContentType(.none)
+                            .autocorrectionDisabled()
+                        
+                        SecureField("Contraseña", text: $password)
+                            .textFieldStyle(LoginTextFieldStyle())
+                            .textContentType(.none)
+                            .autocorrectionDisabled()
+                        
+                        if mode == .login {
+                            Button("¿Olvidaste tu contraseña?") {
+                                showingPasswordReset = true
+                            }
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                        }
+                        
+                        // Submit
+                        Button {
+                            submit()
+                        } label: {
+                            Text(mode.buttonTitle)
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 50)
+                                .background(Color.orange)
+                                .cornerRadius(12)
+                        }
+                        .disabled(!isFormValid)
+                        .opacity(isFormValid ? 1 : 0.6)
+                    }
+                    .padding(.horizontal, 32)
                     
                     // Divider
-                    dividerSection
+                    HStack {
+                        Rectangle().fill(Color.gray.opacity(0.3)).frame(height: 1)
+                        Text("o").font(.caption).foregroundColor(.gray)
+                        Rectangle().fill(Color.gray.opacity(0.3)).frame(height: 1)
+                    }
+                    .padding(.horizontal, 32)
                     
-                    // Social Buttons
-                    socialButtonsSection
+                    // Social
+                    VStack(spacing: 12) {
+                        SignInWithAppleButton(
+                            onRequest: { request in
+                                let nonce = authService.prepareAppleSignIn()
+                                request.requestedScopes = [.fullName, .email]
+                                request.nonce = nonce
+                            },
+                            onCompletion: { result in
+                                Task { await authService.handleSignInWithApple(result: result) }
+                            }
+                        )
+                        .signInWithAppleButtonStyle(.white)
+                        .frame(height: 50)
+                        .cornerRadius(12)
+                        
+                        Button {
+                            Task { await authService.signInWithGoogle() }
+                        } label: {
+                            HStack {
+                                Image(systemName: "g.circle.fill")
+                                Text("Continuar con Google")
+                            }
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(.white)
+                            .foregroundColor(.black)
+                            .cornerRadius(12)
+                        }
+                    }
+                    .padding(.horizontal, 32)
                     
-                    // Switch Mode
-                    switchModeSection
+                    // Switch mode
+                    HStack {
+                        Text(mode == .login ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?")
+                            .foregroundColor(.gray)
+                        Button(mode == .login ? "Regístrate" : "Inicia sesión") {
+                            withAnimation {
+                                mode = mode == .login ? .register : .login
+                                password = ""
+                            }
+                        }
+                        .foregroundColor(.orange)
+                        .fontWeight(.semibold)
+                    }
+                    .font(.subheadline)
                     
-                    Spacer(minLength: 20)
+                    Spacer(minLength: 40)
                 }
-                .padding(.horizontal, 32)
             }
+            .scrollDismissesKeyboard(.interactively)
             
             // Loading
             if authService.isLoading {
-                loadingOverlay
+                Color.black.opacity(0.5).ignoresSafeArea()
+                ProgressView()
+                    .tint(.orange)
+                    .scaleEffect(1.5)
             }
         }
         .alert("Error", isPresented: $showingError) {
@@ -75,8 +169,6 @@ struct LoginView: View {
         }
         .alert("Restablecer Contraseña", isPresented: $showingPasswordReset) {
             TextField("Email", text: $email)
-                .textInputAutocapitalization(.never)
-                .keyboardType(.emailAddress)
             Button("Enviar") {
                 Task {
                     if await authService.resetPassword(email: email) {
@@ -86,7 +178,7 @@ struct LoginView: View {
             }
             Button("Cancelar", role: .cancel) {}
         } message: {
-            Text("Te enviaremos un email para restablecer tu contraseña")
+            Text("Te enviaremos un email")
         }
         .alert("Email Enviado", isPresented: $passwordResetSent) {
             Button("OK") {}
@@ -98,227 +190,33 @@ struct LoginView: View {
         }
     }
     
-    // MARK: - Logo Section
-    private var logoSection: some View {
-        VStack(spacing: 16) {
-            Image("Logo")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 260)
-            
-            Text(mode.title)
-                .font(.title3)
-                .foregroundColor(.gray)
-        }
+    private var isFormValid: Bool {
+        !email.isEmpty && !password.isEmpty && (mode == .login || !name.isEmpty)
     }
     
-    // MARK: - Form Section
-    private var formSection: some View {
-        VStack(spacing: 16) {
-            if mode == .register {
-                CustomTextField(
-                    icon: "person.fill",
-                    placeholder: "Nombre",
-                    text: $name,
-                    isSecure: false
-                )
-                .textInputAutocapitalization(.words)
-            }
-            
-            CustomTextField(
-                icon: "envelope.fill",
-                placeholder: "Email",
-                text: $email,
-                isSecure: false
-            )
-            .textInputAutocapitalization(.never)
-            .keyboardType(.emailAddress)
-            .textContentType(.emailAddress)
-            
-            CustomTextField(
-                icon: "lock.fill",
-                placeholder: "Contraseña",
-                text: $password,
-                isSecure: true
-            )
-            .textContentType(mode == .register ? .newPassword : .password)
-            
+    private func submit() {
+        Task {
             if mode == .login {
-                HStack {
-                    Spacer()
-                    Button("¿Olvidaste tu contraseña?") {
-                        showingPasswordReset = true
-                    }
-                    .font(.caption)
-                    .foregroundColor(.orange)
-                }
+                await authService.signIn(email: email, password: password)
+            } else {
+                await authService.register(email: email, password: password, name: name)
             }
-            
-            // Submit Button
-            Button {
-                Task {
-                    if mode == .login {
-                        await authService.signIn(email: email, password: password)
-                    } else {
-                        await authService.register(email: email, password: password, name: name)
-                    }
-                }
-            } label: {
-                Text(mode.buttonTitle)
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 54)
-                    .background(
-                        LinearGradient(
-                            colors: [.orange, .red],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .cornerRadius(12)
-            }
-            .disabled(email.isEmpty || password.isEmpty || (mode == .register && name.isEmpty))
-            .opacity(email.isEmpty || password.isEmpty || (mode == .register && name.isEmpty) ? 0.6 : 1)
-        }
-    }
-    
-    // MARK: - Divider Section
-    private var dividerSection: some View {
-        HStack {
-            Rectangle()
-                .fill(Color.gray.opacity(0.3))
-                .frame(height: 1)
-            
-            Text("o continúa con")
-                .font(.caption)
-                .foregroundColor(.gray)
-            
-            Rectangle()
-                .fill(Color.gray.opacity(0.3))
-                .frame(height: 1)
-        }
-    }
-    
-    // MARK: - Social Buttons Section
-    private var socialButtonsSection: some View {
-        VStack(spacing: 12) {
-            // Sign in with Apple
-            SignInWithAppleButton(
-                onRequest: { request in
-                    let nonce = authService.prepareAppleSignIn()
-                    request.requestedScopes = [.fullName, .email]
-                    request.nonce = nonce
-                },
-                onCompletion: { result in
-                    Task {
-                        await authService.handleSignInWithApple(result: result)
-                    }
-                }
-            )
-            .signInWithAppleButtonStyle(.white)
-            .frame(height: 54)
-            .cornerRadius(12)
-            
-            // Sign in with Google
-            Button {
-                Task {
-                    await authService.signInWithGoogle()
-                }
-            } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: "g.circle.fill")
-                        .font(.title2)
-                    Text("Continuar con Google")
-                        .font(.headline)
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 54)
-                .background(.white)
-                .foregroundColor(.black)
-                .cornerRadius(12)
-            }
-        }
-    }
-    
-    // MARK: - Switch Mode Section
-    private var switchModeSection: some View {
-        HStack(spacing: 4) {
-            Text(mode == .login ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?")
-                .foregroundColor(.gray)
-            
-            Button(mode == .login ? "Regístrate" : "Inicia sesión") {
-                withAnimation(.spring(response: 0.3)) {
-                    mode = mode == .login ? .register : .login
-                    password = ""
-                }
-            }
-            .foregroundColor(.orange)
-            .fontWeight(.semibold)
-        }
-        .font(.subheadline)
-    }
-    
-    // MARK: - Loading Overlay
-    private var loadingOverlay: some View {
-        ZStack {
-            Color.black.opacity(0.5)
-                .ignoresSafeArea()
-            
-            VStack(spacing: 16) {
-                ProgressView()
-                    .tint(.orange)
-                    .scaleEffect(1.5)
-                
-                Text("Cargando...")
-                    .foregroundColor(.white)
-            }
-            .padding(32)
-            .background(.ultraThinMaterial)
-            .cornerRadius(16)
         }
     }
 }
 
-// MARK: - Custom Text Field
-struct CustomTextField: View {
-    let icon: String
-    let placeholder: String
-    @Binding var text: String
-    let isSecure: Bool
-    
-    @State private var showPassword = false
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .foregroundColor(.gray)
-                .frame(width: 24)
-            
-            if isSecure && !showPassword {
-                SecureField(placeholder, text: $text)
-                    .foregroundColor(.white)
-            } else {
-                TextField(placeholder, text: $text)
-                    .foregroundColor(.white)
-            }
-            
-            if isSecure {
-                Button {
-                    showPassword.toggle()
-                } label: {
-                    Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
-                        .foregroundColor(.gray)
-                }
-            }
-        }
-        .padding()
-        .background(Color.white.opacity(0.1))
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.white.opacity(0.2), lineWidth: 1)
-        )
+// MARK: - Simple Text Field Style
+struct LoginTextFieldStyle: TextFieldStyle {
+    func _body(configuration: TextField<Self._Label>) -> some View {
+        configuration
+            .padding()
+            .background(Color.white.opacity(0.1))
+            .foregroundColor(.white)
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+            )
     }
 }
 

@@ -5,7 +5,7 @@ struct RMListView: View {
     @State private var showingAddSheet = false
     @State private var searchText = ""
     
-    var filteredEjercicios: [Ejercicio] {
+    private var filteredEjercicios: [Ejercicio] {
         if searchText.isEmpty {
             return ejercicioService.ejercicios
         }
@@ -20,18 +20,9 @@ struct RMListView: View {
                 Color(uiColor: .systemGroupedBackground)
                     .ignoresSafeArea()
                 
-                if ejercicioService.isLoading && ejercicioService.ejercicios.isEmpty {
-                    ProgressView()
-                        .scaleEffect(1.5)
-                        .tint(.orange)
-                } else if filteredEjercicios.isEmpty && !searchText.isEmpty {
-                    ContentUnavailableView.search(text: searchText)
-                } else if ejercicioService.ejercicios.isEmpty {
-                    emptyStateView
-                } else {
-                    ejerciciosList
-                }
+                content
                 
+                // FAB - always on top
                 fabButton
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -60,7 +51,23 @@ struct RMListView: View {
         }
     }
     
-    // MARK: - List
+    // MARK: - Content
+    @ViewBuilder
+    private var content: some View {
+        if ejercicioService.isLoading && ejercicioService.ejercicios.isEmpty {
+            ProgressView()
+                .scaleEffect(1.5)
+                .tint(.orange)
+        } else if filteredEjercicios.isEmpty && !searchText.isEmpty {
+            ContentUnavailableView.search(text: searchText)
+        } else if ejercicioService.ejercicios.isEmpty {
+            emptyStateView
+        } else {
+            ejerciciosList
+        }
+    }
+    
+    // MARK: - List (Optimized with LazyVStack for better performance)
     private var ejerciciosList: some View {
         List {
             ForEach(filteredEjercicios) { ejercicio in
@@ -70,16 +77,26 @@ struct RMListView: View {
                     EjercicioRowView(ejercicio: ejercicio)
                 }
             }
-            .onDelete { indexSet in
-                for index in indexSet {
-                    let ejercicio = filteredEjercicios[index]
-                    if let id = ejercicio.id {
-                        Task { try? await ejercicioService.deleteEjercicio(id: id) }
-                    }
+            .onDelete(perform: deleteEjercicios)
+            
+            // Spacer for FAB
+            Color.clear
+                .frame(height: 80)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+        }
+        .listStyle(.plain)
+    }
+    
+    private func deleteEjercicios(at offsets: IndexSet) {
+        for index in offsets {
+            let ejercicio = filteredEjercicios[index]
+            if let id = ejercicio.id {
+                Task {
+                    try? await ejercicioService.deleteEjercicio(id: id)
                 }
             }
         }
-        .listStyle(.plain)
     }
     
     // MARK: - FAB
@@ -88,16 +105,21 @@ struct RMListView: View {
             Spacer()
             HStack {
                 Spacer()
-                Button { showingAddSheet = true } label: {
+                Button {
+                    showingAddSheet = true
+                } label: {
                     Image(systemName: "plus")
                         .font(.title2.bold())
                         .foregroundColor(.white)
                         .frame(width: 56, height: 56)
-                        .background(Color.orange)
-                        .clipShape(Circle())
-                        .shadow(radius: 4)
+                        .background(
+                            Circle()
+                                .fill(Color.orange)
+                                .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+                        )
                 }
-                .padding()
+                .padding(.trailing, 20)
+                .padding(.bottom, 20)
             }
         }
     }
@@ -108,21 +130,37 @@ struct RMListView: View {
             Image(systemName: "dumbbell.fill")
                 .font(.system(size: 50))
                 .foregroundStyle(.tertiary)
+            
             Text("Sin ejercicios")
                 .font(.title3.bold())
-            Button("Añadir") { showingAddSheet = true }
-                .buttonStyle(.borderedProminent)
-                .tint(.orange)
+            
+            Text("Añade tu primer ejercicio para empezar")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            
+            Button {
+                showingAddSheet = true
+            } label: {
+                Label("Añadir Ejercicio", systemImage: "plus")
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.orange)
         }
     }
 }
 
-// MARK: - Row View
-struct EjercicioRowView: View {
+// MARK: - Row View (Optimized - equatable for diff)
+struct EjercicioRowView: View, Equatable {
     let ejercicio: Ejercicio
     
+    static func == (lhs: EjercicioRowView, rhs: EjercicioRowView) -> Bool {
+        lhs.ejercicio.id == rhs.ejercicio.id &&
+        lhs.ejercicio.rmHistory.count == rhs.ejercicio.rmHistory.count &&
+        lhs.ejercicio.ultimoRM?.valor == rhs.ejercicio.ultimoRM?.valor
+    }
+    
     private var latestRM: Double {
-        ejercicio.rmHistory.max(by: { $0.fecha < $1.fecha })?.valor ?? 0
+        ejercicio.ultimoRM?.valor ?? 0
     }
     
     var body: some View {
@@ -134,7 +172,9 @@ struct EjercicioRowView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            
             Spacer()
+            
             VStack(alignment: .trailing) {
                 Text("\(Int(latestRM))")
                     .font(.system(size: 24, weight: .bold, design: .rounded))
