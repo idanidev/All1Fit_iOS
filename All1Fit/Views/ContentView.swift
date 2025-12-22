@@ -5,19 +5,37 @@ struct ContentView: View {
     
     var body: some View {
         Group {
-            if !authService.isReady {
-                // Show nothing while Firebase initializes
-                Color(red: 0.08, green: 0.08, blue: 0.12)
-                    .ignoresSafeArea()
+            if !authService.isFirebaseReady {
+                // Splash screen while Firebase initializes
+                SplashView()
             } else if authService.isAuthenticated {
                 MainTabView()
             } else {
                 LoginView()
             }
         }
-        .onAppear {
-            // Start Firebase listener AFTER UI is rendered
-            authService.startListening()
+        .animation(.easeInOut(duration: 0.2), value: authService.isFirebaseReady)
+        .animation(.easeInOut(duration: 0.2), value: authService.isAuthenticated)
+    }
+}
+
+// MARK: - Splash View
+struct SplashView: View {
+    var body: some View {
+        ZStack {
+            Color(red: 0.08, green: 0.08, blue: 0.12)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 20) {
+                Image("Logo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 200)
+                
+                ProgressView()
+                    .tint(.orange)
+                    .scaleEffect(1.5)
+            }
         }
     }
 }

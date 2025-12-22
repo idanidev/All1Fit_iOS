@@ -1,14 +1,27 @@
 import SwiftUI
 import FirebaseCore
 
-// MARK: - App Delegate for Firebase - MUST be on main thread
+// MARK: - App Delegate
 class AppDelegate: NSObject, UIApplicationDelegate {
+    static var isFirebaseReady = false
+    
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-        // Firebase MUST be configured on main thread - do NOT move to background
-        FirebaseApp.configure()
+        // Configure Firebase on background thread - NO MAIN THREAD BLOCKING
+        DispatchQueue.global(qos: .userInitiated).async {
+            FirebaseApp.configure()
+            DispatchQueue.main.async {
+                AppDelegate.isFirebaseReady = true
+                NotificationCenter.default.post(name: .firebaseReady, object: nil)
+            }
+        }
         return true
     }
+}
+
+// MARK: - Firebase Ready Notification
+extension Notification.Name {
+    static let firebaseReady = Notification.Name("firebaseReady")
 }
 
 // MARK: - Main App

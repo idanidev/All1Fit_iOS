@@ -2,37 +2,52 @@ import SwiftUI
 import FirebaseAuth
 import CryptoKit
 
-// MARK: - Auth Service (Deferred Init)
+// MARK: - Optimized Auth Service
 @MainActor
 class AuthService: ObservableObject {
     @Published var user: User?
     @Published var isAuthenticated = false
     @Published var isLoading = false
     @Published var errorMessage: String?
-    @Published var isReady = false
+    @Published var isFirebaseReady = false
     
     private var authStateListener: AuthStateDidChangeListenerHandle?
-    private var currentNonce: String?
+    private var firebaseObserver: NSObjectProtocol?
     
-    // Do NOT setup listener in init - wait for explicit call
-    init() {}
+    init() {
+        // Wait for Firebase to be ready before setting up listener
+        if AppDelegate.isFirebaseReady {
+            Task { @MainActor in
+                self.setupAuthListener()
+            }
+        } else {
+            firebaseObserver = NotificationCenter.default.addObserver(
+                forName: .firebaseReady,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                Task { @MainActor in
+                    self?.setupAuthListener()
+                }
+            }
+        }
+    }
     
     deinit {
         if let listener = authStateListener {
             Auth.auth().removeStateDidChangeListener(listener)
         }
+        if let observer = firebaseObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
     
-    // MARK: - Start Listening (Called from ContentView.onAppear)
-    func startListening() {
-        guard authStateListener == nil else { return }
-        
+    // MARK: - Setup Auth Listener
+    private func setupAuthListener() {
+        isFirebaseReady = true
         authStateListener = Auth.auth().addStateDidChangeListener { [weak self] _, user in
-            DispatchQueue.main.async {
-                self?.user = user
-                self?.isAuthenticated = user != nil
-                self?.isReady = true
-            }
+            self?.user = user
+            self?.isAuthenticated = user != nil
         }
     }
     
