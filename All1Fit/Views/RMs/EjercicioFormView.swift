@@ -90,33 +90,6 @@ struct EjercicioFormView: View {
                 } footer: {
                     Text("Introduce el peso máximo que puedes levantar en una repetición")
                 }
-                
-                // Preview of percentages
-                if let rm = Double(rmValue), rm > 0 {
-                    Section("Vista previa de porcentajes") {
-                        LazyVGrid(columns: [
-                            GridItem(.flexible()),
-                            GridItem(.flexible()),
-                            GridItem(.flexible())
-                        ], spacing: 8) {
-                            ForEach([100, 90, 80, 70, 60, 50], id: \.self) { percent in
-                                VStack(spacing: 2) {
-                                    Text("\(percent)%")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                    Text("\(Int(rm * Double(percent) / 100)) kg")
-                                        .font(.subheadline.bold())
-                                        .foregroundStyle(.orange)
-                                }
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 8)
-                                .background(.orange.opacity(0.1))
-                                .cornerRadius(8)
-                            }
-                        }
-                        .padding(.vertical, 4)
-                    }
-                }
             }
             .navigationTitle(mode.title)
             .navigationBarTitleDisplayMode(.inline)
@@ -130,8 +103,12 @@ struct EjercicioFormView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(mode.buttonTitle) {
                         if let rm = Double(rmValue) {
-                            onSave(name, rm)
-                            dismiss()
+                            focusedField = nil // Fecha teclado
+                            dismiss() // Cierra UI inmediatamente
+                            // Pequeño delay para dejar que la animación comience antes de cargar el hilo principal
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                onSave(name, rm)
+                            }
                         }
                     }
                     .fontWeight(.semibold)
@@ -146,13 +123,11 @@ struct EjercicioFormView: View {
                 }
             }
             .onAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    focusedField = mode.showNameField ? .name : .rm
-                }
+                focusedField = mode.showNameField ? .name : .rm
             }
         }
-        .presentationDetents([.medium])
-        .interactiveDismissDisabled(!name.isEmpty || !rmValue.isEmpty)
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 }
 

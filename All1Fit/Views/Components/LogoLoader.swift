@@ -4,7 +4,7 @@ import SwiftUI
 struct LogoLoader: View {
     var body: some View {
         ProgressView()
-            .scaleEffect(1.5)
+            .scaleEffect(2.0)
             .tint(.orange)
     }
 }
@@ -44,7 +44,7 @@ struct HeaderLogo: View {
         Image("Logo")
             .resizable()
             .scaledToFit()
-            .frame(height: 32)
+            .frame(height: 48)
     }
 }
 
