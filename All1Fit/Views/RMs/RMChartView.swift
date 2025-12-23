@@ -1,134 +1,254 @@
 import SwiftUI
 import Charts
 
+// MARK: - RM Chart View (iOS 26 Premium)
 struct RMChartView: View {
     let ejercicio: Ejercicio
+    
+    @AppStorage("weightUnit") private var weightUnit: WeightUnit = .kg
     @State private var selectedEntry: RMEntry?
+    @State private var chartAnimated = false
+    @State private var selectedTimeRange: TimeRange = .all
+    @State private var showingAddRM = false
+    @Namespace private var animation
     
     private var sortedHistory: [RMEntry] {
-        ejercicio.rmHistory.sorted { $0.fecha < $1.fecha }
+        let sorted = ejercicio.rmHistory.sorted { $0.fecha < $1.fecha }
+        
+        switch selectedTimeRange {
+        case .month:
+            let cutoff = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
+            return sorted.filter { $0.fecha >= cutoff }
+        case .quarter:
+            let cutoff = Calendar.current.date(byAdding: .month, value: -3, to: Date()) ?? Date()
+            return sorted.filter { $0.fecha >= cutoff }
+        case .year:
+            let cutoff = Calendar.current.date(byAdding: .year, value: -1, to: Date()) ?? Date()
+            return sorted.filter { $0.fecha >= cutoff }
+        case .all:
+            return sorted
+        }
     }
     
-    private var minValue: Double {
-        let min = sortedHistory.map(\.valor).min() ?? 0
-        return max(0, min - 5)
-    }
-    
-    private var maxValue: Double {
-        let max = sortedHistory.map(\.valor).max() ?? 100
-        return max + 5
+    private var stats: RMStats {
+        RMStats(history: ejercicio.rmHistory, weightUnit: weightUnit)
     }
     
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
-                // Header with current max status
-                headerStatus
+                // Hero Stats
+                heroStatsSection
                 
+                // Time Range Picker
+                timeRangePicker
+                
+                // Chart
                 if sortedHistory.count >= 2 {
-                    // Main Chart
-                    chartContainer
+                    chartSection
                 } else {
                     noDataView
                 }
                 
-                // History List
-                historyListView
+                // Statistics Grid
+                statisticsGrid
+                
+                // History
+                historySection
             }
             .padding()
         }
-        .navigationTitle(ejercicio.name)
-        .navigationBarTitleDisplayMode(.inline)
         .background(Color(uiColor: .systemGroupedBackground))
+        .navigationTitle(ejercicio.name)
+        .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showingAddRM = true
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(.orange)
+                }
+            }
+        }
+        .sheet(isPresented: $showingAddRM) {
+            EjercicioFormView(mode: .addRM(ejercicio: ejercicio)) { _, rm in
+                // Handle save - would need service injection in real app
+            }
+        }
+        .onAppear {
+            withAnimation(.spring(duration: 0.8).delay(0.3)) {
+                chartAnimated = true
+            }
+        }
     }
     
-    // MARK: - Header Status
-    private var headerStatus: some View {
-        VStack(spacing: 8) {
-            Text("Máximo Actual")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            
-            if let max = sortedHistory.last {
-                Text("\(Int(max.valor)) kg")
-                    .font(.system(size: 48, weight: .black, design: .rounded))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.orange, .red],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+    // MARK: - Hero Stats Section
+    private var heroStatsSection: some View {
+        VStack(spacing: 16) {
+            // Current RM with glow
+            ZStack {
+                // Glow
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [.orange.opacity(0.4), .clear],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: 100
                         )
                     )
+                    .frame(width: 200, height: 200)
+                    .blur(radius: 30)
                 
-                Text(max.fecha.formatted(date: .long, time: .omitted))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 4)
-                    .background(.ultraThinMaterial)
-                    .clipShape(Capsule())
+                VStack(spacing: 4) {
+                    Text("RM Actual")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    
+                    if let current = stats.currentRM {
+                        Text(formatWeight(weightUnit.convert(current)))
+                            .font(.system(size: 56, weight: .black, design: .rounded))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.orange, .red],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .contentTransition(.numericText())
+                        
+                        Text(weightUnit.symbol)
+                            .font(.title3)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            
+            // Trend indicator
+            if let progression = stats.progressionPercent {
+                HStack(spacing: 8) {
+                    Image(systemName: progression >= 0 ? "arrow.up.right.circle.fill" : "arrow.down.right.circle.fill")
+                        .foregroundStyle(progression >= 0 ? .green : .red)
+                    
+                    Text("\(progression >= 0 ? "+" : "")\(String(format: "%.1f", progression))%")
+                        .font(.headline)
+                        .foregroundStyle(progression >= 0 ? .green : .red)
+                    
+                    Text("desde el inicio")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Color(uiColor: .secondarySystemGroupedBackground))
+                .clipShape(Capsule())
             }
         }
         .padding(.top)
     }
     
-    // MARK: - Chart Container
-    private var chartContainer: some View {
+    // MARK: - Time Range Picker
+    private var timeRangePicker: some View {
+        GlassEffectContainer {
+            HStack(spacing: 8) {
+                ForEach(TimeRange.allCases, id: \.self) { range in
+                    Button {
+                        withAnimation(.spring(duration: 0.3)) {
+                            selectedTimeRange = range
+                        }
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    } label: {
+                        Text(range.title)
+                            .font(.subheadline.bold())
+                            .foregroundStyle(selectedTimeRange == range ? .white : .secondary)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                    }
+                    .glassEffect(
+                        selectedTimeRange == range
+                        ? .regular.tint(.orange).interactive()
+                        : .clear,
+                        in: .capsule
+                    )
+                    .glassEffectID(range.rawValue, in: animation)
+                }
+            }
+            .padding(4)
+        }
+    }
+    
+    // MARK: - Chart Section
+    private var chartSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Progreso")
                 .font(.headline)
-                .foregroundStyle(.primary)
-                .padding(.horizontal)
             
             Chart {
                 ForEach(sortedHistory) { entry in
                     LineMark(
                         x: .value("Fecha", entry.fecha),
-                        y: .value("Peso", entry.valor)
+                        y: .value("Peso", chartAnimated ? weightUnit.convert(entry.valor) : 0)
                     )
-                    .foregroundStyle(Color.orange)
-                    .symbol {
-                        Circle()
-                            .fill(Color.orange)
-                            .frame(width: 8, height: 8)
-                            .overlay(Circle().stroke(Color.white, lineWidth: 2))
-                    }
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.orange, .red],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round))
                     .interpolationMethod(.catmullRom)
                     
                     AreaMark(
                         x: .value("Fecha", entry.fecha),
-                        y: .value("Peso", entry.valor)
+                        y: .value("Peso", chartAnimated ? weightUnit.convert(entry.valor) : 0)
                     )
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [.orange.opacity(0.3), .orange.opacity(0.0)],
+                            colors: [.orange.opacity(0.3), .orange.opacity(0)],
                             startPoint: .top,
                             endPoint: .bottom
                         )
                     )
                     .interpolationMethod(.catmullRom)
+                    
+                    PointMark(
+                        x: .value("Fecha", entry.fecha),
+                        y: .value("Peso", chartAnimated ? weightUnit.convert(entry.valor) : 0)
+                    )
+                    .foregroundStyle(.orange)
+                    .symbolSize(selectedEntry?.id == entry.id ? 150 : 80)
                 }
                 
                 if let selected = selectedEntry {
-                    RuleMark(x: .value("Fecha", selected.fecha))
+                    RuleMark(x: .value("Selected", selected.fecha))
+                        .foregroundStyle(.orange.opacity(0.5))
                         .lineStyle(StrokeStyle(lineWidth: 1, dash: [5]))
-                        .foregroundStyle(Color.gray)
                         .annotation(position: .top) {
-                            VStack(spacing: 2) {
-                                Text("\(Int(selected.valor)) kg")
-                                    .font(.caption2.bold())
-                                    .foregroundStyle(.white)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(Color.black.opacity(0.7))
-                                    .cornerRadius(4)
+                            VStack(spacing: 4) {
+                                Text(formatWeight(weightUnit.convert(selected.valor)))
+                                    .font(.headline.bold())
+                                Text(selected.fecha.formatted(date: .abbreviated, time: .omitted))
+                                    .font(.caption)
                             }
+                            .foregroundStyle(.white)
+                            .padding(8)
+                            .background(Color.orange)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
                 }
             }
-            .chartYScale(domain: minValue...maxValue)
+            .chartYAxis {
+                AxisMarks(position: .leading)
+            }
+            .chartXAxis {
+                AxisMarks(values: .automatic(desiredCount: 4))
+            }
             .chartOverlay { proxy in
-                GeometryReader { geometry in
+                GeometryReader { geo in
                     Rectangle()
                         .fill(.clear)
                         .contentShape(Rectangle())
@@ -141,71 +261,203 @@ struct RMChartView: View {
                                             abs($0.fecha.timeIntervalSince(date)) < abs($1.fecha.timeIntervalSince(date))
                                         })
                                     }
+                                    UISelectionFeedbackGenerator().selectionChanged()
                                 }
-                                .onEnded { _ in selectedEntry = nil }
+                                .onEnded { _ in
+                                    withAnimation(.spring(duration: 0.2)) {
+                                        selectedEntry = nil
+                                    }
+                                }
                         )
                 }
             }
             .frame(height: 250)
             .padding()
+            .background(Color(uiColor: .secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 20))
         }
-        .background(Color(uiColor: .secondarySystemGroupedBackground))
-        .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
     }
     
-    // MARK: - History List View
-    private var historyListView: some View {
+    // MARK: - Statistics Grid
+    private var statisticsGrid: some View {
+        LazyVGrid(columns: [
+            GridItem(.flexible()),
+            GridItem(.flexible())
+        ], spacing: 12) {
+            StatCard(
+                title: "Mejor RM",
+                value: stats.bestRM.map { formatWeight(weightUnit.convert($0)) + " " + weightUnit.symbol } ?? "-",
+                icon: "trophy.fill",
+                color: .yellow
+            )
+            
+            StatCard(
+                title: "Registros",
+                value: "\(ejercicio.rmHistory.count)",
+                icon: "list.bullet.clipboard",
+                color: .blue
+            )
+            
+            StatCard(
+                title: "Primer RM",
+                value: stats.firstRM.map { formatWeight(weightUnit.convert($0)) + " " + weightUnit.symbol } ?? "-",
+                icon: "flag.fill",
+                color: .green
+            )
+            
+            StatCard(
+                title: "Promedio",
+                value: stats.averageRM.map { formatWeight(weightUnit.convert($0)) + " " + weightUnit.symbol } ?? "-",
+                icon: "chart.bar.fill",
+                color: .purple
+            )
+        }
+    }
+    
+    // MARK: - History Section
+    private var historySection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Historial")
                 .font(.headline)
-                .foregroundStyle(.primary)
-                .padding(.horizontal)
             
-            VStack(spacing: 0) {
+            LazyVStack(spacing: 0) {
                 ForEach(Array(sortedHistory.reversed().enumerated()), id: \.element.id) { index, entry in
                     HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(entry.fecha.formatted(date: .numeric, time: .omitted))
-                                .font(.body)
-                                .fontWeight(.medium)
+                        // Position badge
+                        if index == 0 {
+                            Image(systemName: "crown.fill")
+                                .font(.caption)
+                                .foregroundStyle(.yellow)
+                                .frame(width: 24)
+                        } else {
+                            Text("#\(index + 1)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .frame(width: 24)
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(entry.fecha.formatted(date: .long, time: .omitted))
+                                .font(.subheadline)
                         }
                         
                         Spacer()
                         
-                        Text("\(Int(entry.valor)) kg")
-                            .font(.title3)
-                            .fontWeight(.bold)
+                        Text("\(formatWeight(weightUnit.convert(entry.valor))) \(weightUnit.symbol)")
+                            .font(.headline)
                             .foregroundStyle(index == 0 ? .orange : .primary)
                     }
                     .padding()
                     
                     if index < sortedHistory.count - 1 {
                         Divider()
-                            .padding(.leading)
+                            .padding(.leading, 44)
                     }
                 }
             }
             .background(Color(uiColor: .secondarySystemGroupedBackground))
-            .cornerRadius(16)
-            .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
         }
     }
     
     // MARK: - No Data View
     private var noDataView: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "chart.xyaxis.line")
-                .font(.largeTitle)
+        VStack(spacing: 16) {
+            Image(systemName: "chart.line.uptrend.xyaxis")
+                .font(.system(size: 40))
                 .foregroundStyle(.secondary)
-            Text("No hay suficientes datos para la gráfica")
-                .font(.footnote)
+            
+            Text("Añade más registros para ver el gráfico")
+                .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
+        .padding(.vertical, 60)
         .background(Color(uiColor: .secondarySystemGroupedBackground))
-        .cornerRadius(16)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+    }
+    
+    // MARK: - Helpers
+    private func formatWeight(_ weight: Double) -> String {
+        if weight.truncatingRemainder(dividingBy: 1) == 0 {
+            return "\(Int(weight))"
+        }
+        return String(format: "%.1f", weight)
+    }
+}
+
+// MARK: - Time Range
+enum TimeRange: String, CaseIterable {
+    case month, quarter, year, all
+    
+    var title: String {
+        switch self {
+        case .month: return "1M"
+        case .quarter: return "3M"
+        case .year: return "1A"
+        case .all: return "Todo"
+        }
+    }
+}
+
+// MARK: - RM Stats
+struct RMStats {
+    let history: [RMEntry]
+    let weightUnit: WeightUnit
+    
+    var currentRM: Double? {
+        history.max(by: { $0.fecha < $1.fecha })?.valor
+    }
+    
+    var bestRM: Double? {
+        history.max(by: { $0.valor < $1.valor })?.valor
+    }
+    
+    var firstRM: Double? {
+        history.min(by: { $0.fecha < $1.fecha })?.valor
+    }
+    
+    var averageRM: Double? {
+        guard !history.isEmpty else { return nil }
+        return history.map(\.valor).reduce(0, +) / Double(history.count)
+    }
+    
+    var progressionPercent: Double? {
+        guard let first = firstRM, let current = currentRM, first > 0 else { return nil }
+        return ((current - first) / first) * 100
+    }
+}
+
+// MARK: - Stat Card
+struct StatCard: View {
+    let title: String
+    let value: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: icon)
+                    .font(.title3)
+                    .foregroundStyle(color)
+                
+                Spacer()
+            }
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(value)
+                    .font(.title3.bold())
+                    .foregroundStyle(.primary)
+                
+                Text(title)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding()
+        .background(Color(uiColor: .secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }
 

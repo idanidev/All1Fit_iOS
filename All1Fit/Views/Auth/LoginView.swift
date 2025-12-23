@@ -2,7 +2,7 @@ import SwiftUI
 import AuthenticationServices
 
 // MARK: - Auth Mode
-enum AuthMode {
+enum AuthMode: String, CaseIterable {
     case login, register
     
     var title: String {
@@ -14,9 +14,10 @@ enum AuthMode {
     }
 }
 
-// MARK: - Login View (SIMPLIFIED - for debugging)
+// MARK: - Login View (iOS 26 Premium)
 struct LoginView: View {
     @EnvironmentObject var authService: AuthService
+    @Namespace private var animation
     
     @State private var mode: AuthMode = .login
     @State private var email = ""
@@ -25,141 +26,43 @@ struct LoginView: View {
     @State private var showingError = false
     @State private var showingPasswordReset = false
     @State private var passwordResetSent = false
+    @State private var logoAnimated = false
+    @State private var formAppeared = false
     
     var body: some View {
         ZStack {
-            // ✅ SIMPLIFIED: Solid color instead of gradient
-            Color(red: 0.08, green: 0.08, blue: 0.12)
-                .ignoresSafeArea()
+            // ✅ iOS 26: Animated Mesh Gradient Background
+            animatedBackground
             
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: 32) {
                     Spacer(minLength: 60)
                     
-                    // Logo
-                    Image("Logo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 220)
+                    // Logo Section
+                    logoSection
                     
-                    Text(mode.title)
-                        .font(.title3)
-                        .foregroundColor(.gray)
-                    
-                    // ✅ SIMPLIFIED: Direct text fields with autocorrection disabled
-                    VStack(spacing: 16) {
-                        if mode == .register {
-                            TextField("Nombre", text: $name)
-                                .textFieldStyle(LoginTextFieldStyle())
-                                .textInputAutocapitalization(.words)
-                                .autocorrectionDisabled()
-                        }
-                        
-                        TextField("Email", text: $email)
-                            .textFieldStyle(LoginTextFieldStyle())
-                            .textInputAutocapitalization(.never)
-                            .keyboardType(.asciiCapable)
-                            .textContentType(.none)
-                            .autocorrectionDisabled()
-                        
-                        SecureField("Contraseña", text: $password)
-                            .textFieldStyle(LoginTextFieldStyle())
-                            .textContentType(.none)
-                            .autocorrectionDisabled()
-                        
-                        if mode == .login {
-                            Button("¿Olvidaste tu contraseña?") {
-                                showingPasswordReset = true
-                            }
-                            .font(.caption)
-                            .foregroundColor(.orange)
-                            .frame(maxWidth: .infinity, alignment: .trailing)
-                        }
-                        
-                        // Submit
-                        Button {
-                            submit()
-                        } label: {
-                            Text(mode.buttonTitle)
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 50)
-                                .background(Color.orange)
-                                .cornerRadius(12)
-                        }
-                        .disabled(!isFormValid)
-                        .opacity(isFormValid ? 1 : 0.6)
-                    }
-                    .padding(.horizontal, 32)
+                    // Form Section with Liquid Glass
+                    formSection
                     
                     // Divider
-                    HStack {
-                        Rectangle().fill(Color.gray.opacity(0.3)).frame(height: 1)
-                        Text("o").font(.caption).foregroundColor(.gray)
-                        Rectangle().fill(Color.gray.opacity(0.3)).frame(height: 1)
-                    }
-                    .padding(.horizontal, 32)
+                    dividerSection
                     
-                    // Social
-                    VStack(spacing: 12) {
-                        SignInWithAppleButton(
-                            onRequest: { request in
-                                let nonce = authService.prepareAppleSignIn()
-                                request.requestedScopes = [.fullName, .email]
-                                request.nonce = nonce
-                            },
-                            onCompletion: { result in
-                                Task { await authService.handleSignInWithApple(result: result) }
-                            }
-                        )
-                        .signInWithAppleButtonStyle(.white)
-                        .frame(height: 50)
-                        .cornerRadius(12)
-                        
-                        Button {
-                            Task { await authService.signInWithGoogle() }
-                        } label: {
-                            HStack {
-                                Image(systemName: "g.circle.fill")
-                                Text("Continuar con Google")
-                            }
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 50)
-                            .background(.white)
-                            .foregroundColor(.black)
-                            .cornerRadius(12)
-                        }
-                    }
-                    .padding(.horizontal, 32)
+                    // Social Login with Liquid Glass
+                    socialSection
                     
-                    // Switch mode
-                    HStack {
-                        Text(mode == .login ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?")
-                            .foregroundColor(.gray)
-                        Button(mode == .login ? "Regístrate" : "Inicia sesión") {
-                            withAnimation {
-                                mode = mode == .login ? .register : .login
-                                password = ""
-                            }
-                        }
-                        .foregroundColor(.orange)
-                        .fontWeight(.semibold)
-                    }
-                    .font(.subheadline)
+                    // Switch Mode
+                    switchModeSection
                     
                     Spacer(minLength: 40)
                 }
+                .padding(.horizontal, 24)
             }
             .scrollDismissesKeyboard(.interactively)
+            .scrollIndicators(.hidden)
             
-            // Loading
+            // Loading Overlay
             if authService.isLoading {
-                Color.black.opacity(0.5).ignoresSafeArea()
-                ProgressView()
-                    .tint(.orange)
-                    .scaleEffect(1.5)
+                loadingOverlay
             }
         }
         .alert("Error", isPresented: $showingError) {
@@ -178,23 +81,256 @@ struct LoginView: View {
             }
             Button("Cancelar", role: .cancel) {}
         } message: {
-            Text("Te enviaremos un email")
+            Text("Te enviaremos un email para restablecer tu contraseña")
         }
-        .alert("Email Enviado", isPresented: $passwordResetSent) {
+        .alert("Email Enviado ✓", isPresented: $passwordResetSent) {
             Button("OK") {}
         } message: {
             Text("Revisa tu bandeja de entrada")
         }
         .onChange(of: authService.errorMessage) { _, newValue in
-            showingError = newValue != nil
+            if newValue != nil {
+                showingError = true
+                UINotificationFeedbackGenerator().notificationOccurred(.error)
+            }
+        }
+        .onAppear {
+            withAnimation(.spring(duration: 1.0, bounce: 0.3).delay(0.2)) {
+                logoAnimated = true
+            }
+            withAnimation(.spring(duration: 0.8).delay(0.5)) {
+                formAppeared = true
+            }
         }
     }
     
+    // MARK: - Animated Background
+    private var animatedBackground: some View {
+        TimelineView(.animation(minimumInterval: 1/30)) { timeline in
+            let time = timeline.date.timeIntervalSinceReferenceDate
+            
+            MeshGradient(
+                width: 3,
+                height: 3,
+                points: [
+                    [0, 0], [0.5, 0], [1, 0],
+                    [Float(sin(time * 0.5) * 0.1), 0.5],
+                    [Float(0.5 + cos(time * 0.3) * 0.1), Float(0.5 + sin(time * 0.4) * 0.1)],
+                    [Float(1 + sin(time * 0.6) * 0.1), 0.5],
+                    [0, 1], [0.5, 1], [1, 1]
+                ],
+                colors: [
+                    Color(hex: "0a0a0f"), Color(hex: "1a1a2e"), Color(hex: "0a0a0f"),
+                    Color(hex: "16213e"), Color(hex: "FF6B35").opacity(0.2), Color(hex: "1a1a2e"),
+                    Color(hex: "0a0a0f"), Color(hex: "0f3460"), Color(hex: "0a0a0f")
+                ]
+            )
+            .ignoresSafeArea()
+        }
+    }
+    
+    // MARK: - Logo Section
+    private var logoSection: some View {
+        VStack(spacing: 16) {
+            Image("Logo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 200)
+                .scaleEffect(logoAnimated ? 1.0 : 0.5)
+                .opacity(logoAnimated ? 1.0 : 0)
+            
+            Text(mode.title)
+                .font(.title3)
+                .foregroundStyle(.secondary)
+                .contentTransition(.numericText())
+        }
+    }
+    
+    // MARK: - Form Section
+    private var formSection: some View {
+        VStack(spacing: 16) {
+            // Name field (register only)
+            if mode == .register {
+                GlassTextField(
+                    placeholder: "Nombre",
+                    text: $name,
+                    icon: "person.fill"
+                )
+                .textInputAutocapitalization(.words)
+                .transition(.asymmetric(
+                    insertion: .push(from: .top).combined(with: .opacity),
+                    removal: .push(from: .bottom).combined(with: .opacity)
+                ))
+            }
+            
+            // Email field
+            GlassTextField(
+                placeholder: "Email",
+                text: $email,
+                icon: "envelope.fill"
+            )
+            .textInputAutocapitalization(.never)
+            .keyboardType(.emailAddress)
+            
+            // Password field
+            GlassSecureField(
+                placeholder: "Contraseña",
+                text: $password,
+                icon: "lock.fill"
+            )
+            
+            // Forgot password
+            if mode == .login {
+                HStack {
+                    Spacer()
+                    Button("¿Olvidaste tu contraseña?") {
+                        showingPasswordReset = true
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                }
+            }
+            
+            // Submit button
+            Button {
+                submit()
+            } label: {
+                HStack(spacing: 8) {
+                    Text(mode.buttonTitle)
+                        .font(.headline)
+                    Image(systemName: "arrow.right")
+                        .font(.headline)
+                }
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 56)
+            }
+            .glassEffect(.regular.tint(.orange).interactive(), in: .capsule)
+            .disabled(!isFormValid)
+            .opacity(isFormValid ? 1 : 0.6)
+            .padding(.top, 8)
+        }
+        .opacity(formAppeared ? 1 : 0)
+        .offset(y: formAppeared ? 0 : 30)
+    }
+    
+    // MARK: - Divider Section
+    private var dividerSection: some View {
+        HStack(spacing: 16) {
+            Rectangle()
+                .fill(Color.white.opacity(0.2))
+                .frame(height: 1)
+            
+            Text("o")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            
+            Rectangle()
+                .fill(Color.white.opacity(0.2))
+                .frame(height: 1)
+        }
+        .opacity(formAppeared ? 1 : 0)
+    }
+    
+    // MARK: - Social Section
+    private var socialSection: some View {
+        GlassEffectContainer {
+            VStack(spacing: 12) {
+                // Sign in with Apple
+                SignInWithAppleButton(
+                    onRequest: { request in
+                        let nonce = authService.prepareAppleSignIn()
+                        request.requestedScopes = [.fullName, .email]
+                        request.nonce = nonce
+                    },
+                    onCompletion: { result in
+                        Task {
+                            await authService.handleSignInWithApple(result: result)
+                        }
+                    }
+                )
+                .signInWithAppleButtonStyle(.white)
+                .frame(height: 56)
+                .clipShape(.capsule)
+                .glassEffectID("apple", in: animation)
+                
+                // Sign in with Google
+                Button {
+                    Task {
+                        await authService.signInWithGoogle()
+                    }
+                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "g.circle.fill")
+                            .font(.title2)
+                        Text("Continuar con Google")
+                            .font(.headline)
+                    }
+                    .foregroundStyle(.primary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                }
+                .glassEffect(.regular.interactive(), in: .capsule)
+                .glassEffectID("google", in: animation)
+            }
+        }
+        .opacity(formAppeared ? 1 : 0)
+        .offset(y: formAppeared ? 0 : 20)
+    }
+    
+    // MARK: - Switch Mode Section
+    private var switchModeSection: some View {
+        HStack(spacing: 4) {
+            Text(mode == .login ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?")
+                .foregroundStyle(.secondary)
+            
+            Button(mode == .login ? "Regístrate" : "Inicia sesión") {
+                withAnimation(.spring(duration: 0.4)) {
+                    mode = mode == .login ? .register : .login
+                    password = ""
+                }
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            }
+            .foregroundStyle(.orange)
+            .fontWeight(.semibold)
+        }
+        .font(.subheadline)
+        .opacity(formAppeared ? 1 : 0)
+    }
+    
+    // MARK: - Loading Overlay
+    private var loadingOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.5)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 16) {
+                ProgressView()
+                    .controlSize(.large)
+                    .tint(.orange)
+                
+                Text("Cargando...")
+                    .font(.subheadline)
+                    .foregroundStyle(.white)
+            }
+            .padding(32)
+            .glassEffect(.regular.tint(.orange.opacity(0.2)), in: RoundedRectangle(cornerRadius: 20))
+        }
+        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+    }
+    
+    // MARK: - Helpers
     private var isFormValid: Bool {
-        !email.isEmpty && !password.isEmpty && (mode == .login || !name.isEmpty)
+        let emailValid = !email.trimmingCharacters(in: .whitespaces).isEmpty
+        let passwordValid = !password.isEmpty
+        let nameValid = mode == .login || !name.trimmingCharacters(in: .whitespaces).isEmpty
+        return emailValid && passwordValid && nameValid
     }
     
     private func submit() {
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         Task {
             if mode == .login {
                 await authService.signIn(email: email, password: password)
@@ -205,18 +341,77 @@ struct LoginView: View {
     }
 }
 
-// MARK: - Simple Text Field Style
-struct LoginTextFieldStyle: TextFieldStyle {
-    func _body(configuration: TextField<Self._Label>) -> some View {
-        configuration
-            .padding()
-            .background(Color.white.opacity(0.1))
-            .foregroundColor(.white)
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
-            )
+// MARK: - Glass Text Field (iOS 26)
+struct GlassTextField: View {
+    let placeholder: String
+    @Binding var text: String
+    let icon: String
+    @FocusState private var isFocused: Bool
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.body)
+                .foregroundStyle(isFocused ? .orange : .secondary)
+                .frame(width: 24)
+                .animation(.smooth(duration: 0.2), value: isFocused)
+            
+            TextField(placeholder, text: $text)
+                .focused($isFocused)
+                .autocorrectionDisabled()
+        }
+        .padding(.horizontal, 16)
+        .frame(height: 56)
+        .glassEffect(
+            isFocused ? .regular.tint(.orange.opacity(0.3)) : .regular,
+            in: .capsule
+        )
+        .animation(.smooth(duration: 0.2), value: isFocused)
+    }
+}
+
+// MARK: - Glass Secure Field (iOS 26)
+struct GlassSecureField: View {
+    let placeholder: String
+    @Binding var text: String
+    let icon: String
+    @State private var isSecure = true
+    @FocusState private var isFocused: Bool
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.body)
+                .foregroundStyle(isFocused ? .orange : .secondary)
+                .frame(width: 24)
+                .animation(.smooth(duration: 0.2), value: isFocused)
+            
+            Group {
+                if isSecure {
+                    SecureField(placeholder, text: $text)
+                } else {
+                    TextField(placeholder, text: $text)
+                }
+            }
+            .focused($isFocused)
+            .autocorrectionDisabled()
+            
+            Button {
+                isSecure.toggle()
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            } label: {
+                Image(systemName: isSecure ? "eye.slash" : "eye")
+                    .foregroundStyle(.secondary)
+                    .contentTransition(.symbolEffect(.replace))
+            }
+        }
+        .padding(.horizontal, 16)
+        .frame(height: 56)
+        .glassEffect(
+            isFocused ? .regular.tint(.orange.opacity(0.3)) : .regular,
+            in: .capsule
+        )
+        .animation(.smooth(duration: 0.2), value: isFocused)
     }
 }
 

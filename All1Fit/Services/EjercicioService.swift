@@ -2,23 +2,24 @@ import Foundation
 import FirebaseFirestore
 import FirebaseAuth
 
-// MARK: - Optimized Ejercicio Service (NO LISTENERS, WITH CACHE)
+// MARK: - Ejercicio Service (iOS 26 Optimized with Cache)
 @MainActor
+@Observable
 class EjercicioService: ObservableObject {
-    @Published var ejercicios: [Ejercicio] = []
-    @Published var isLoading = false
-    @Published var errorMessage: String?
+    var ejercicios: [Ejercicio] = []
+    var isLoading = false
+    var errorMessage: String?
     
     private let db = Firestore.firestore()
     private var lastFetchTime: Date?
-    private let cacheTimeout: TimeInterval = 30 // 30 seconds cache
+    private let cacheTimeout: TimeInterval = 30
     
     // MARK: - Collection Reference
     private func ejerciciosCollection(userId: String) -> CollectionReference {
         db.collection("users").document(userId).collection("ejercicios")
     }
     
-    // MARK: - Fetch Ejercicios (ONE-TIME with Cache)
+    // MARK: - Fetch
     func fetchEjercicios(forceRefresh: Bool = false) async {
         guard let userId = Auth.auth().currentUser?.uid else {
             errorMessage = "Usuario no autenticado"
@@ -26,13 +27,14 @@ class EjercicioService: ObservableObject {
         }
         
         // Check cache
-        if !forceRefresh, let lastFetch = lastFetchTime,
+        if !forceRefresh,
+           let lastFetch = lastFetchTime,
            Date().timeIntervalSince(lastFetch) < cacheTimeout,
            !ejercicios.isEmpty {
-            return // Use cached data
+            return
         }
         
-        isLoading = ejercicios.isEmpty // Only show loading if no cached data
+        isLoading = ejercicios.isEmpty
         
         do {
             let snapshot = try await ejerciciosCollection(userId: userId)
@@ -50,7 +52,7 @@ class EjercicioService: ObservableObject {
         isLoading = false
     }
     
-    // MARK: - Create Ejercicio (Optimistic Update)
+    // MARK: - Create (Optimistic)
     func createEjercicio(name: String, rm: Double) async throws {
         guard let userId = Auth.auth().currentUser?.uid else {
             throw EjercicioError.notAuthenticated
@@ -61,22 +63,22 @@ class EjercicioService: ObservableObject {
             rmHistory: [RMEntry(valor: rm)]
         )
         
-        // Optimistic update - add to local cache immediately
+        // Optimistic update
         var tempEjercicio = ejercicio
         tempEjercicio.id = UUID().uuidString
         ejercicios.append(tempEjercicio)
-        ejercicios.sort { $0.name < $1.name }
+        ejercicios.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         
-        // Then persist to Firestore
+        // Persist
         let docRef = try ejerciciosCollection(userId: userId).addDocument(from: ejercicio)
         
-        // Update local copy with real ID
+        // Update with real ID
         if let index = ejercicios.firstIndex(where: { $0.id == tempEjercicio.id }) {
             ejercicios[index].id = docRef.documentID
         }
     }
     
-    // MARK: - Add RM (Optimistic Update)
+    // MARK: - Add RM (Optimistic)
     func addRM(ejercicioId: String, valor: Double) async throws {
         guard let userId = Auth.auth().currentUser?.uid else {
             throw EjercicioError.notAuthenticated
@@ -87,7 +89,7 @@ class EjercicioService: ObservableObject {
             ejercicios[index].rmHistory.append(RMEntry(valor: valor))
         }
         
-        // Persist to Firestore
+        // Persist
         let docRef = ejerciciosCollection(userId: userId).document(ejercicioId)
         let document = try await docRef.getDocument()
         
@@ -99,16 +101,16 @@ class EjercicioService: ObservableObject {
         try docRef.setData(from: ejercicio)
     }
     
-    // MARK: - Delete Ejercicio (Optimistic Update)
+    // MARK: - Delete (Optimistic)
     func deleteEjercicio(id: String) async throws {
         guard let userId = Auth.auth().currentUser?.uid else {
             throw EjercicioError.notAuthenticated
         }
         
-        // Optimistic update - remove from local cache immediately
+        // Optimistic update
         ejercicios.removeAll { $0.id == id }
         
-        // Then delete from Firestore
+        // Persist
         try await ejerciciosCollection(userId: userId).document(id).delete()
     }
     

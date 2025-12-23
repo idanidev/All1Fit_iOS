@@ -33,6 +33,11 @@ struct Ejercicio: Codable, Identifiable {
         rmHistory.max(by: { $0.fecha < $1.fecha })
     }
     
+    /// Mejor RM histórico
+    var mejorRM: RMEntry? {
+        rmHistory.max(by: { $0.valor < $1.valor })
+    }
+    
     /// Fecha formateada del último RM
     var ultimaFechaFormateada: String {
         guard let fecha = ultimoRM?.fecha else { return "Sin registros" }
@@ -51,14 +56,15 @@ struct Ejercicio: Codable, Identifiable {
     }
 }
 
-// MARK: - Sample Data for Previews
+// MARK: - Sample Data
 extension Ejercicio {
     static let sample = Ejercicio(
         name: "Back Squat",
         rmHistory: [
-            RMEntry(valor: 100, fecha: Date().addingTimeInterval(-86400 * 30)),
-            RMEntry(valor: 105, fecha: Date().addingTimeInterval(-86400 * 20)),
-            RMEntry(valor: 110, fecha: Date().addingTimeInterval(-86400 * 10)),
+            RMEntry(valor: 100, fecha: Date().addingTimeInterval(-86400 * 60)),
+            RMEntry(valor: 105, fecha: Date().addingTimeInterval(-86400 * 45)),
+            RMEntry(valor: 110, fecha: Date().addingTimeInterval(-86400 * 30)),
+            RMEntry(valor: 112.5, fecha: Date().addingTimeInterval(-86400 * 15)),
             RMEntry(valor: 115, fecha: Date())
         ]
     )

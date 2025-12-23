@@ -1,7 +1,9 @@
 import SwiftUI
 
+// MARK: - Porcentajes View (iOS 26)
 struct PorcentajesView: View {
     let ejercicio: Ejercicio
+    @AppStorage("weightUnit") private var weightUnit: WeightUnit = .kg
     
     private let columns = [
         GridItem(.flexible()),
@@ -12,28 +14,59 @@ struct PorcentajesView: View {
     
     var body: some View {
         if ejercicio.porcentajes.isEmpty {
-            Text("Sin datos de RM")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity)
-                .padding()
+            emptyState
         } else {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Tabla de Porcentajes")
-                    .font(.subheadline.bold())
-                    .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 16) {
+                // Header
+                HStack {
+                    Label("Tabla de Porcentajes", systemImage: "percent")
+                        .font(.headline)
+                    
+                    Spacer()
+                    
+                    if let rm = ejercicio.ultimoRM {
+                        Text("RM: \(formatWeight(weightUnit.convert(rm.valor))) \(weightUnit.symbol)")
+                            .font(.subheadline)
+                            .foregroundStyle(.orange)
+                    }
+                }
                 
-                LazyVGrid(columns: columns, spacing: 8) {
+                // Grid
+                LazyVGrid(columns: columns, spacing: 10) {
                     ForEach(ejercicio.porcentajes, id: \.porcentaje) { item in
                         PorcentajeCell(
                             porcentaje: item.porcentaje,
-                            peso: item.peso
+                            peso: weightUnit.convert(item.peso),
+                            unit: weightUnit.symbol
                         )
                     }
                 }
             }
-            .padding(.vertical, 4)
+            .padding()
+            .background(Color(uiColor: .secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
         }
+    }
+    
+    private var emptyState: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "percent")
+                .font(.title)
+                .foregroundStyle(.secondary)
+            
+            Text("Sin datos de RM")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+    }
+    
+    private func formatWeight(_ weight: Double) -> String {
+        if weight.truncatingRemainder(dividingBy: 1) == 0 {
+            return "\(Int(weight))"
+        }
+        return String(format: "%.1f", weight)
     }
 }
 
@@ -41,64 +74,67 @@ struct PorcentajesView: View {
 struct PorcentajeCell: View {
     let porcentaje: Int
     let peso: Double
+    let unit: String
     
-    private var backgroundColor: Color {
+    private var intensity: CellIntensity {
         switch porcentaje {
-        case 100:
-            return .red.opacity(0.15)
-        case 90...99:
-            return .orange.opacity(0.15)
-        case 80...89:
-            return .yellow.opacity(0.15)
-        case 70...79:
-            return .green.opacity(0.15)
-        default:
-            return .blue.opacity(0.15)
-        }
-    }
-    
-    private var textColor: Color {
-        switch porcentaje {
-        case 100:
-            return .red
-        case 90...99:
-            return .orange
-        case 80...89:
-            return .yellow
-        case 70...79:
-            return .green
-        default:
-            return .blue
+        case 100: return .max
+        case 90...99: return .high
+        case 80...89: return .medium
+        case 70...79: return .moderate
+        default: return .low
         }
     }
     
     var body: some View {
-        VStack(spacing: 2) {
+        VStack(spacing: 4) {
             Text("\(porcentaje)%")
-                .font(.caption2.bold())
-                .foregroundStyle(textColor)
+                .font(.caption.bold())
+                .foregroundStyle(intensity.color)
             
             Text(formatWeight(peso))
-                .font(.footnote.bold())
+                .font(.subheadline.bold())
                 .foregroundStyle(.primary)
+            
+            Text(unit)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
-        .background(backgroundColor)
-        .cornerRadius(8)
+        .padding(.vertical, 10)
+        .background(intensity.backgroundColor)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
     
     private func formatWeight(_ weight: Double) -> String {
         if weight.truncatingRemainder(dividingBy: 1) == 0 {
-            return "\(Int(weight)) kg"
-        } else {
-            return String(format: "%.1f kg", weight)
+            return "\(Int(weight))"
+        }
+        return String(format: "%.1f", weight)
+    }
+    
+    enum CellIntensity {
+        case max, high, medium, moderate, low
+        
+        var color: Color {
+            switch self {
+            case .max: return .red
+            case .high: return .orange
+            case .medium: return .yellow
+            case .moderate: return .green
+            case .low: return .blue
+            }
+        }
+        
+        var backgroundColor: Color {
+            color.opacity(0.15)
         }
     }
 }
 
 #Preview {
-    List {
+    ScrollView {
         PorcentajesView(ejercicio: .sample)
+            .padding()
     }
 }

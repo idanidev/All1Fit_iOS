@@ -5,40 +5,27 @@ import AuthenticationServices
 import CryptoKit
 import GoogleSignIn
 
-// MARK: - Auth Service (NON-BLOCKING)
+// MARK: - Auth Service
 @MainActor
 class AuthService: ObservableObject {
     @Published private(set) var user: User?
     @Published private(set) var isAuthenticated = false
+    @Published private(set) var isReady = false
     @Published var isLoading = false
     @Published var errorMessage: String?
-    @Published private(set) var isReady = false
     
     private var authStateListener: AuthStateDidChangeListenerHandle?
     private var currentNonce: String?
     
     init() {
-        // ✅ NO bloquear init - hacer setup async
-        Task { @MainActor in
-            await setupAuthListenerAsync()
-        }
+        setupAuthListener()
     }
     
-    deinit {
-        if let listener = authStateListener {
-            Auth.auth().removeStateDidChangeListener(listener)
-        }
-    }
-    
-    // MARK: - Setup Auth Listener (ASYNC - NON BLOCKING)
-    private func setupAuthListenerAsync() async {
-        // Pequeño delay para que la UI se renderice primero
-        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 segundos
-        
+    // MARK: - Setup
+    private func setupAuthListener() {
         authStateListener = Auth.auth().addStateDidChangeListener { [weak self] _, firebaseUser in
-            guard let self = self else { return }
-            
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
                 self.user = firebaseUser
                 self.isAuthenticated = firebaseUser != nil
                 
@@ -110,7 +97,7 @@ class AuthService: ObservableObject {
         }
     }
     
-    // MARK: - Sign in with Apple
+    // MARK: - Apple Sign In
     func prepareAppleSignIn() -> String {
         let nonce = randomNonceString()
         currentNonce = nonce
@@ -147,7 +134,7 @@ class AuthService: ObservableObject {
         }
     }
     
-    // MARK: - Sign in with Google
+    // MARK: - Google Sign In
     func signInWithGoogle() async {
         isLoading = true
         errorMessage = nil
