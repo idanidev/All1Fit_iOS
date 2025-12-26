@@ -1,6 +1,7 @@
 import Foundation
 import FirebaseFirestore
 import FirebaseAuth
+import os
 
 // MARK: - Workout Service
 @MainActor
@@ -10,6 +11,7 @@ class WorkoutService: ObservableObject {
     @Published var errorMessage: String?
     
     private let db = Firestore.firestore()
+    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "All1Fit", category: "WorkoutService")
     
     // MARK: - Fetch Results for a Workout
     func fetchResults(for workoutId: String) async {
@@ -23,15 +25,26 @@ class WorkoutService: ObservableObject {
                 .document(userId)
                 .collection("workoutResults")
                 .whereField("workoutId", isEqualTo: workoutId)
-                .order(by: "date", descending: true)
+                // .order(by: "date", descending: true) // Disabled: may require composite index
                 .getDocuments()
             
-            let fetchedResults = snapshot.documents.compactMap { doc in
-                try? doc.data(as: WorkoutResult.self)
+            logger.info("Fetched \(snapshot.documents.count) results for workoutId: \(workoutId)")
+            
+            let fetchedResults = snapshot.documents.compactMap { doc -> WorkoutResult? in
+                do {
+                    let result = try doc.data(as: WorkoutResult.self)
+                    self.logger.info("Decoded result: \(result.workoutId), time: \(result.timeSeconds)")
+                    return result
+                } catch {
+                    self.logger.error("Failed to decode result \(doc.documentID): \(error.localizedDescription)")
+                    return nil
+                }
             }
             
             results[workoutId] = fetchedResults
+            logger.info("Stored \(fetchedResults.count) results for \(workoutId). Total workouts with results: \(self.results.count)")
         } catch {
+            logger.error("Error fetching results for \(workoutId): \(error.localizedDescription)")
             errorMessage = error.localizedDescription
         }
     }

@@ -1,5 +1,6 @@
 
 import SwiftUI
+import FirebaseAuth
 
 // MARK: - Workouts View
 struct WorkoutsView: View {
@@ -48,6 +49,22 @@ struct WorkoutsView: View {
                                     .font(.caption2)
                                     .foregroundStyle(.secondary)
                                     .lineLimit(2)
+                                
+                                Divider()
+                                
+                                Text("RESULTS DEBUG:")
+                                    .font(.caption.bold())
+                                    .foregroundStyle(.green)
+                                Text("UID: \(Auth.auth().currentUser?.uid ?? "NO USER")")
+                                    .font(.caption2)
+                                    .foregroundStyle(.blue)
+                                Text("\(workoutService.results.count) workouts con resultados")
+                                    .font(.caption2)
+                                Text("Total: \(workoutService.results.values.flatMap { $0 }.count)")
+                                    .font(.caption2)
+                                Text("IDs: \(workoutService.results.keys.joined(separator: ", ")))")
+                                    .font(.caption2)
+                                    .lineLimit(3)
                             }
                             .padding(8)
                             .background(Color.black.opacity(0.1))
