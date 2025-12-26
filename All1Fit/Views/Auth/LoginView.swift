@@ -1,5 +1,6 @@
 import SwiftUI
 import AuthenticationServices
+import LocalAuthentication
 
 // MARK: - Auth Mode
 enum AuthMode: String, CaseIterable {
@@ -106,42 +107,47 @@ struct LoginView: View {
     
     // MARK: - Animated Background
     private var animatedBackground: some View {
-        TimelineView(.animation(minimumInterval: 1/30)) { timeline in
-            let time = timeline.date.timeIntervalSinceReferenceDate
-            
-            MeshGradient(
-                width: 3,
-                height: 3,
-                points: [
-                    [0, 0], [0.5, 0], [1, 0],
-                    [Float(sin(time * 0.5) * 0.1), 0.5],
-                    [Float(0.5 + cos(time * 0.3) * 0.1), Float(0.5 + sin(time * 0.4) * 0.1)],
-                    [Float(1 + sin(time * 0.6) * 0.1), 0.5],
-                    [0, 1], [0.5, 1], [1, 1]
-                ],
-                colors: [
-                    Color(hex: "0a0a0f"), Color(hex: "1a1a2e"), Color(hex: "0a0a0f"),
-                    Color(hex: "16213e"), Color(hex: "FF6B35").opacity(0.2), Color(hex: "1a1a2e"),
-                    Color(hex: "0a0a0f"), Color(hex: "0f3460"), Color(hex: "0a0a0f")
-                ]
-            )
-            .ignoresSafeArea()
-        }
+        LinearGradient(
+            colors: [
+                Color(hex: "0a0a0f"),
+                Color(hex: "1a1a2e"),
+                Color(hex: "16213e"),
+                Color(hex: "0a0a0f")
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        .ignoresSafeArea()
     }
     
     // MARK: - Logo Section
     private var logoSection: some View {
-        VStack(spacing: 16) {
-            Image("Logo")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 200)
-                .scaleEffect(logoAnimated ? 1.0 : 0.5)
-                .opacity(logoAnimated ? 1.0 : 0)
+        VStack(spacing: 20) {
+            // Glow effect
+            ZStack {
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [.orange.opacity(0.3), .clear],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: 120
+                        )
+                    )
+                    .frame(width: 280, height: 280)
+                    .blur(radius: 40)
+                
+                Image("Logo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 280)
+                    .scaleEffect(logoAnimated ? 1.0 : 0.5)
+                    .opacity(logoAnimated ? 1.0 : 0)
+            }
             
             Text(mode.title)
-                .font(.title3)
-                .foregroundStyle(.secondary)
+                .font(.title2.bold())
+                .foregroundStyle(.white)
                 .contentTransition(.numericText())
         }
     }
@@ -205,8 +211,11 @@ struct LoginView: View {
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)
+                .background(
+                    LinearGradient(colors: [.orange, .red], startPoint: .leading, endPoint: .trailing),
+                    in: Capsule()
+                )
             }
-            .glassEffect(.regular.tint(.orange).interactive(), in: .capsule)
             .disabled(!isFormValid)
             .opacity(isFormValid ? 1 : 0.6)
             .padding(.top, 8)
@@ -235,45 +244,56 @@ struct LoginView: View {
     
     // MARK: - Social Section
     private var socialSection: some View {
-        GlassEffectContainer {
-            VStack(spacing: 12) {
-                // Sign in with Apple
-                SignInWithAppleButton(
-                    onRequest: { request in
-                        let nonce = authService.prepareAppleSignIn()
-                        request.requestedScopes = [.fullName, .email]
-                        request.nonce = nonce
-                    },
-                    onCompletion: { result in
-                        Task {
-                            await authService.handleSignInWithApple(result: result)
-                        }
-                    }
-                )
-                .signInWithAppleButtonStyle(.white)
-                .frame(height: 56)
-                .clipShape(.capsule)
-                .glassEffectID("apple", in: animation)
-                
-                // Sign in with Google
-                Button {
+        VStack(spacing: 12) {
+            // Sign in with Apple
+            SignInWithAppleButton(
+                onRequest: { request in
+                    let nonce = authService.prepareAppleSignIn()
+                    request.requestedScopes = [.fullName, .email]
+                    request.nonce = nonce
+                },
+                onCompletion: { result in
                     Task {
-                        await authService.signInWithGoogle()
+                        await authService.handleSignInWithApple(result: result)
                     }
-                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "g.circle.fill")
-                            .font(.title2)
-                        Text("Continuar con Google")
-                            .font(.headline)
-                    }
-                    .foregroundStyle(.primary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
                 }
-                .glassEffect(.regular.interactive(), in: .capsule)
-                .glassEffectID("google", in: animation)
+            )
+            .signInWithAppleButtonStyle(.white)
+            .frame(height: 56)
+            .clipShape(.capsule)
+            
+            // Sign in with Google
+            Button {
+                Task {
+                    await authService.signInWithGoogle()
+                }
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            } label: {
+                HStack(spacing: 10) {
+                    // Google G Logo
+                    ZStack {
+                        Circle()
+                            .fill(.white)
+                            .frame(width: 24, height: 24)
+                        
+                        Text("G")
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.red, .yellow, .green, .blue],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    }
+                    
+                    Text("Continuar con Google")
+                        .font(.headline)
+                }
+                .foregroundStyle(.primary)
+                .frame(maxWidth: .infinity)
+                .frame(height: 56)
+                .background(.white, in: Capsule())
             }
         }
         .opacity(formAppeared ? 1 : 0)
@@ -316,7 +336,7 @@ struct LoginView: View {
                     .foregroundStyle(.white)
             }
             .padding(32)
-            .glassEffect(.regular.tint(.orange.opacity(0.2)), in: RoundedRectangle(cornerRadius: 20))
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
         }
         .transition(.opacity.combined(with: .scale(scale: 0.95)))
     }
@@ -362,10 +382,15 @@ struct GlassTextField: View {
         }
         .padding(.horizontal, 16)
         .frame(height: 56)
-        .glassEffect(
-            isFocused ? .regular.tint(.orange.opacity(0.3)) : .regular,
-            in: .capsule
+        .background(
+            ZStack {
+                if isFocused {
+                    Color.orange.opacity(0.1)
+                }
+                Color.white.opacity(0.05)
+            }
         )
+        .background(.ultraThinMaterial, in: Capsule())
         .animation(.smooth(duration: 0.2), value: isFocused)
     }
 }
@@ -407,10 +432,15 @@ struct GlassSecureField: View {
         }
         .padding(.horizontal, 16)
         .frame(height: 56)
-        .glassEffect(
-            isFocused ? .regular.tint(.orange.opacity(0.3)) : .regular,
-            in: .capsule
+        .background(
+            ZStack {
+                if isFocused {
+                    Color.orange.opacity(0.1)
+                }
+                Color.white.opacity(0.05)
+            }
         )
+        .background(.ultraThinMaterial, in: Capsule())
         .animation(.smooth(duration: 0.2), value: isFocused)
     }
 }

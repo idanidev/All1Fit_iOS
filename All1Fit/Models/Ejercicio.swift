@@ -47,10 +47,29 @@ struct Ejercicio: Codable, Identifiable {
         return formatter.string(from: fecha)
     }
     
-    /// Tabla de porcentajes calculados (40% - 100%)
+    /// Icon based on exercise type
+    var icon: String {
+        let lowercaseName = name.lowercased()
+        // Olympic lifts - person doing cross training (better for clean/jerk/snatch)
+        if lowercaseName.contains("clean") || lowercaseName.contains("jerk") || 
+           lowercaseName.contains("snatch") || lowercaseName.contains("thruster") ||
+           lowercaseName.contains("overhead") || lowercaseName.contains("push press") {
+            return "figure.cross.training"
+        }
+        // Isolation/dumbbell exercises
+        if lowercaseName.contains("curl") || lowercaseName.contains("bench") || 
+           lowercaseName.contains("row") || lowercaseName.contains("fly") ||
+           lowercaseName.contains("tricep") || lowercaseName.contains("bicep") {
+            return "dumbbell.fill"
+        }
+        // Default: cross training
+        return "figure.cross.training"
+    }
+    
+    /// Tabla de porcentajes calculados (30% - 100%)
     var porcentajes: [(porcentaje: Int, peso: Double)] {
         guard let rm = ultimoRM else { return [] }
-        return [100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40].map { p in
+        return [100, 90, 80, 70, 60, 50, 40, 30].map { p in
             (porcentaje: p, peso: round((rm.valor * Double(p)) / 100.0 * 10) / 10)
         }
     }

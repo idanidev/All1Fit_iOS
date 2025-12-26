@@ -217,44 +217,40 @@ struct EjercicioFormView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             
-            GlassEffectContainer {
-                HStack(spacing: 12) {
-                    ForEach(increments, id: \.self) { increment in
-                        Button {
-                            withAnimation(.spring(duration: 0.3)) {
-                                rmValue += increment
-                                rmText = formatValue(rmValue)
-                            }
-                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        } label: {
-                            Text("+\(formatValue(increment))")
-                                .font(.headline)
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 44)
+            HStack(spacing: 12) {
+                ForEach(increments, id: \.self) { increment in
+                    Button {
+                        withAnimation(.spring(duration: 0.3)) {
+                            rmValue += increment
+                            rmText = formatValue(rmValue)
                         }
-                        .glassEffect(.regular.tint(.orange.opacity(0.5)).interactive(), in: .capsule)
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    } label: {
+                        Text("+\(formatValue(increment))")
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 44)
+                            .glassCapsuleStyle(tint: .orange)
                     }
                 }
             }
             
-            GlassEffectContainer {
-                HStack(spacing: 12) {
-                    ForEach(increments, id: \.self) { increment in
-                        Button {
-                            withAnimation(.spring(duration: 0.3)) {
-                                rmValue = max(0, rmValue - increment)
-                                rmText = rmValue > 0 ? formatValue(rmValue) : ""
-                            }
-                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        } label: {
-                            Text("-\(formatValue(increment))")
-                                .font(.headline)
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 44)
+            HStack(spacing: 12) {
+                ForEach(increments, id: \.self) { increment in
+                    Button {
+                        withAnimation(.spring(duration: 0.3)) {
+                            rmValue = max(0, rmValue - increment)
+                            rmText = rmValue > 0 ? formatValue(rmValue) : ""
                         }
-                        .glassEffect(.regular.interactive(), in: .capsule)
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    } label: {
+                        Text("-\(formatValue(increment))")
+                            .font(.headline)
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 44)
+                            .glassCapsuleStyle()
                     }
                 }
             }
@@ -317,7 +313,7 @@ struct EjercicioFormView: View {
                     .foregroundStyle(.white)
             }
             .padding(40)
-            .glassEffect(.regular.tint(.green.opacity(0.2)), in: RoundedRectangle(cornerRadius: 24))
+            .glassButtonStyle(tint: .green, cornerRadius: 24)
         }
         .transition(.opacity.combined(with: .scale))
     }
@@ -353,12 +349,12 @@ struct EjercicioFormView: View {
 
 #Preview("New") {
     EjercicioFormView(mode: .new) { name, rm in
-        print("Created: \(name) with RM: \(rm)")
+        // print("Created: \(name) with RM: \(rm)")
     }
 }
 
 #Preview("Add RM") {
     EjercicioFormView(mode: .addRM(ejercicio: .sample)) { _, rm in
-        print("Added RM: \(rm)")
+        // print("Added RM: \(rm)")
     }
 }

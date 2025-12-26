@@ -8,7 +8,7 @@ struct RMListView: View {
     @State private var showingAddSheet = false
     @State private var searchText = ""
     @State private var selectedEjercicio: Ejercicio?
-    @State private var showingAddRMSheet = false
+    @State private var expandedEjercicioId: String?
     
     private var filteredEjercicios: [Ejercicio] {
         if searchText.isEmpty {
@@ -29,8 +29,33 @@ struct RMListView: View {
                 // Content
                 content
                 
-                // ✅ iOS 26: Liquid Glass FAB
-                fabButton
+                // Floating Add Button
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Button {
+                            showingAddSheet = true
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(.title2.bold())
+                                .foregroundStyle(.white)
+                                .frame(width: 56, height: 56)
+                                .background(
+                                    LinearGradient(
+                                        colors: [.orange, .yellow],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .clipShape(Circle())
+                                .shadow(color: .orange.opacity(0.4), radius: 8, y: 4)
+                        }
+                        .padding(.trailing, 20)
+                        .padding(.bottom, 20)
+                    }
+                }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -38,8 +63,10 @@ struct RMListView: View {
                     Image("Logo")
                         .resizable()
                         .scaledToFit()
-                        .frame(height: 32)
+                        .frame(height: 80) // Reduced to fit Dynamic Island
+                        .shadow(color: .white.opacity(0.5), radius: 10) // Glow for dark mode
                 }
+
             }
             .searchable(text: $searchText, prompt: "Buscar ejercicio...")
             .refreshable {
@@ -54,14 +81,12 @@ struct RMListView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingAddRMSheet) {
-                if let ejercicio = selectedEjercicio {
-                    EjercicioFormView(mode: .addRM(ejercicio: ejercicio)) { _, rm in
-                        Task {
-                            if let id = ejercicio.id {
-                                try? await ejercicioService.addRM(ejercicioId: id, valor: rm)
-                                UINotificationFeedbackGenerator().notificationOccurred(.success)
-                            }
+            .sheet(item: $selectedEjercicio) { ejercicio in
+                EjercicioFormView(mode: .addRM(ejercicio: ejercicio)) { _, rm in
+                    Task {
+                        if let id = ejercicio.id {
+                            try? await ejercicioService.addRM(ejercicioId: id, valor: rm)
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
                         }
                     }
                 }
@@ -103,17 +128,50 @@ struct RMListView: View {
     private var ejerciciosList: some View {
         List {
             ForEach(filteredEjercicios) { ejercicio in
-                NavigationLink {
-                    RMChartView(ejercicio: ejercicio)
-                } label: {
-                    EjercicioRowView(
-                        ejercicio: ejercicio,
-                        onAddRM: {
-                            selectedEjercicio = ejercicio
-                            showingAddRMSheet = true
-                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                VStack(spacing: 0) {
+                    // Main row with navigation
+                    HStack {
+                        NavigationLink {
+                            RMChartView(ejercicio: ejercicio)
+                        } label: {
+                            EjercicioRowView(
+                                ejercicio: ejercicio,
+                                onAddRM: {
+                                    selectedEjercicio = ejercicio
+                                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                }
+                            )
                         }
-                    )
+                        
+                        // Expand button
+                        Button {
+                            withAnimation(.spring(duration: 0.3)) {
+                                if expandedEjercicioId == ejercicio.id {
+                                    expandedEjercicioId = nil
+                                } else {
+                                    expandedEjercicioId = ejercicio.id
+                                }
+                            }
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        } label: {
+                            Image(systemName: "percent")
+                                .font(.body)
+                                .foregroundStyle(.orange)
+                                .rotationEffect(.degrees(expandedEjercicioId == ejercicio.id ? 180 : 0))
+                                .padding(8)
+                                .background(Color.orange.opacity(0.1), in: Circle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    
+                    // Expandable percentage table
+                    if expandedEjercicioId == ejercicio.id {
+                        ExpandablePorcentajesView(ejercicio: ejercicio)
+                            .transition(.asymmetric(
+                                insertion: .push(from: .top).combined(with: .opacity),
+                                removal: .push(from: .bottom).combined(with: .opacity)
+                            ))
+                    }
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                     Button(role: .destructive) {
@@ -125,48 +183,16 @@ struct RMListView: View {
                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
                     Button {
                         selectedEjercicio = ejercicio
-                        showingAddRMSheet = true
                     } label: {
                         Label("Añadir RM", systemImage: "plus.circle")
                     }
                     .tint(.orange)
                 }
             }
-            
-            // Spacer for FAB
-            Color.clear
-                .frame(height: 100)
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
         }
         .listStyle(.plain)
         .animation(.smooth, value: filteredEjercicios.count)
-    }
-    
-    // MARK: - FAB Button (iOS 26 Liquid Glass)
-    private var fabButton: some View {
-        VStack {
-            Spacer()
-            HStack {
-                Spacer()
-                
-                GlassEffectContainer {
-                    Button {
-                        showingAddSheet = true
-                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.title2.bold())
-                            .foregroundStyle(.white)
-                            .frame(width: 60, height: 60)
-                    }
-                    .glassEffect(.regular.tint(.orange).interactive(), in: .circle)
-                    .glassEffectID("fab", in: animation)
-                }
-                .padding(.trailing, 20)
-                .padding(.bottom, 20)
-            }
-        }
+        .animation(.spring(duration: 0.3), value: expandedEjercicioId)
     }
     
     // MARK: - Empty State
@@ -185,7 +211,7 @@ struct RMListView: View {
                     )
                     .frame(width: 160, height: 160)
                 
-                Image(systemName: "dumbbell.fill")
+                Image(systemName: "figure.cross.training")
                     .font(.system(size: 60))
                     .foregroundStyle(
                         LinearGradient(
@@ -216,8 +242,11 @@ struct RMListView: View {
                     .font(.headline)
                     .foregroundStyle(.white)
                     .frame(width: 200, height: 50)
+                    .background(
+                        LinearGradient(colors: [.orange, .red], startPoint: .leading, endPoint: .trailing)
+                    )
+                    .clipShape(Capsule())
             }
-            .glassEffect(.regular.tint(.orange).interactive(), in: .capsule)
         }
     }
     
@@ -272,9 +301,10 @@ struct EjercicioRowView: View {
                     )
                     .frame(width: 50, height: 50)
                 
-                Image(systemName: "dumbbell.fill")
+                Image(systemName: ejercicio.icon)
                     .font(.title3)
                     .foregroundStyle(.orange)
+                    .frame(width: 50, height: 50)
                 
                 // Trend badge
                 if trend != .neutral {
@@ -384,6 +414,86 @@ struct SkeletonCard: View {
                 isAnimating = true
             }
         }
+    }
+}
+
+// MARK: - Expandable Porcentajes View
+struct ExpandablePorcentajesView: View {
+    let ejercicio: Ejercicio
+    @AppStorage("weightUnit") private var weightUnit: WeightUnit = .kg
+    
+    private let columns = [
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+        GridItem(.flexible())
+    ]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Header
+            HStack {
+                Label("Tabla de Porcentajes", systemImage: "percent")
+                    .font(.caption.bold())
+                    .foregroundStyle(.secondary)
+                
+                Spacer()
+                
+                if let rm = ejercicio.ultimoRM {
+                    Text("RM: \(formatWeight(weightUnit.convert(rm.valor))) \(weightUnit.symbol)")
+                        .font(.caption.bold())
+                        .foregroundStyle(.orange)
+                }
+            }
+            
+            // Grid
+            LazyVGrid(columns: columns, spacing: 8) {
+                ForEach(ejercicio.porcentajes, id: \.porcentaje) { item in
+                    VStack(spacing: 2) {
+                        Text("\(item.porcentaje)%")
+                            .font(.caption2.bold())
+                            .foregroundStyle(colorForPercentage(item.porcentaje))
+                        
+                        Text(formatWeight(weightUnit.convert(item.peso)))
+                            .font(.subheadline.bold())
+                            .foregroundStyle(.primary)
+                        
+                        Text(weightUnit.symbol)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(colorForPercentage(item.porcentaje).opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+            }
+        }
+        .padding()
+        .background(Color(uiColor: .tertiarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(.top, 8)
+    }
+    
+    private func colorForPercentage(_ percentage: Int) -> Color {
+        switch percentage {
+        case 100: return .red
+        case 90: return .orange
+        case 80: return .yellow
+        case 70: return .green
+        case 60: return .teal
+        case 50: return .blue
+        case 40: return .indigo
+        case 30: return .purple
+        default: return .gray
+        }
+    }
+    
+    private func formatWeight(_ weight: Double) -> String {
+        if weight.truncatingRemainder(dividingBy: 1) == 0 {
+            return "\(Int(weight))"
+        }
+        return String(format: "%.1f", weight)
     }
 }
 

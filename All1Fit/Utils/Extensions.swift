@@ -128,3 +128,71 @@ extension View {
         modifier(ShimmerModifier())
     }
 }
+
+// MARK: - iOS 26 Glass Effect Compatibility
+
+/// Container that provides glass effect on iOS 26+ and fallback on older versions
+/// This is a pass-through container - it doesn't add any styling itself
+struct GlassEffectContainer<Content: View>: View {
+    let content: Content
+    
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+    
+    var body: some View {
+        content
+    }
+}
+
+// MARK: - Glass Button Style (iOS 26 Compatible)
+extension View {
+    /// Applies a glass-style button background compatible with iOS 17+
+    /// On iOS 26+, use native .glassEffect() instead
+    @ViewBuilder
+    func glassButtonStyle(tint: Color = .clear, cornerRadius: CGFloat = 12) -> some View {
+        self
+            .background(
+                ZStack {
+                    if tint != .clear {
+                        tint.opacity(0.3)
+                    }
+                    Color.white.opacity(0.1)
+                }
+            )
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+    }
+    
+    /// Applies a capsule glass-style button background
+    @ViewBuilder
+    func glassCapsuleStyle(tint: Color = .clear) -> some View {
+        self
+            .background(
+                ZStack {
+                    if tint != .clear {
+                        tint.opacity(0.3)
+                    }
+                    Color.white.opacity(0.1)
+                }
+            )
+            .background(.ultraThinMaterial)
+            .clipShape(Capsule())
+    }
+    
+    /// Applies a circular glass-style background
+    @ViewBuilder
+    func glassCircleStyle(tint: Color = .clear) -> some View {
+        self
+            .background(
+                ZStack {
+                    if tint != .clear {
+                        tint.opacity(0.3)
+                    }
+                    Color.white.opacity(0.1)
+                }
+            )
+            .background(.ultraThinMaterial)
+            .clipShape(Circle())
+    }
+}

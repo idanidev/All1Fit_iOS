@@ -7,6 +7,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         FirebaseApp.configure()
+        
+        #if DEBUG
+        SimpleTestRunner.run()
+        #endif
+        
         return true
     }
     
@@ -21,12 +26,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 @main
 struct All1FitApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
     
     var body: some Scene {
         WindowGroup {
-            RootView(hasCompletedOnboarding: $hasCompletedOnboarding)
+            RootView()
                 .preferredColorScheme(appTheme.colorScheme)
         }
     }
@@ -35,14 +39,24 @@ struct All1FitApp: App {
 // MARK: - Root View
 struct RootView: View {
     @StateObject private var authService = AuthService()
-    @Binding var hasCompletedOnboarding: Bool
+    @AppStorage("hasCompletedOnboarding") private var localOnboardingComplete = false
+    
+    /// Combined onboarding status: local OR Firebase
+    private var hasCompletedOnboarding: Bool {
+        localOnboardingComplete || authService.hasCompletedOnboarding
+    }
     
     var body: some View {
         Group {
             if !authService.isReady {
                 SplashView()
             } else if !hasCompletedOnboarding {
-                OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
+                OnboardingView(onComplete: {
+                    Task {
+                        await authService.completeOnboarding()
+                        localOnboardingComplete = true
+                    }
+                })
             } else if authService.isAuthenticated {
                 MainTabView()
             } else {
@@ -50,81 +64,84 @@ struct RootView: View {
             }
         }
         .environmentObject(authService)
-        .animation(.smooth(duration: 0.4), value: authService.isReady)
-        .animation(.smooth(duration: 0.4), value: authService.isAuthenticated)
-        .animation(.smooth(duration: 0.4), value: hasCompletedOnboarding)
+        .animation(.easeInOut(duration: 0.3), value: authService.isReady)
+        .animation(.easeInOut(duration: 0.3), value: authService.isAuthenticated)
+        .animation(.easeInOut(duration: 0.3), value: hasCompletedOnboarding)
     }
 }
 
-// MARK: - App Theme
-enum AppTheme: String, CaseIterable {
-    case system, light, dark
-    
-    var colorScheme: ColorScheme? {
-        switch self {
-        case .system: return nil
-        case .light: return .light
-        case .dark: return .dark
-        }
-    }
-    
-    var displayName: String {
-        switch self {
-        case .system: return "Automático"
-        case .light: return "Claro"
-        case .dark: return "Oscuro"
-        }
-    }
-}
-
-// MARK: - Splash View (iOS 26 Liquid Glass)
+// MARK: - Splash View
 struct SplashView: View {
-    @State private var logoScale: CGFloat = 0.8
+    @State private var logoScale: CGFloat = 0.5
     @State private var logoOpacity: Double = 0
+    @State private var glowScale: CGFloat = 0.6
+    @State private var glowOpacity: Double = 0
     
     var body: some View {
         ZStack {
-            // ✅ iOS 26: Mesh gradient background
-            MeshGradient(
-                width: 3,
-                height: 3,
-                points: [
-                    [0, 0], [0.5, 0], [1, 0],
-                    [0, 0.5], [0.5, 0.5], [1, 0.5],
-                    [0, 1], [0.5, 1], [1, 1]
-                ],
-                colors: [
-                    .black, Color(hex: "1a1a2e"), .black,
-                    Color(hex: "16213e"), Color(hex: "0f3460"), Color(hex: "1a1a2e"),
-                    .black, Color(hex: "1a1a2e"), .black
-                ]
-            )
-            .ignoresSafeArea()
+            // Dark background
+            Color(red: 0.04, green: 0.04, blue: 0.06)
+                .ignoresSafeArea()
             
-            VStack(spacing: 32) {
-                Image("Logo")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 200)
-                    .scaleEffect(logoScale)
-                    .opacity(logoOpacity)
-                
-                // ✅ iOS 26: Glass effect en el loader
-                ProgressView()
-                    .controlSize(.large)
-                    .tint(.orange)
-                    .padding(20)
-                    .glassEffect(.regular.tint(.orange.opacity(0.3)), in: .circle)
+            // Animated glow rings
+            ForEach(0..<3, id: \.self) { i in
+                Circle()
+                    .stroke(
+                        LinearGradient(
+                            colors: [.orange.opacity(0.4), .red.opacity(0.2)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 2
+                    )
+                    .frame(width: 200 + CGFloat(i * 60), height: 200 + CGFloat(i * 60))
+                    .scaleEffect(glowScale)
+                    .opacity(glowOpacity * (0.6 - Double(i) * 0.15))
             }
+            
+            // Main glow effect behind logo
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [.orange.opacity(0.5), .red.opacity(0.2), .clear],
+                        center: .center,
+                        startRadius: 0,
+                        endRadius: 180
+                    )
+                )
+                .frame(width: 350, height: 350)
+                .scaleEffect(glowScale)
+                .opacity(glowOpacity)
+            
+            // Logo with dramatic zoom
+            Image("Logo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 250)
+                .scaleEffect(logoScale)
+                .opacity(logoOpacity)
         }
         .onAppear {
-            withAnimation(.spring(duration: 0.8, bounce: 0.4)) {
+            // Initial dramatic appear animation
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
                 logoScale = 1.0
                 logoOpacity = 1.0
+                glowScale = 1.0
+                glowOpacity = 0.8
+            }
+            
+            // Start breathing pulse after initial animation
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
+                    logoScale = 1.15
+                    glowScale = 1.3
+                    glowOpacity = 1.0
+                }
             }
         }
     }
 }
+
 
 // MARK: - Color Extension
 extension Color {
@@ -155,4 +172,40 @@ extension Color {
 
 #Preview {
     SplashView()
+}
+
+// MARK: - Runtime Test Runner (Debug)
+struct SimpleTestRunner {
+    static func run() {
+        print("\n🧪 ----- STARTING RUNTIME UNIT TESTS -----")
+        
+        testEjercicioIcons()
+        testRMFormatting()
+        
+        print("✅ ----- ALL RUNTIME TESTS PASSED -----\n")
+    }
+    
+    // Test 1: Verify dynamic icon logic
+    static func testEjercicioIcons() {
+        let clean = Ejercicio(name: "Clean", rmHistory: [])
+        assert(clean.icon == "figure.cross.training", "❌ TEST FAILED: 'Clean' should have 'figure.cross.training' icon")
+        
+        let curl = Ejercicio(name: "Bicep Curl", rmHistory: [])
+        assert(curl.icon == "dumbbell.fill", "❌ TEST FAILED: 'Bicep Curl' should have 'dumbbell.fill' icon")
+        
+        print("   ✅ Ejercicio Icons Logic: PASS")
+    }
+    
+    // Test 2: Verify RM formatting or calculations if any
+    static func testRMFormatting() {
+        let history = [
+            RMEntry(valor: 100.0, fecha: Date()),
+            RMEntry(valor: 105.5, fecha: Date().addingTimeInterval(100)) // Latest
+        ]
+        let exercise = Ejercicio(name: "Test", rmHistory: history)
+        
+        assert(exercise.ultimoRM?.valor == 105.5, "❌ TEST FAILED: ultimoRM should be 105.5")
+        
+        print("   ✅ RM Calculation Logic: PASS")
+    }
 }

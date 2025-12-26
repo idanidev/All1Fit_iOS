@@ -1,25 +1,71 @@
 import SwiftUI
+import FirebaseAuth
+import FirebaseFirestore
+import FirebaseStorage
+import PhotosUI
 
 // MARK: - Main Tab View (iOS 26 Liquid Glass TabBar)
 struct MainTabView: View {
     @EnvironmentObject var authService: AuthService
+    @StateObject private var userWorkoutService = UserWorkoutService()
     @State private var selectedTab = 0
+    @State private var showingAddSheet = false
+    @State private var showingAddRM = false
+    @State private var showingAddWorkout = false
     
     var body: some View {
-        TabView(selection: $selectedTab) {
-            RMListView()
-                .tabItem {
-                    Label("RMs", systemImage: "dumbbell.fill")
+        ZStack(alignment: .bottom) {
+            TabView(selection: $selectedTab) {
+                RMListView()
+                    .tabItem {
+                        Label("RMs", systemImage: "dumbbell.fill")
+                    }
+                    .tag(0)
+                
+                WorkoutsView()
+                    .environmentObject(userWorkoutService)
+                    .tabItem {
+                        Label("Entrenos", systemImage: "figure.run")
+                    }
+                    .tag(1)
+                
+                // Mobility only for admin
+                if authService.isAdmin {
+                    MobilityView()
+                        .tabItem {
+                            Label("Movilidad", systemImage: "figure.flexibility")
+                        }
+                        .tag(3)
                 }
-                .tag(0)
+                
+                SettingsView()
+                    .tabItem {
+                        Label("Ajustes", systemImage: "gearshape.fill")
+                    }
+                    .tag(4)
+            }
+            .tint(.orange)
             
-            SettingsView()
-                .tabItem {
-                    Label("Ajustes", systemImage: "gearshape.fill")
-                }
-                .tag(1)
+
         }
-        .tint(.orange)
+        .confirmationDialog("¿Qué quieres añadir?", isPresented: $showingAddSheet, titleVisibility: .visible) {
+            Button("Nuevo RM") {
+                showingAddRM = true
+            }
+            Button("Nuevo Entreno") {
+                showingAddWorkout = true
+            }
+            Button("Cancelar", role: .cancel) {}
+        }
+        .sheet(isPresented: $showingAddRM) {
+            EjercicioFormView(mode: .new) { name, rm in
+                // This will be handled by RMListView's refresh
+            }
+        }
+        .sheet(isPresented: $showingAddWorkout) {
+            WorkoutFormView()
+                .environmentObject(userWorkoutService)
+        }
     }
 }
 
@@ -30,6 +76,7 @@ struct SettingsView: View {
     @AppStorage("weightUnit") private var weightUnit: WeightUnit = .kg
     @State private var showingLogoutConfirmation = false
     @State private var showingDeleteConfirmation = false
+    @State private var showingProfileEdit = false
     
     var body: some View {
         NavigationStack {
@@ -51,6 +98,18 @@ struct SettingsView: View {
             }
             .navigationTitle("Ajustes")
             .listStyle(.insetGrouped)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Image("Logo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 80) // Reduced to fit Dynamic Island
+                        .shadow(color: .white.opacity(0.5), radius: 10)
+                }
+            }
+            .sheet(isPresented: $showingProfileEdit) {
+                ProfileEditView()
+            }
         }
     }
     
@@ -58,37 +117,51 @@ struct SettingsView: View {
     private var userSection: some View {
         Section {
             if let user = authService.user {
-                HStack(spacing: 16) {
-                    // Avatar with glass effect
-                    ZStack {
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [.orange, .red],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
+                Button {
+                    showingProfileEdit = true
+                } label: {
+                    HStack(spacing: 16) {
+                        // Avatar
+                        ZStack {
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [.orange, .red],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
                                 )
-                            )
-                            .frame(width: 60, height: 60)
+                                .frame(width: 60, height: 60)
+                            
+                            Text(user.displayName?.prefix(1).uppercased() ?? "U")
+                                .font(.title2.bold())
+                                .foregroundStyle(.white)
+                        }
                         
-                        Text(user.displayName?.prefix(1).uppercased() ?? "U")
-                            .font(.title2.bold())
-                            .foregroundStyle(.white)
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(user.displayName ?? "Usuario")
-                            .font(.headline)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(user.displayName ?? "Usuario")
+                                .font(.headline)
+                                .foregroundStyle(.primary)
+                            
+                            Text(user.email ?? "")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                         
-                        Text(user.email ?? "")
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.tertiary)
                     }
-                    
-                    Spacer()
+                    .padding(.vertical, 8)
                 }
-                .padding(.vertical, 8)
+                .buttonStyle(.plain)
             }
+        } header: {
+            Text("Perfil")
+        } footer: {
+            Text("Toca para editar tu perfil")
         }
     }
     
@@ -194,3 +267,234 @@ struct SettingsView: View {
     MainTabView()
         .environmentObject(AuthService())
 }
+
+// MARK: - Profile Edit View
+struct ProfileEditView: View {
+    @EnvironmentObject var authService: AuthService
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var displayName = ""
+    @State private var isSaving = false
+    @State private var showSuccess = false
+    @State private var errorMessage: String?
+    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var profileImage: UIImage?
+    @State private var photoURL: String?
+    
+    private let db = Firestore.firestore()
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                // Profile Section
+                Section {
+                    // Avatar with PhotosPicker
+                    HStack {
+                        Spacer()
+                        PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                            ZStack {
+                                if let profileImage = profileImage {
+                                    Image(uiImage: profileImage)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 100, height: 100)
+                                        .clipShape(Circle())
+                                } else if let photoURL = photoURL, let url = URL(string: photoURL) {
+                                    AsyncImage(url: url) { image in
+                                        image
+                                            .resizable()
+                                            .scaledToFill()
+                                    } placeholder: {
+                                        avatarPlaceholder
+                                    }
+                                    .frame(width: 100, height: 100)
+                                    .clipShape(Circle())
+                                } else {
+                                    avatarPlaceholder
+                                }
+                                
+                                // Camera badge
+                                Circle()
+                                    .fill(Color.orange)
+                                    .frame(width: 30, height: 30)
+                                    .overlay(
+                                        Image(systemName: "camera.fill")
+                                            .font(.caption)
+                                            .foregroundStyle(.white)
+                                    )
+                                    .offset(x: 35, y: 35)
+                            }
+                        }
+                        Spacer()
+                    }
+                    .listRowBackground(Color.clear)
+                    .onChange(of: selectedPhotoItem) { _, newItem in
+                        Task {
+                            if let data = try? await newItem?.loadTransferable(type: Data.self),
+                               let uiImage = UIImage(data: data) {
+                                profileImage = uiImage
+                            }
+                        }
+                    }
+                }
+                
+                // Editable Fields
+                Section("Información Personal") {
+                    HStack {
+                        Label("Nombre", systemImage: "person")
+                        Spacer()
+                        TextField("Tu nombre", text: $displayName)
+                            .multilineTextAlignment(.trailing)
+                    }
+                    
+                    HStack {
+                        Label("Email", systemImage: "envelope")
+                        Spacer()
+                        Text(authService.user?.email ?? "")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                
+                // Stats Section (read-only)
+                Section("Estadísticas") {
+                    HStack {
+                        Label("Usuario desde", systemImage: "calendar")
+                        Spacer()
+                        Text(authService.user?.metadata.creationDate?.formatted(date: .abbreviated, time: .omitted) ?? "")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                
+                // Error message
+                if let error = errorMessage {
+                    Section {
+                        Text(error)
+                            .foregroundStyle(.red)
+                    }
+                }
+            }
+            .navigationTitle("Editar Perfil")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancelar") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .confirmationAction) {
+                    Button {
+                        saveProfile()
+                    } label: {
+                        if isSaving {
+                            ProgressView()
+                        } else {
+                            Text("Guardar")
+                                .fontWeight(.semibold)
+                        }
+                    }
+                    .disabled(displayName.isEmpty || isSaving)
+                }
+            }
+            .onAppear {
+                displayName = authService.user?.displayName ?? ""
+            }
+            .overlay {
+                if showSuccess {
+                    successOverlay
+                }
+            }
+        }
+    }
+    
+    // MARK: - Success Overlay
+    private var successOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.5)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 16) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 60))
+                    .foregroundStyle(.green)
+                
+                Text("¡Guardado!")
+                    .font(.title2.bold())
+                    .foregroundStyle(.white)
+            }
+            .padding(40)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 24))
+        }
+    }
+    
+    // MARK: - Avatar Placeholder
+    private var avatarPlaceholder: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [.orange, .red],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 100, height: 100)
+            
+            Text(displayName.prefix(1).uppercased())
+                .font(.system(size: 40, weight: .bold))
+                .foregroundStyle(.white)
+        }
+    }
+    
+    // MARK: - Save Profile
+    private func saveProfile() {
+        guard let user = authService.user else { return }
+        
+        isSaving = true
+        errorMessage = nil
+        
+        Task {
+            do {
+                var newPhotoURL: String? = nil
+                
+                // Upload image if selected
+                if let profileImage = profileImage,
+                   let imageData = profileImage.jpegData(compressionQuality: 0.7) {
+                    let storageRef = Storage.storage().reference()
+                        .child("users/\(user.uid)/profile.jpg")
+                    
+                    _ = try await storageRef.putDataAsync(imageData)
+                    newPhotoURL = try await storageRef.downloadURL().absoluteString
+                }
+                
+                // Update Firebase Auth profile
+                let changeRequest = user.createProfileChangeRequest()
+                changeRequest.displayName = displayName
+                if let photoURLString = newPhotoURL, let url = URL(string: photoURLString) {
+                    changeRequest.photoURL = url
+                }
+                try await changeRequest.commitChanges()
+                
+                // Update Firestore user document
+                var updateData: [String: Any] = ["displayName": displayName]
+                if let photoURLString = newPhotoURL {
+                    updateData["photoURL"] = photoURLString
+                }
+                try await db.collection("users").document(user.uid).setData(updateData, merge: true)
+                
+                // Show success and dismiss
+                showSuccess = true
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                
+                try? await Task.sleep(nanoseconds: 800_000_000)
+                dismiss()
+            } catch {
+                isSaving = false
+                errorMessage = error.localizedDescription
+                UINotificationFeedbackGenerator().notificationOccurred(.error)
+            }
+        }
+    }
+}
+

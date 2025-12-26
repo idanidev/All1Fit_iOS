@@ -1,21 +1,28 @@
 import SwiftUI
 import FirebaseAuth
 import FirebaseCore
+import FirebaseFirestore
 import AuthenticationServices
 import CryptoKit
 import GoogleSignIn
+import os
 
 // MARK: - Auth Service
 @MainActor
 class AuthService: ObservableObject {
+    private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.all1fit", category: "AuthService")
+
     @Published private(set) var user: User?
     @Published private(set) var isAuthenticated = false
     @Published private(set) var isReady = false
+    @Published private(set) var hasCompletedOnboarding = false
     @Published var isLoading = false
     @Published var errorMessage: String?
+    @Published private(set) var isAdmin = false
     
     private var authStateListener: AuthStateDidChangeListenerHandle?
     private var currentNonce: String?
+    private let db = Firestore.firestore()
     
     init() {
         setupAuthListener()
@@ -29,10 +36,100 @@ class AuthService: ObservableObject {
                 self.user = firebaseUser
                 self.isAuthenticated = firebaseUser != nil
                 
+                // Fetch user data when user logs in
+                if firebaseUser != nil {
+                    await self.fetchUserData()
+                } else {
+                    self.hasCompletedOnboarding = false
+                    self.isAdmin = false
+                }
+                
                 if !self.isReady {
                     self.isReady = true
                 }
             }
+        }
+    }
+    
+    // MARK: - User Data
+    func fetchUserData() async {
+        guard let userId = user?.uid else { return }
+        
+        // First, ensure user document exists
+        await createUserDocumentIfNeeded()
+        
+        do {
+            let doc = try await db.collection("users").document(userId).getDocument()
+            if let data = doc.data() {
+                if let completed = data["hasCompletedOnboarding"] as? Bool {
+                    hasCompletedOnboarding = completed
+                }
+                if let admin = data["isAdmin"] as? Bool {
+                    isAdmin = admin
+                }
+            }
+        } catch {
+            // If fetch fails, check local storage as fallback
+            hasCompletedOnboarding = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+            isAdmin = false
+        }
+    }
+    
+    /// Creates the user document in Firestore if it doesn't exist
+    private func createUserDocumentIfNeeded() async {
+        guard let user = user else { return }
+        
+        let userRef = db.collection("users").document(user.uid)
+        
+        do {
+            let doc = try await userRef.getDocument()
+            
+            // Only create if document doesn't exist or has no data
+            if !doc.exists || doc.data() == nil {
+                let userData: [String: Any] = [
+                    "displayName": user.displayName ?? "",
+                    "email": user.email ?? "",
+                    "photoURL": user.photoURL?.absoluteString ?? "",
+                    "createdAt": FieldValue.serverTimestamp(),
+                    "isAdmin": false,
+                    "hasCompletedOnboarding": false,
+                    "preferences": [
+                        "weightUnit": "kg",
+                        "theme": "system"
+                    ],
+                    "stats": [
+                        "totalExercises": 0,
+                        "totalWorkouts": 0
+                    ]
+                ]
+                
+                try await userRef.setData(userData, merge: true)
+                logger.info("✅ User document created for \(user.uid)")
+            }
+        } catch {
+            logger.error("❌ Error creating user document: \(error.localizedDescription)")
+        }
+    }
+    // ...
+    
+    func completeOnboarding() async {
+        guard let userId = user?.uid else {
+            // If not logged in, just save locally
+            UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+            hasCompletedOnboarding = true
+            return
+        }
+        
+        do {
+            try await db.collection("users").document(userId).setData([
+                "hasCompletedOnboarding": true
+            ], merge: true)
+            hasCompletedOnboarding = true
+            UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+        } catch {
+            // Save locally as fallback
+            UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+            hasCompletedOnboarding = true
         }
     }
     
@@ -49,6 +146,10 @@ class AuthService: ObservableObject {
         
         do {
             try await Auth.auth().signIn(withEmail: email, password: password)
+            
+            // Save credentials for biometric login
+            UserDefaults.standard.set(email, forKey: "lastEmail")
+            _ = KeychainHelper.savePassword(password, for: email)
         } catch let error as NSError {
             errorMessage = mapError(error)
         }

@@ -62,6 +62,12 @@ struct RMChartView: View {
         .navigationTitle(ejercicio.name)
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
+            ToolbarItem(placement: .principal) {
+                Image("Logo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 32)
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     showingAddRM = true
@@ -152,31 +158,14 @@ struct RMChartView: View {
     
     // MARK: - Time Range Picker
     private var timeRangePicker: some View {
-        GlassEffectContainer {
-            HStack(spacing: 8) {
-                ForEach(TimeRange.allCases, id: \.self) { range in
-                    Button {
-                        withAnimation(.spring(duration: 0.3)) {
-                            selectedTimeRange = range
-                        }
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    } label: {
-                        Text(range.title)
-                            .font(.subheadline.bold())
-                            .foregroundStyle(selectedTimeRange == range ? .white : .secondary)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                    }
-                    .glassEffect(
-                        selectedTimeRange == range
-                        ? .regular.tint(.orange).interactive()
-                        : .clear,
-                        in: .capsule
-                    )
-                    .glassEffectID(range.rawValue, in: animation)
-                }
+        Picker("Rango", selection: $selectedTimeRange) {
+            ForEach(TimeRange.allCases, id: \.self) { range in
+                Text(range.title).tag(range)
             }
-            .padding(4)
+        }
+        .pickerStyle(.segmented)
+        .onChange(of: selectedTimeRange) { _, _ in
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
         }
     }
     
