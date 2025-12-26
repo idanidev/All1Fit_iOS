@@ -6,7 +6,7 @@ struct WorkoutResult: Identifiable, Codable, Hashable {
     @DocumentID var id: String?
     let workoutId: String
     let userId: String
-    let date: Date
+    @ServerTimestamp var date: Date?  // Firebase Timestamp → Date conversion
     let timeSeconds: Int // Total time in seconds
     let rounds: Int? // For AMRAP workouts
     let notes: String?
@@ -25,7 +25,7 @@ struct WorkoutResult: Identifiable, Codable, Hashable {
     }
     
     var formattedDate: String {
-        date.formatted(date: .abbreviated, time: .omitted)
+        (date ?? Date()).formatted(date: .abbreviated, time: .omitted)
     }
     
     // Check if this is a PR (Personal Record)
