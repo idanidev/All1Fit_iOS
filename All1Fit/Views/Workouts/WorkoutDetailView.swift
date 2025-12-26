@@ -5,6 +5,9 @@ struct WorkoutDetailView: View {
     let workout: Workout
     @EnvironmentObject var workoutService: WorkoutService
     @State private var showingAddResult = false
+    @State private var resultToEdit: WorkoutResult?
+    @State private var resultToDelete: WorkoutResult?
+    @State private var showDeleteConfirmation = false
     
     private var results: [WorkoutResult] {
         workoutService.results[workout.id] ?? []
@@ -65,6 +68,34 @@ struct WorkoutDetailView: View {
         }
         .sheet(isPresented: $showingAddResult) {
             WorkoutResultSheet(workout: workout)
+        }
+        .sheet(item: $resultToEdit) { result in
+            WorkoutResultSheet(workout: workout, editingResult: result)
+        }
+        .confirmationDialog(
+            "¿Eliminar resultado?",
+            isPresented: $showDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Eliminar", role: .destructive) {
+                if let result = resultToDelete {
+                    Task {
+                        try? await workoutService.deleteResult(result)
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    }
+                }
+            }
+            Button("Cancelar", role: .cancel) {}
+        } message: {
+            Text("Esta acción no se puede deshacer")
+        }
+        .overlay {
+            if workoutService.isLoading && results.isEmpty {
+                ProgressView()
+                    .scaleEffect(1.5)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color(uiColor: .systemGroupedBackground).opacity(0.8))
+            }
         }
         .task {
             await workoutService.fetchResults(for: workout.id)
@@ -189,12 +220,43 @@ struct WorkoutDetailView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            .padding(.horizontal)
+            .padding(.top)
             
+            // Results with context menu for edit/delete
             ForEach(results) { result in
-                ResultRow(result: result, isPR: result.id == personalRecord?.id, workout: workout)
+                HStack {
+                    ResultRow(result: result, isPR: result.id == personalRecord?.id, workout: workout)
+                    
+                    // Visual hint for actions
+                    Image(systemName: "ellipsis.circle")
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                }
+                .contentShape(Rectangle())
+                .contextMenu {
+                    Button {
+                        resultToEdit = result
+                    } label: {
+                        Label("Editar", systemImage: "pencil")
+                    }
+                    
+                    Button(role: .destructive) {
+                        resultToDelete = result
+                        showDeleteConfirmation = true
+                    } label: {
+                        Label("Eliminar", systemImage: "trash")
+                    }
+                }
+                .padding(.horizontal)
+                
+                if result.id != results.last?.id {
+                    Divider()
+                        .padding(.leading)
+                }
             }
+            .padding(.bottom)
         }
-        .padding()
         .background(Color(uiColor: .secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }

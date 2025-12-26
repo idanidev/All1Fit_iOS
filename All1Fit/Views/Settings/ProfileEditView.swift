@@ -90,12 +90,15 @@ struct ProfileEditView: View {
                     Button {
                         saveProfile()
                     } label: {
-                        if isSaving {
-                            ProgressView()
-                        } else {
-                            Text("Guardar")
-                                .fontWeight(.semibold)
+                        Group {
+                            if isSaving {
+                                ProgressView()
+                            } else {
+                                Text("Guardar")
+                                    .fontWeight(.semibold)
+                            }
                         }
+                        .animation(.none, value: isSaving)
                     }
                     .disabled(displayName.isEmpty || isSaving)
                 }

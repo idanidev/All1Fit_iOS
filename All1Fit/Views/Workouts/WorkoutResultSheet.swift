@@ -5,6 +5,7 @@ import os
 struct WorkoutResultSheet: View {
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.all1fit", category: "WorkoutResult")
     let workout: Workout
+    var editingResult: WorkoutResult? = nil
     @EnvironmentObject var workoutService: WorkoutService
     @Environment(\.dismiss) private var dismiss
     
@@ -15,6 +16,10 @@ struct WorkoutResultSheet: View {
     @State private var notes = ""
     @State private var isSaving = false
     @State private var showSuccess = false
+    
+    private var isEditing: Bool {
+        editingResult != nil
+    }
     
     private var categoryColor: Color {
         switch workout.category {
@@ -64,13 +69,23 @@ struct WorkoutResultSheet: View {
                 .padding()
             }
             .background(Color(uiColor: .systemGroupedBackground))
-            .navigationTitle("Registrar Resultado")
+            .navigationTitle(isEditing ? "Editar Resultado" : "Registrar Resultado")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancelar") {
                         dismiss()
                     }
+                }
+            }
+            .onAppear {
+                if let result = editingResult {
+                    // Load existing values
+                    hours = result.timeSeconds / 3600
+                    minutes = (result.timeSeconds % 3600) / 60
+                    seconds = result.timeSeconds % 60
+                    rounds = result.rounds ?? 0
+                    notes = result.notes ?? ""
                 }
             }
             .overlay {
@@ -323,12 +338,23 @@ struct WorkoutResultSheet: View {
         
         Task {
             do {
-                try await workoutService.saveResult(
-                    workoutId: workout.id,
-                    timeSeconds: totalSeconds,
-                    rounds: workout.isForTime ? nil : rounds,
-                    notes: notes.isEmpty ? nil : notes
-                )
+                if let result = editingResult {
+                    // Update existing result
+                    try await workoutService.updateResult(
+                        result,
+                        timeSeconds: totalSeconds,
+                        rounds: workout.isForTime ? nil : rounds,
+                        notes: notes.isEmpty ? nil : notes
+                    )
+                } else {
+                    // Create new result
+                    try await workoutService.saveResult(
+                        workoutId: workout.id,
+                        timeSeconds: totalSeconds,
+                        rounds: workout.isForTime ? nil : rounds,
+                        notes: notes.isEmpty ? nil : notes
+                    )
+                }
                 
                 showSuccess = true
                 UINotificationFeedbackGenerator().notificationOccurred(.success)

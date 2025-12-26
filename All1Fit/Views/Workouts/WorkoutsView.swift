@@ -34,47 +34,23 @@ struct WorkoutsView: View {
             ZStack(alignment: .bottomTrailing) {
                 ScrollView {
                     VStack(spacing: 20) {
-                        // DEBUG INFO (Temporary)
-                        if userWorkoutService.isLoading {
-                            ProgressView("Cargando...")
-                        } else {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("DEBUG: \(userWorkoutService.userWorkouts.count) entrenos encontrados")
-                                    .font(.caption.bold())
-                                    .foregroundStyle(.orange)
-                                if let error = userWorkoutService.errorMessage {
-                                    Text("Error: \(error)").foregroundStyle(.red)
-                                }
-                                Text("Cats: \(userWorkoutService.userWorkouts.map { $0.category }.joined(separator: ", "))")
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(2)
-                                
-                                Divider()
-                                
-                                Text("RESULTS DEBUG:")
-                                    .font(.caption.bold())
-                                    .foregroundStyle(.green)
-                                Text("UID: \(Auth.auth().currentUser?.uid ?? "NO USER")")
-                                    .font(.caption2)
-                                    .foregroundStyle(.blue)
-                                Text("\(workoutService.results.count) workouts con resultados")
-                                    .font(.caption2)
-                                Text("Total: \(workoutService.results.values.flatMap { $0 }.count)")
-                                    .font(.caption2)
-                                Text("IDs: \(workoutService.results.keys.joined(separator: ", ")))")
-                                    .font(.caption2)
-                                    .lineLimit(3)
-                            }
-                            .padding(8)
-                            .background(Color.black.opacity(0.1))
-                            .cornerRadius(8)
-                        }
                         // Category selector
                         categorySelector
                         
-                        // Workouts grid
-                        workoutsGrid
+                        // Loading state
+                        if userWorkoutService.isLoading && allWorkouts.isEmpty {
+                            VStack(spacing: 16) {
+                                ForEach(0..<3, id: \.self) { _ in
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(Color(uiColor: .secondarySystemGroupedBackground))
+                                        .frame(height: 100)
+                                        .shimmer()
+                                }
+                            }
+                        } else {
+                            // Workouts grid
+                            workoutsGrid
+                        }
                     }
                     .padding()
                 }

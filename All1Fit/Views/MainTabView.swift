@@ -365,8 +365,8 @@ struct ProfileEditView: View {
                     }
                 }
                 
-                // Error message
-                if let error = errorMessage {
+                // Error message (hide "does not exist" errors as they're expected for new users)
+                if let error = errorMessage, !error.contains("does not exist") {
                     Section {
                         Text(error)
                             .foregroundStyle(.red)
@@ -398,6 +398,7 @@ struct ProfileEditView: View {
             }
             .onAppear {
                 displayName = authService.user?.displayName ?? ""
+                photoURL = authService.user?.photoURL?.absoluteString
             }
             .overlay {
                 if showSuccess {

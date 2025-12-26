@@ -7,7 +7,7 @@ struct WorkoutHistoryChartView: View {
     let isForTime: Bool
     
     private var sortedResults: [WorkoutResult] {
-        results.sorted { $0.date < $1.date }
+        results.sorted { ($0.date ?? Date.distantPast) < ($1.date ?? Date.distantPast) }
     }
     
     var body: some View {
@@ -37,7 +37,7 @@ struct WorkoutHistoryChartView: View {
             if isForTime {
                 // For time workouts: lower is better
                 LineMark(
-                    x: .value("Fecha", result.date),
+                    x: .value("Fecha", result.date ?? Date()),
                     y: .value("Tiempo", Double(result.timeSeconds) / 60.0)
                 )
                 .foregroundStyle(.orange.gradient)
@@ -49,14 +49,14 @@ struct WorkoutHistoryChartView: View {
                 }
                 
                 AreaMark(
-                    x: .value("Fecha", result.date),
+                    x: .value("Fecha", result.date ?? Date()),
                     y: .value("Tiempo", Double(result.timeSeconds) / 60.0)
                 )
                 .foregroundStyle(.orange.opacity(0.1).gradient)
             } else {
                 // AMRAP: more rounds is better
                 LineMark(
-                    x: .value("Fecha", result.date),
+                    x: .value("Fecha", result.date ?? Date()),
                     y: .value("Rondas", result.rounds ?? 0)
                 )
                 .foregroundStyle(.blue.gradient)
@@ -68,7 +68,7 @@ struct WorkoutHistoryChartView: View {
                 }
                 
                 AreaMark(
-                    x: .value("Fecha", result.date),
+                    x: .value("Fecha", result.date ?? Date()),
                     y: .value("Rondas", result.rounds ?? 0)
                 )
                 .foregroundStyle(.blue.opacity(0.1).gradient)

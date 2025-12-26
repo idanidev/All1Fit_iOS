@@ -92,6 +92,45 @@ class WorkoutService: ObservableObject {
         }
     }
     
+    // MARK: - Update Result
+    func updateResult(_ result: WorkoutResult, timeSeconds: Int, rounds: Int?, notes: String?) async throws {
+        guard let userId = Auth.auth().currentUser?.uid,
+              let resultId = result.id else { return }
+        
+        var updateData: [String: Any] = [
+            "timeSeconds": timeSeconds
+        ]
+        
+        if let rounds = rounds {
+            updateData["rounds"] = rounds
+        }
+        
+        if let notes = notes {
+            updateData["notes"] = notes
+        }
+        
+        try await db.collection("users")
+            .document(userId)
+            .collection("workoutResults")
+            .document(resultId)
+            .updateData(updateData)
+        
+        // Update local cache
+        if let index = results[result.workoutId]?.firstIndex(where: { $0.id == resultId }) {
+            var updatedResult = results[result.workoutId]![index]
+            // Create new result with updated values (since properties may be let)
+            results[result.workoutId]?[index] = WorkoutResult(
+                id: resultId,
+                workoutId: result.workoutId,
+                userId: result.userId,
+                date: result.date,
+                timeSeconds: timeSeconds,
+                rounds: rounds,
+                notes: notes
+            )
+        }
+    }
+    
     // MARK: - Delete Result
     func deleteResult(_ result: WorkoutResult) async throws {
         guard let userId = Auth.auth().currentUser?.uid,
