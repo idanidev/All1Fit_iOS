@@ -370,8 +370,9 @@ struct GlassTextField: View {
                 .frame(width: 24)
                 .animation(.smooth(duration: 0.2), value: isFocused)
             
-            TextField(placeholder, text: $text)
+            TextField("", text: $text, prompt: Text(placeholder).foregroundColor(.white.opacity(0.5)))
                 .focused($isFocused)
+                .foregroundStyle(.white)
                 .autocorrectionDisabled()
         }
         .padding(.horizontal, 16)
@@ -406,12 +407,13 @@ struct GlassSecureField: View {
             
             Group {
                 if isSecure {
-                    SecureField(placeholder, text: $text)
+                    SecureField("", text: $text, prompt: Text(placeholder).foregroundColor(.white.opacity(0.5)))
                 } else {
-                    TextField(placeholder, text: $text)
+                    TextField("", text: $text, prompt: Text(placeholder).foregroundColor(.white.opacity(0.5)))
                 }
             }
             .focused($isFocused)
+            .foregroundStyle(.white)
             .autocorrectionDisabled()
             
             Button {

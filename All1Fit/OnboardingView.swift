@@ -8,10 +8,11 @@ struct OnboardingView: View {
     
     private let pages: [OnboardingPage] = [
         OnboardingPage(
-            icon: "dumbbell.fill",
-            title: "Trackea tus RMs",
-            description: "Registra tus repeticiones máximas y ve tu progreso en el tiempo",
-            gradient: [Color(hex: "FF6B35"), Color(hex: "F7931E")]
+            icon: "Logo", // Will use Image("Logo") instead of system icon
+            title: "Bienvenido a All1Fit",
+            description: "Tu app para trackear RMs, workouts y mucho más",
+            gradient: [Color(hex: "FF6B35"), Color(hex: "F7931E")],
+            useLogo: true
         ),
         OnboardingPage(
             icon: "chart.line.uptrend.xyaxis",
@@ -134,8 +135,8 @@ struct OnboardingView: View {
                         onComplete()
                     }
                 }
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.white.opacity(0.7))
             }
         }
     }
@@ -147,6 +148,7 @@ struct OnboardingPage {
     let title: String
     let description: String
     let gradient: [Color]
+    var useLogo: Bool = false
 }
 
 // MARK: - Onboarding Page View
@@ -175,16 +177,25 @@ struct OnboardingPageView: View {
                     .scaleEffect(isAnimating ? 1.1 : 0.9)
                     .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: isAnimating)
                 
-                // Icon
-                Image(systemName: page.icon)
-                    .font(.system(size: 70, weight: .medium))
-                    .foregroundStyle(
-                        LinearGradient(colors: page.gradient, startPoint: .topLeading, endPoint: .bottomTrailing)
-                    )
-                    .frame(width: 140, height: 140)
-                    .background(.ultraThinMaterial, in: Circle())
-                    .scaleEffect(isAnimating ? 1.0 : 0.95)
-                    .animation(.spring(duration: 0.8).delay(0.2), value: isAnimating)
+                // Icon or Logo
+                if page.useLogo {
+                    Image("Logo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 180, height: 180)
+                        .scaleEffect(isAnimating ? 1.0 : 0.95)
+                        .animation(.spring(duration: 0.8).delay(0.2), value: isAnimating)
+                } else {
+                    Image(systemName: page.icon)
+                        .font(.system(size: 70, weight: .medium))
+                        .foregroundStyle(
+                            LinearGradient(colors: page.gradient, startPoint: .topLeading, endPoint: .bottomTrailing)
+                        )
+                        .frame(width: 140, height: 140)
+                        .background(.ultraThinMaterial, in: Circle())
+                        .scaleEffect(isAnimating ? 1.0 : 0.95)
+                        .animation(.spring(duration: 0.8).delay(0.2), value: isAnimating)
+                }
             }
             
             VStack(spacing: 16) {
