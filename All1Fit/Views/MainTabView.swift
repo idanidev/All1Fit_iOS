@@ -29,14 +29,14 @@ struct MainTabView: View {
                     }
                     .tag(1)
                 
-                // Mobility only for admin
-                if authService.isAdmin {
-                    MobilityView()
-                        .tabItem {
-                            Label("Movilidad", systemImage: "figure.flexibility")
-                        }
-                        .tag(3)
-                }
+                // TODO: Mobility - Coming in v1.1
+                // if authService.isAdmin {
+                //     MobilityView()
+                //         .tabItem {
+                //             Label("Movilidad", systemImage: "figure.flexibility")
+                //         }
+                //         .tag(3)
+                // }
                 
                 SettingsView()
                     .tabItem {

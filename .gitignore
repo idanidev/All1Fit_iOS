@@ -35,3 +35,6 @@ Podfile.lock
 GoogleService-Info.plist
 migration/serviceAccountKey.json
 migration/
+
+# Mobility assets (coming in v1.1)
+.mobility_assets/
