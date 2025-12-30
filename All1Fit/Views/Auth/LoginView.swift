@@ -298,7 +298,7 @@ struct LoginView: View {
     private var switchModeSection: some View {
         HStack(spacing: 4) {
             Text(mode == .login ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.white.opacity(0.7))
             
             Button(mode == .login ? "Regístrate" : "Inicia sesión") {
                 withAnimation(.spring(duration: 0.4)) {
