@@ -201,6 +201,7 @@ struct RMChartView: View {
                     PointMark(
                         x: .value("Fecha", entry.fecha),
                         y: .value("Peso", chartAnimated ? weightUnit.convert(entry.valor) : 0)
+                    )
                     .foregroundStyle(.orange)
                     .symbolSize(80)
                 }
