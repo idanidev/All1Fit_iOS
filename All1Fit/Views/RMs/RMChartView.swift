@@ -61,7 +61,7 @@ struct RMChartView: View {
         .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle(ejercicio.name)
         .navigationBarTitleDisplayMode(.inline)
-        .logoToolbar(height: 80)
+        .logoToolbar(height: 100)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -229,10 +229,11 @@ struct RMChartView: View {
                 AxisMarks(position: .leading)
             }
             .chartXAxis {
-                AxisMarks(values: .automatic(desiredCount: 4)) { value in
+                AxisMarks(values: .automatic(desiredCount: 3)) { value in
                     if let date = value.as(Date.self) {
                         AxisValueLabel {
-                            Text(date.formatted(.dateTime.day().month(.abbreviated)))
+                            Text(date.formatted(.dateTime.day(.twoDigits).month(.twoDigits)))
+                                .font(.caption2)
                         }
                     }
                     AxisGridLine()
