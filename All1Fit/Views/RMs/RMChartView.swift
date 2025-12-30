@@ -60,14 +60,8 @@ struct RMChartView: View {
         }
         .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle(ejercicio.name)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                Image("Logo")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 32)
-            }
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     showingAddRM = true
@@ -234,7 +228,14 @@ struct RMChartView: View {
                 AxisMarks(position: .leading)
             }
             .chartXAxis {
-                AxisMarks(values: .automatic(desiredCount: 4))
+                AxisMarks(values: .automatic(desiredCount: 4)) { value in
+                    if let date = value.as(Date.self) {
+                        AxisValueLabel {
+                            Text(date.formatted(.dateTime.day().month(.abbreviated)))
+                        }
+                    }
+                    AxisGridLine()
+                }
             }
             .chartOverlay { proxy in
                 GeometryReader { geo in
