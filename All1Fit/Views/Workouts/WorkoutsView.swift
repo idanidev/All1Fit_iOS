@@ -36,7 +36,7 @@ struct WorkoutsView: View {
         switch selectedCategory {
         case .crossfit: return [.red, .black]
         case .running: return [.orange, .yellow]
-        case .competition: return [.blue, .purple]
+        case .competition: return [.purple, .pink]
         }
     }
     
@@ -44,7 +44,7 @@ struct WorkoutsView: View {
         switch selectedCategory {
         case .crossfit: return .red
         case .running: return .orange
-        case .competition: return .blue
+        case .competition: return .purple
         }
     }
     
