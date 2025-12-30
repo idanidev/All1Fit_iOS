@@ -61,6 +61,7 @@ struct RMChartView: View {
         .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle(ejercicio.name)
         .navigationBarTitleDisplayMode(.inline)
+        .logoToolbar(height: 80)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
