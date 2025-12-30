@@ -250,14 +250,8 @@ struct SettingsView: View {
             }
             
             // Contact
-            Link(destination: URL(string: "mailto:support@all1fit.com")!) {
+            Link(destination: URL(string: "mailto:idanideveloper@gmail.com")!) {
                 Label("Contacto", systemImage: "envelope")
-                    .foregroundStyle(.primary)
-            }
-            
-            // Privacy
-            Link(destination: URL(string: "https://all1fit.com/privacy")!) {
-                Label("Política de Privacidad", systemImage: "hand.raised")
                     .foregroundStyle(.primary)
             }
         }

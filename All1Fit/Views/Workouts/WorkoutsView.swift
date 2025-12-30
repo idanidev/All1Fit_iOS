@@ -31,12 +31,12 @@ struct WorkoutsView: View {
         }
     }
     
-    // Colores dinámicos según categoría
+    // Colores dinámicos según categoría (coincidir con etiquetas)
     private var categoryColors: [Color] {
         switch selectedCategory {
-        case .crossfit: return [.red, .black]
-        case .running: return [.orange, .yellow]
-        case .competition: return [.purple, .pink]
+        case .crossfit: return [.red, .red.opacity(0.8)]
+        case .running: return [.orange, .orange.opacity(0.8)]
+        case .competition: return [.purple, .purple.opacity(0.8)]
         }
     }
     
@@ -388,6 +388,7 @@ struct WorkoutCard: View {
             }
         }
         .padding()
+        .frame(minHeight: 130)
         .background(Color(uiColor: .secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
