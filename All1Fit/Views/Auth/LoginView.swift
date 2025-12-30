@@ -37,7 +37,7 @@ struct LoginView: View {
             
             ScrollView {
                 VStack(spacing: 32) {
-                    Spacer(minLength: 60)
+                    Spacer(minLength: 20)
                     
                     // Logo Section
                     logoSection
@@ -131,16 +131,16 @@ struct LoginView: View {
                             colors: [.orange.opacity(0.3), .clear],
                             center: .center,
                             startRadius: 0,
-                            endRadius: 120
+                            endRadius: 80
                         )
                     )
-                    .frame(width: 280, height: 280)
-                    .blur(radius: 40)
+                    .frame(width: 200, height: 200)
+                    .blur(radius: 30)
                 
                 Image("Logo")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 280)
+                    .frame(width: 200)
                     .scaleEffect(logoAnimated ? 1.0 : 0.5)
                     .opacity(logoAnimated ? 1.0 : 0)
             }
@@ -270,7 +270,7 @@ struct LoginView: View {
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             } label: {
                 HStack(spacing: 10) {
-                    // Google G Logo
+                    // Google G Logo - Black
                     ZStack {
                         Circle()
                             .fill(.white)
@@ -278,19 +278,13 @@ struct LoginView: View {
                         
                         Text("G")
                             .font(.system(size: 16, weight: .bold, design: .rounded))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.red, .yellow, .green, .blue],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
+                            .foregroundStyle(.black)
                     }
                     
                     Text("Continuar con Google")
                         .font(.headline)
                 }
-                .foregroundStyle(.primary)
+                .foregroundStyle(.black)
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)
                 .background(.white, in: Capsule())

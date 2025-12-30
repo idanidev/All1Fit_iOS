@@ -90,11 +90,11 @@ struct SettingsView: View {
                 // Preferences
                 preferencesSection
                 
+                // Support (moved before Info)
+                supportSection
+                
                 // App Info
                 appInfoSection
-                
-                // Support
-                supportSection
                 
                 // Logout
                 logoutSection
@@ -266,10 +266,11 @@ struct SettingsView: View {
     // MARK: - Logout Section
     private var logoutSection: some View {
         Section {
-            Button(role: .destructive) {
+            Button {
                 showingLogoutConfirmation = true
             } label: {
                 Label("Cerrar Sesión", systemImage: "rectangle.portrait.and.arrow.right")
+                    .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity)
             }
             .confirmationDialog(
