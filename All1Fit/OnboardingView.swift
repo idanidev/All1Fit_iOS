@@ -182,7 +182,7 @@ struct OnboardingPageView: View {
                     Image("Logo")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 180, height: 180)
+                        .frame(width: 300, height: 300)
                         .scaleEffect(isAnimating ? 1.0 : 0.95)
                         .animation(.spring(duration: 0.8).delay(0.2), value: isAnimating)
                 } else {
