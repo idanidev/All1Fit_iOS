@@ -36,8 +36,8 @@ struct LoginView: View {
             animatedBackground
             
             ScrollView {
-                VStack(spacing: 32) {
-                    Spacer(minLength: 20)
+                VStack(spacing: 24) {
+                    Spacer(minLength: 0)
                     
                     // Logo Section
                     logoSection
@@ -131,16 +131,16 @@ struct LoginView: View {
                             colors: [.orange.opacity(0.3), .clear],
                             center: .center,
                             startRadius: 0,
-                            endRadius: 80
+                            endRadius: 100
                         )
                     )
-                    .frame(width: 200, height: 200)
+                    .frame(width: 240, height: 240)
                     .blur(radius: 30)
                 
                 Image("Logo")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 200)
+                    .frame(width: 240)
                     .scaleEffect(logoAnimated ? 1.0 : 0.5)
                     .opacity(logoAnimated ? 1.0 : 0)
             }
@@ -281,7 +281,7 @@ struct LoginView: View {
                             .foregroundStyle(.black)
                     }
                     
-                    Text("Continuar con Google")
+                    Text("Iniciar sesión con Google")
                         .font(.headline)
                 }
                 .foregroundStyle(.black)
@@ -377,14 +377,13 @@ struct GlassTextField: View {
         .padding(.horizontal, 16)
         .frame(height: 56)
         .background(
-            ZStack {
-                if isFocused {
-                    Color.orange.opacity(0.1)
-                }
-                Color.white.opacity(0.05)
-            }
+            RoundedRectangle(cornerRadius: 28)
+                .fill(isFocused ? Color.orange.opacity(0.1) : Color.white.opacity(0.05))
         )
-        .background(.ultraThinMaterial, in: Capsule())
+        .overlay(
+            RoundedRectangle(cornerRadius: 28)
+                .stroke(isFocused ? Color.orange.opacity(0.3) : Color.white.opacity(0.1), lineWidth: 1)
+        )
         .animation(.smooth(duration: 0.2), value: isFocused)
     }
 }
@@ -427,14 +426,13 @@ struct GlassSecureField: View {
         .padding(.horizontal, 16)
         .frame(height: 56)
         .background(
-            ZStack {
-                if isFocused {
-                    Color.orange.opacity(0.1)
-                }
-                Color.white.opacity(0.05)
-            }
+            RoundedRectangle(cornerRadius: 28)
+                .fill(isFocused ? Color.orange.opacity(0.1) : Color.white.opacity(0.05))
         )
-        .background(.ultraThinMaterial, in: Capsule())
+        .overlay(
+            RoundedRectangle(cornerRadius: 28)
+                .stroke(isFocused ? Color.orange.opacity(0.3) : Color.white.opacity(0.1), lineWidth: 1)
+        )
         .animation(.smooth(duration: 0.2), value: isFocused)
     }
 }
