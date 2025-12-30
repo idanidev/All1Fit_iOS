@@ -355,7 +355,7 @@ struct WorkoutCard: View {
                 Text(workout.description)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
                 
                 // Tags
                 HStack(spacing: 8) {
