@@ -54,8 +54,8 @@ struct Workout: Identifiable, Hashable {
         // Running
         Workout(
             id: "5k",
-            name: "Carrera de 5 km",
-            description: "",
+            name: "5K",
+            description: "Carrera de 5 kilómetros",
             category: .running,
             exercises: [
                 WorkoutExercise(name: "Carrera", reps: "5 km", notes: "Ritmo constante")
@@ -65,8 +65,8 @@ struct Workout: Identifiable, Hashable {
         ),
         Workout(
             id: "10k",
-            name: "Carrera de 10 km",
-            description: "",
+            name: "10K",
+            description: "Carrera de 10 kilómetros",
             category: .running,
             exercises: [
                 WorkoutExercise(name: "Carrera", reps: "10 km", notes: "Ritmo moderado")
