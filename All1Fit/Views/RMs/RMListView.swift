@@ -9,6 +9,7 @@ struct RMListView: View {
     @State private var searchText = ""
     @State private var selectedEjercicio: Ejercicio?
     @State private var expandedEjercicioId: String?
+    @State private var ejercicioToDelete: Ejercicio?
     
     private var filteredEjercicios: [Ejercicio] {
         if searchText.isEmpty {
@@ -56,6 +57,19 @@ struct RMListView: View {
                         .padding(.bottom, 20)
                     }
                 }
+                
+                // Loading overlay
+                if ejercicioService.isLoading {
+                    VStack {
+                        ProgressView()
+                            .scaleEffect(1.2)
+                        Text("Cargando...")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(.ultraThinMaterial)
+                }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -90,6 +104,25 @@ struct RMListView: View {
                         }
                     }
                 }
+            }
+            .confirmationDialog(
+                "¿Eliminar ejercicio?",
+                isPresented: Binding(
+                    get: { ejercicioToDelete != nil },
+                    set: { if !$0 { ejercicioToDelete = nil } }
+                ),
+                titleVisibility: .visible
+            ) {
+                Button("Eliminar \(ejercicioToDelete?.name ?? "")", role: .destructive) {
+                    if let ejercicio = ejercicioToDelete {
+                        deleteEjercicio(ejercicio)
+                    }
+                }
+                Button("Cancelar", role: .cancel) {
+                    ejercicioToDelete = nil
+                }
+            } message: {
+                Text("Se eliminarán todos los RMs registrados. Esta acción no se puede deshacer.")
             }
             .task {
                 await ejercicioService.fetchEjercicios()
@@ -175,7 +208,7 @@ struct RMListView: View {
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                     Button(role: .destructive) {
-                        deleteEjercicio(ejercicio)
+                        ejercicioToDelete = ejercicio
                     } label: {
                         Label("Eliminar", systemImage: "trash")
                     }

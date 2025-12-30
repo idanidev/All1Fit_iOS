@@ -9,7 +9,9 @@ struct WorkoutsView: View {
     @State private var selectedCategory: WorkoutCategory = .crossfit
     @State private var searchText = ""
     @State private var showingAddWorkout = false
-    // showingAddWorkout removed as it's handled globally now
+    @State private var workoutToCustomize: Workout?
+    @State private var userWorkoutToEdit: UserWorkout?
+    @State private var workoutToDelete: UserWorkout?
     
     // Merge hardcoded + user workouts
     private var allWorkouts: [Workout] {
@@ -32,29 +34,76 @@ struct WorkoutsView: View {
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottomTrailing) {
-                ScrollView {
-                    VStack(spacing: 20) {
-                        // Category selector
+                List {
+                    // Category selector as header
+                    Section {
                         categorySelector
-                        
-                        // Loading state
-                        if userWorkoutService.isLoading && allWorkouts.isEmpty {
-                            VStack(spacing: 16) {
-                                ForEach(0..<3, id: \.self) { _ in
-                                    RoundedRectangle(cornerRadius: 16)
-                                        .fill(Color(uiColor: .secondarySystemGroupedBackground))
-                                        .frame(height: 100)
-                                        .shimmer()
+                    }
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    
+                    // Workouts
+                    Section {
+                        ForEach(filteredWorkouts) { workout in
+                            NavigationLink {
+                                WorkoutDetailView(workout: workout)
+                                    .environmentObject(workoutService)
+                            } label: {
+                                WorkoutCard(
+                                    workout: workout,
+                                    recordCount: workoutService.results[workout.id]?.count ?? 0,
+                                    lastResult: workoutService.results[workout.id]?.first
+                                )
+                            }
+                            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                if let userWorkout = userWorkoutService.userWorkouts.first(where: { $0.id == workout.id }) {
+                                    Button(role: .destructive) {
+                                        workoutToDelete = userWorkout
+                                    } label: {
+                                        Label("Eliminar", systemImage: "trash")
+                                    }
                                 }
                             }
-                        } else {
-                            // Workouts grid
-                            workoutsGrid
+                            .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                if let userWorkout = userWorkoutService.userWorkouts.first(where: { $0.id == workout.id }) {
+                                    Button {
+                                        userWorkoutToEdit = userWorkout
+                                    } label: {
+                                        Label("Editar", systemImage: "pencil")
+                                    }
+                                    .tint(.orange)
+                                } else {
+                                    Button {
+                                        workoutToCustomize = workout
+                                    } label: {
+                                        Label("Personalizar", systemImage: "slider.horizontal.3")
+                                    }
+                                    .tint(.blue)
+                                }
+                            }
                         }
                     }
-                    .padding()
                 }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
                 .background(Color(uiColor: .systemGroupedBackground))
+                .overlay {
+                    if userWorkoutService.isLoading {
+                        VStack {
+                            ProgressView()
+                                .scaleEffect(1.2)
+                            Text("Cargando...")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(.ultraThinMaterial)
+                    }
+                }
                 
                 // Floating Add Button
                 Button {
@@ -92,6 +141,14 @@ struct WorkoutsView: View {
                 WorkoutFormView()
                     .environmentObject(userWorkoutService)
             }
+            .sheet(item: $workoutToCustomize) { workout in
+                WorkoutFormView(basedOnWorkout: workout)
+                    .environmentObject(userWorkoutService)
+            }
+            .sheet(item: $userWorkoutToEdit) { workout in
+                WorkoutFormView(workoutToEdit: workout)
+                    .environmentObject(userWorkoutService)
+            }
             .searchable(text: $searchText, prompt: "Buscar entrenamiento...")
             .task {
                 await userWorkoutService.fetchWorkouts()
@@ -113,6 +170,28 @@ struct WorkoutsView: View {
                          await workoutService.fetchResults(for: id)
                      }
                 }
+            }
+            .confirmationDialog(
+                "¿Eliminar entrenamiento?",
+                isPresented: Binding(
+                    get: { workoutToDelete != nil },
+                    set: { if !$0 { workoutToDelete = nil } }
+                ),
+                titleVisibility: .visible
+            ) {
+                Button("Eliminar \(workoutToDelete?.name ?? "")", role: .destructive) {
+                    if let workout = workoutToDelete {
+                        Task {
+                            try? await userWorkoutService.deleteWorkout(workout)
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        }
+                    }
+                }
+                Button("Cancelar", role: .cancel) {
+                    workoutToDelete = nil
+                }
+            } message: {
+                Text("Los resultados guardados no se eliminarán.")
             }
 
         }
@@ -136,27 +215,8 @@ struct WorkoutsView: View {
                     }
                 }
             }
+            .padding(.horizontal, 16)
         }
-    }
-    
-    // MARK: - Workouts Grid
-    private var workoutsGrid: some View {
-        LazyVStack(spacing: 16) {
-            ForEach(filteredWorkouts) { workout in
-                NavigationLink {
-                    WorkoutDetailView(workout: workout)
-                        .environmentObject(workoutService)
-                } label: {
-                    WorkoutCard(
-                        workout: workout,
-                        recordCount: workoutService.results[workout.id]?.count ?? 0,
-                        lastResult: workoutService.results[workout.id]?.first
-                    )
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .animation(.spring(duration: 0.3), value: selectedCategory)
     }
 }
 
@@ -298,12 +358,6 @@ struct WorkoutCard: View {
                     }
                 }
             }
-            
-            Spacer()
-            
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
         }
         .padding()
         .background(Color(uiColor: .secondarySystemGroupedBackground))

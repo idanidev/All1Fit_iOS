@@ -8,6 +8,9 @@ struct WorkoutFormView: View {
     // Edit mode: pass existing workout
     var workoutToEdit: UserWorkout?
     
+    // For duplicating/customizing a hardcoded workout
+    var basedOnWorkout: Workout?
+    
     @State private var name = ""
     @State private var description = ""
     @State private var category: WorkoutCategory = .crossfit
@@ -23,8 +26,26 @@ struct WorkoutFormView: View {
     @State private var newExerciseReps = ""
     @State private var newExerciseNotes = ""
     
+    private var isEditing: Bool {
+        workoutToEdit != nil
+    }
+    
+    private var isDuplicating: Bool {
+        basedOnWorkout != nil && workoutToEdit == nil
+    }
+    
     private var isValid: Bool {
         !name.trimmingCharacters(in: .whitespaces).isEmpty && !exercises.isEmpty
+    }
+    
+    private var navigationTitle: String {
+        if isEditing {
+            return "Editar Entreno"
+        } else if isDuplicating {
+            return "Personalizar Entreno"
+        } else {
+            return "Nuevo Entreno"
+        }
     }
     
     var body: some View {
@@ -97,7 +118,7 @@ struct WorkoutFormView: View {
                     }
                 }
             }
-            .navigationTitle(workoutToEdit == nil ? "Nuevo Entreno" : "Editar Entreno")
+            .navigationTitle(navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -121,12 +142,24 @@ struct WorkoutFormView: View {
             }
             .onAppear {
                 if let workout = workoutToEdit {
+                    // Editing existing user workout
                     name = workout.name
                     description = workout.description
                     category = workout.workoutCategory
                     isForTime = workout.isForTime
                     timeCapMinutes = workout.timeCapMinutes
                     exercises = workout.exercises
+                } else if let workout = basedOnWorkout {
+                    // Duplicating/customizing hardcoded workout
+                    name = workout.name + " (Mi versión)"
+                    description = workout.description
+                    category = workout.category
+                    isForTime = workout.isForTime
+                    timeCapMinutes = workout.timeCapMinutes
+                    // Convert WorkoutExercise to UserWorkoutExercise
+                    exercises = workout.exercises.map { ex in
+                        UserWorkoutExercise(name: ex.name, reps: ex.reps, notes: ex.notes)
+                    }
                 }
             }
             .sheet(isPresented: $showAddExercise) {

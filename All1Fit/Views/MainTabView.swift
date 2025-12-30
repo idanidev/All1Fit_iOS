@@ -14,7 +14,7 @@ struct MainTabView: View {
     @State private var showingAddWorkout = false
     
     var body: some View {
-        ZStack(alignment: .bottom) {
+        ZStack(alignment: .top) {
             TabView(selection: $selectedTab) {
                 RMListView()
                     .tabItem {
@@ -46,7 +46,9 @@ struct MainTabView: View {
             }
             .tint(.orange)
             
-
+            // Offline indicator banner
+            OfflineBanner()
+                .animation(.spring(duration: 0.3), value: NetworkMonitor.shared.isConnected)
         }
         .confirmationDialog("¿Qué quieres añadir?", isPresented: $showingAddSheet, titleVisibility: .visible) {
             Button("Nuevo RM") {
@@ -77,6 +79,7 @@ struct SettingsView: View {
     @State private var showingLogoutConfirmation = false
     @State private var showingDeleteConfirmation = false
     @State private var showingProfileEdit = false
+    @State private var profileRefreshID = UUID() // Forces avatar refresh
     
     var body: some View {
         NavigationStack {
@@ -107,7 +110,10 @@ struct SettingsView: View {
                         .shadow(color: .white.opacity(0.5), radius: 10)
                 }
             }
-            .sheet(isPresented: $showingProfileEdit) {
+            .sheet(isPresented: $showingProfileEdit, onDismiss: {
+                // Force refresh of avatar image when profile is edited
+                profileRefreshID = UUID()
+            }) {
                 ProfileEditView()
             }
         }
@@ -121,22 +127,23 @@ struct SettingsView: View {
                     showingProfileEdit = true
                 } label: {
                     HStack(spacing: 16) {
-                        // Avatar
-                        ZStack {
-                            Circle()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [.orange, .red],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .frame(width: 60, height: 60)
-                            
-                            Text(user.displayName?.prefix(1).uppercased() ?? "U")
-                                .font(.title2.bold())
-                                .foregroundStyle(.white)
+                        // Avatar with photo support (cached)
+                        Group {
+                            if let photoURL = user.photoURL {
+                                CachedAsyncImage(url: photoURL) { image in
+                                    image
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 60, height: 60)
+                                        .clipShape(Circle())
+                                } placeholder: {
+                                    avatarPlaceholder(for: user)
+                                }
+                            } else {
+                                avatarPlaceholder(for: user)
+                            }
                         }
+                        .id(profileRefreshID) // Force refresh when photo changes
                         
                         VStack(alignment: .leading, spacing: 4) {
                             Text(user.displayName ?? "Usuario")
@@ -162,6 +169,25 @@ struct SettingsView: View {
             Text("Perfil")
         } footer: {
             Text("Toca para editar tu perfil")
+        }
+    }
+    
+    // MARK: - Avatar Placeholder
+    private func avatarPlaceholder(for user: FirebaseAuth.User) -> some View {
+        ZStack {
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [.orange, .red],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 60, height: 60)
+            
+            Text(user.displayName?.prefix(1).uppercased() ?? "U")
+                .font(.title2.bold())
+                .foregroundStyle(.white)
         }
     }
     
@@ -474,6 +500,12 @@ struct ProfileEditView: View {
                 changeRequest.displayName = displayName
                 if let photoURLString = newPhotoURL, let url = URL(string: photoURLString) {
                     changeRequest.photoURL = url
+                    // Invalidate old cached image
+                    if let oldPhotoURL = user.photoURL {
+                        ImageCacheManager.shared.invalidate(url: oldPhotoURL)
+                    }
+                    // Also invalidate new URL to force fresh download
+                    ImageCacheManager.shared.invalidate(url: url)
                 }
                 try await changeRequest.commitChanges()
                 

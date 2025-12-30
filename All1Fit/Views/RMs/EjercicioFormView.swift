@@ -119,9 +119,11 @@ struct EjercicioFormView: View {
                 }
             }
         }
-        // ✅ iOS 26: Sheets automáticamente usan Liquid Glass
-        .presentationDetents([.medium, .large])
+        // Sheet presentation - height based on content
+        .presentationDetents([.fraction(0.7), .large])
         .presentationDragIndicator(.visible)
+        .presentationBackground(.ultraThickMaterial)
+        .presentationCornerRadius(24)
         .interactiveDismissDisabled(showSuccess)
     }
     

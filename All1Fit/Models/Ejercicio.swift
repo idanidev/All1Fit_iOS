@@ -50,11 +50,11 @@ struct Ejercicio: Codable, Identifiable {
     /// Icon based on exercise type
     var icon: String {
         let lowercaseName = name.lowercased()
-        // Olympic lifts - person doing cross training (better for clean/jerk/snatch)
+        // Olympic lifts - person lifting overhead
         if lowercaseName.contains("clean") || lowercaseName.contains("jerk") || 
            lowercaseName.contains("snatch") || lowercaseName.contains("thruster") ||
            lowercaseName.contains("overhead") || lowercaseName.contains("push press") {
-            return "figure.cross.training"
+            return "figure.strengthtraining.traditional"
         }
         // Isolation/dumbbell exercises
         if lowercaseName.contains("curl") || lowercaseName.contains("bench") || 
@@ -62,8 +62,8 @@ struct Ejercicio: Codable, Identifiable {
            lowercaseName.contains("tricep") || lowercaseName.contains("bicep") {
             return "dumbbell.fill"
         }
-        // Default: cross training
-        return "figure.cross.training"
+        // Default: person lifting weights overhead
+        return "figure.strengthtraining.traditional"
     }
     
     /// Tabla de porcentajes calculados (30% - 100%)

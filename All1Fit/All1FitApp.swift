@@ -1,5 +1,6 @@
 import SwiftUI
 import FirebaseCore
+import FirebaseFirestore
 import GoogleSignIn
 
 // MARK: - App Delegate
@@ -7,6 +8,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         FirebaseApp.configure()
+        
+        // Configure Firestore offline persistence (100MB cache)
+        let settings = Firestore.firestore().settings
+        settings.cacheSettings = PersistentCacheSettings(sizeBytes: 100 * 1024 * 1024 as NSNumber)
+        Firestore.firestore().settings = settings
         
         #if DEBUG
         SimpleTestRunner.run()
@@ -188,7 +194,7 @@ struct SimpleTestRunner {
     // Test 1: Verify dynamic icon logic
     static func testEjercicioIcons() {
         let clean = Ejercicio(name: "Clean", rmHistory: [])
-        assert(clean.icon == "figure.cross.training", "❌ TEST FAILED: 'Clean' should have 'figure.cross.training' icon")
+        assert(clean.icon == "figure.strengthtraining.traditional", "❌ TEST FAILED: 'Clean' should have 'figure.strengthtraining.traditional' icon")
         
         let curl = Ejercicio(name: "Bicep Curl", rmHistory: [])
         assert(curl.icon == "dumbbell.fill", "❌ TEST FAILED: 'Bicep Curl' should have 'dumbbell.fill' icon")

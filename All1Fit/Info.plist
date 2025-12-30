@@ -4,5 +4,16 @@
 <dict>
     <key>NSFaceIDUsageDescription</key>
     <string>All1Fit usa Face ID para iniciar sesión de forma rápida y segura</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.googleusercontent.apps.832672007300-atl6vp5v6mmdfmcc72apr1g7u3dhqr2f</string>
+            </array>
+        </dict>
+    </array>
 </dict>
 </plist>

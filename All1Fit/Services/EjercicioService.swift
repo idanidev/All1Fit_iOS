@@ -34,7 +34,7 @@ class EjercicioService: ObservableObject {
             return
         }
         
-        isLoading = ejercicios.isEmpty
+        isLoading = true
         
         do {
             let snapshot = try await ejerciciosCollection(userId: userId)
