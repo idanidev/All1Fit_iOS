@@ -79,6 +79,7 @@ struct SettingsView: View {
     @State private var showingLogoutConfirmation = false
     @State private var showingDeleteConfirmation = false
     @State private var showingProfileEdit = false
+    @State private var showingPrivacyPolicy = false
     @State private var profileRefreshID = UUID() // Forces avatar refresh
     
     var body: some View {
@@ -115,6 +116,9 @@ struct SettingsView: View {
                 profileRefreshID = UUID()
             }) {
                 ProfileEditView()
+            }
+            .sheet(isPresented: $showingPrivacyPolicy) {
+                PrivacyPolicyView()
             }
         }
     }
@@ -252,6 +256,14 @@ struct SettingsView: View {
             // Contact
             Link(destination: URL(string: "mailto:idanideveloper@gmail.com")!) {
                 Label("Contacto", systemImage: "envelope")
+                    .foregroundStyle(.primary)
+            }
+            
+            // Privacy Policy
+            Button {
+                showingPrivacyPolicy = true
+            } label: {
+                Label("Política de Privacidad", systemImage: "hand.raised")
                     .foregroundStyle(.primary)
             }
         }
