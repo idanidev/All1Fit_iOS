@@ -10,6 +10,9 @@ struct WorkoutFormView: View {
     
     // For duplicating/customizing a hardcoded workout
     var basedOnWorkout: Workout?
+
+    // Initial category when creating new (optional)
+    var initialCategory: WorkoutCategory?
     
     @State private var name = ""
     @State private var description = ""
@@ -157,9 +160,10 @@ struct WorkoutFormView: View {
                     isForTime = workout.isForTime
                     timeCapMinutes = workout.timeCapMinutes
                     // Convert WorkoutExercise to UserWorkoutExercise
-                    exercises = workout.exercises.map { ex in
                         UserWorkoutExercise(name: ex.name, reps: ex.reps, notes: ex.notes)
                     }
+                } else if let initialCategory = initialCategory {
+                    category = initialCategory
                 }
             }
             .sheet(isPresented: $showAddExercise) {

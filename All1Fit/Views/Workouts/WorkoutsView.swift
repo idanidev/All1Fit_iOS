@@ -34,17 +34,17 @@ struct WorkoutsView: View {
     // Colores dinámicos según categoría
     private var categoryColors: [Color] {
         switch selectedCategory {
-        case .crossfit: return [.red, .orange]
-        case .running: return [.blue, .cyan]
-        case .competition: return [.purple, .pink]
+        case .crossfit: return [.red, .black]
+        case .running: return [.orange, .yellow]
+        case .competition: return [.blue, .purple]
         }
     }
     
     private var categoryShadowColor: Color {
         switch selectedCategory {
         case .crossfit: return .red
-        case .running: return .blue
-        case .competition: return .purple
+        case .running: return .orange
+        case .competition: return .blue
         }
     }
     
@@ -166,7 +166,7 @@ struct WorkoutsView: View {
                 }
             }
             .sheet(isPresented: $showingAddWorkout) {
-                WorkoutFormView()
+                WorkoutFormView(initialCategory: selectedCategory)
                     .environmentObject(userWorkoutService)
             }
             .sheet(item: $workoutToCustomize) { workout in
