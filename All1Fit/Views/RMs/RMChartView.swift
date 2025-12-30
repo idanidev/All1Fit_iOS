@@ -6,7 +6,6 @@ struct RMChartView: View {
     let ejercicio: Ejercicio
     
     @AppStorage("weightUnit") private var weightUnit: WeightUnit = .kg
-    @State private var selectedEntry: RMEntry?
     @State private var chartAnimated = false
     @State private var selectedTimeRange: TimeRange = .all
     @State private var showingAddRM = false
@@ -202,28 +201,8 @@ struct RMChartView: View {
                     PointMark(
                         x: .value("Fecha", entry.fecha),
                         y: .value("Peso", chartAnimated ? weightUnit.convert(entry.valor) : 0)
-                    )
                     .foregroundStyle(.orange)
-                    .symbolSize(selectedEntry?.id == entry.id ? 150 : 80)
-                }
-                
-                if let selected = selectedEntry {
-                    RuleMark(x: .value("Selected", selected.fecha))
-                        .foregroundStyle(.orange.opacity(0.5))
-                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [5]))
-                        .annotation(position: .automatic, alignment: .center, spacing: 8) {
-                            VStack(spacing: 2) {
-                                Text(formatWeight(weightUnit.convert(selected.valor)) + " " + weightUnit.symbol)
-                                    .font(.caption.bold())
-                                Text(selected.fecha.formatted(date: .abbreviated, time: .omitted))
-                                    .font(.caption2)
-                            }
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 6)
-                            .background(Color.orange)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                        }
+                    .symbolSize(80)
                 }
             }
             .chartYAxis {
@@ -240,31 +219,7 @@ struct RMChartView: View {
                     AxisGridLine()
                 }
             }
-            .chartOverlay { proxy in
-                GeometryReader { geo in
-                    Rectangle()
-                        .fill(.clear)
-                        .contentShape(Rectangle())
-                        .gesture(
-                            DragGesture(minimumDistance: 0)
-                                .onChanged { value in
-                                    let x = value.location.x
-                                    if let date: Date = proxy.value(atX: x) {
-                                        selectedEntry = sortedHistory.min(by: {
-                                            abs($0.fecha.timeIntervalSince(date)) < abs($1.fecha.timeIntervalSince(date))
-                                        })
-                                    }
-                                    UISelectionFeedbackGenerator().selectionChanged()
-                                }
-                                .onEnded { _ in
-                                    withAnimation(.spring(duration: 0.2)) {
-                                        selectedEntry = nil
-                                    }
-                                }
-                        )
-                }
-            }
-            .frame(height: 250)
+            .frame(height: 220)
             .padding()
             .background(Color(uiColor: .secondarySystemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: 20))
