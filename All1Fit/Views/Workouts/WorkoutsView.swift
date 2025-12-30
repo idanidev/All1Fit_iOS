@@ -31,6 +31,23 @@ struct WorkoutsView: View {
         }
     }
     
+    // Colores dinámicos según categoría
+    private var categoryColors: [Color] {
+        switch selectedCategory {
+        case .crossfit: return [.red, .orange]
+        case .running: return [.blue, .cyan]
+        case .competition: return [.purple, .pink]
+        }
+    }
+    
+    private var categoryShadowColor: Color {
+        switch selectedCategory {
+        case .crossfit: return .red
+        case .running: return .blue
+        case .competition: return .purple
+        }
+    }
+    
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottomTrailing) {
@@ -105,27 +122,38 @@ struct WorkoutsView: View {
                     }
                 }
                 
-                // Floating Add Button
-                Button {
-                    showingAddWorkout = true
-                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.title2.bold())
-                        .foregroundStyle(.white)
-                        .frame(width: 56, height: 56)
-                        .background(
-                            LinearGradient(
-                                colors: [.red, .orange],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
+                // Floating Add Button - Color dinámico según categoría
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Button {
+                            showingAddWorkout = true
+                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "plus")
+                                    .font(.title3.bold())
+                                Text("Añadir")
+                                    .font(.headline)
+                            }
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 14)
+                            .background(
+                                LinearGradient(
+                                    colors: categoryColors,
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
                             )
-                        )
-                        .clipShape(Circle())
-                        .shadow(color: .red.opacity(0.4), radius: 8, y: 4)
+                            .clipShape(Capsule())
+                            .shadow(color: categoryShadowColor.opacity(0.4), radius: 8, y: 4)
+                        }
+                        .padding(.trailing, 20)
+                        .padding(.bottom, 30)
+                    }
                 }
-                .padding(.trailing, 20)
-                .padding(.bottom, 20)
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

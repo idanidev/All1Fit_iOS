@@ -131,16 +131,16 @@ struct LoginView: View {
                             colors: [.orange.opacity(0.3), .clear],
                             center: .center,
                             startRadius: 0,
-                            endRadius: 100
+                            endRadius: 120
                         )
                     )
-                    .frame(width: 240, height: 240)
-                    .blur(radius: 30)
+                    .frame(width: 280, height: 280)
+                    .blur(radius: 35)
                 
                 Image("Logo")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 240)
+                    .frame(width: 280)
                     .scaleEffect(logoAnimated ? 1.0 : 0.5)
                     .opacity(logoAnimated ? 1.0 : 0)
             }
