@@ -160,6 +160,7 @@ struct WorkoutFormView: View {
                     isForTime = workout.isForTime
                     timeCapMinutes = workout.timeCapMinutes
                     // Convert WorkoutExercise to UserWorkoutExercise
+                    exercises = workout.exercises.map { ex in
                         UserWorkoutExercise(name: ex.name, reps: ex.reps, notes: ex.notes)
                     }
                 } else if let initialCategory = initialCategory {
