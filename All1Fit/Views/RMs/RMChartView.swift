@@ -211,17 +211,18 @@ struct RMChartView: View {
                     RuleMark(x: .value("Selected", selected.fecha))
                         .foregroundStyle(.orange.opacity(0.5))
                         .lineStyle(StrokeStyle(lineWidth: 1, dash: [5]))
-                        .annotation(position: .top) {
-                            VStack(spacing: 4) {
-                                Text(formatWeight(weightUnit.convert(selected.valor)))
-                                    .font(.headline.bold())
+                        .annotation(position: .automatic, alignment: .center, spacing: 8) {
+                            VStack(spacing: 2) {
+                                Text(formatWeight(weightUnit.convert(selected.valor)) + " " + weightUnit.symbol)
+                                    .font(.caption.bold())
                                 Text(selected.fecha.formatted(date: .abbreviated, time: .omitted))
-                                    .font(.caption)
+                                    .font(.caption2)
                             }
                             .foregroundStyle(.white)
-                            .padding(8)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 6)
                             .background(Color.orange)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
                         }
                 }
             }
