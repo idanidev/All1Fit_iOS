@@ -32,6 +32,8 @@
 		335068772EF9FDAE0094B0E7 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 335068762EF9FDAE0094B0E7 /* GoogleService-Info.plist */; };
 		335D55722EFA9706009688E1 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335D55712EFA9706009688E1 /* OnboardingView.swift */; };
 		3362C4D02EFAB755000E5518 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3362C4CF2EFAB755000E5518 /* KeychainHelper.swift */; };
+		33670A5F2F041B33000651DC /* ProfileEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33670A5D2F041B33000651DC /* ProfileEditView.swift */; };
+		33670A602F041B33000651DC /* PrivacyPolicyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33670A5C2F041B33000651DC /* PrivacyPolicyView.swift */; };
 		33904BA72EFA945E00EE9AB8 /* WeightUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33904BA62EFA945E00EE9AB8 /* WeightUnit.swift */; };
 		33ABCD032EFAC12000B3B102 /* VideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33ABCD022EFAC12000B3B102 /* VideoPlayerView.swift */; };
 		33BCDE012EFAD10000C4C203 /* Workout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BCDE002EFAD10000C4C203 /* Workout.swift */; };
@@ -70,6 +72,8 @@
 		335D55712EFA9706009688E1 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		3362C4CF2EFAB755000E5518 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
 		3362C4D12EFAB911000E5518 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		33670A5C2F041B33000651DC /* PrivacyPolicyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyPolicyView.swift; sourceTree = "<group>"; };
+		33670A5D2F041B33000651DC /* ProfileEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileEditView.swift; sourceTree = "<group>"; };
 		33904BA62EFA945E00EE9AB8 /* WeightUnit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightUnit.swift; sourceTree = "<group>"; };
 		339983292F03156500171A0C /* All1Fit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = All1Fit.entitlements; sourceTree = "<group>"; };
 		33ABCD022EFAC12000B3B102 /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
@@ -153,6 +157,7 @@
 		1A0000000000000000000034 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				33670A5E2F041B33000651DC /* Settings */,
 				1A0000000000000000000012 /* ContentView.swift */,
 				1A0000000000000000000013 /* MainTabView.swift */,
 				1A0000000000000000000038 /* Components */,
@@ -218,6 +223,15 @@
 				33321DFB2EFABCF900B3B102 /* MobilityView.swift */,
 			);
 			path = Mobility;
+			sourceTree = "<group>";
+		};
+		33670A5E2F041B33000651DC /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				33670A5C2F041B33000651DC /* PrivacyPolicyView.swift */,
+				33670A5D2F041B33000651DC /* ProfileEditView.swift */,
+			);
+			path = Settings;
 			sourceTree = "<group>";
 		};
 		33BCDE0C2EFAD16000C4C203 /* Workouts */ = {
@@ -343,6 +357,8 @@
 				33BCDE092EFAD14000C4C203 /* WorkoutDetailView.swift in Sources */,
 				33BCDE0B2EFAD15000C4C203 /* WorkoutResultSheet.swift in Sources */,
 				33CDEF012EFB100000D5D304 /* UserWorkoutService.swift in Sources */,
+				33670A5F2F041B33000651DC /* ProfileEditView.swift in Sources */,
+				33670A602F041B33000651DC /* PrivacyPolicyView.swift in Sources */,
 				33CDEF032EFB110000D5D304 /* WorkoutFormView.swift in Sources */,
 				33CDEF052EFB120000D5D304 /* WorkoutHistoryChartView.swift in Sources */,
 			);
