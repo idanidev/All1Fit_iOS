@@ -117,7 +117,7 @@ class WorkoutService: ObservableObject {
         
         // Update local cache
         if let index = results[result.workoutId]?.firstIndex(where: { $0.id == resultId }) {
-            var updatedResult = results[result.workoutId]![index]
+
             // Create new result with updated values (since properties may be let)
             results[result.workoutId]?[index] = WorkoutResult(
                 id: resultId,
