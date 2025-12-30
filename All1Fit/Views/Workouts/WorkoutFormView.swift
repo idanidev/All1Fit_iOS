@@ -154,7 +154,7 @@ struct WorkoutFormView: View {
                     exercises = workout.exercises
                 } else if let workout = basedOnWorkout {
                     // Duplicating/customizing hardcoded workout
-                    name = workout.name + " (Mi versión)"
+                    name = workout.name
                     description = workout.description
                     category = workout.category
                     isForTime = workout.isForTime

@@ -54,22 +54,22 @@ struct Workout: Identifiable, Hashable {
         // Running
         Workout(
             id: "5k",
-            name: "5K",
+            name: "Carrera de 5 km",
+            description: "",
             category: .running,
-            description: "Carrera de 5 kilómetros. Una distancia perfecta para principiantes y para establecer tu ritmo base.",
             exercises: [
-                WorkoutExercise(name: "Carrera", reps: "5 km")
+                WorkoutExercise(name: "Carrera", reps: "5 km", notes: "Ritmo constante")
             ],
             timeCapMinutes: nil,
             isForTime: true
         ),
         Workout(
             id: "10k",
-            name: "10K",
+            name: "Carrera de 10 km",
+            description: "",
             category: .running,
-            description: "Carrera de 10 kilómetros. El siguiente paso después del 5K, ideal para mejorar resistencia.",
             exercises: [
-                WorkoutExercise(name: "Carrera", reps: "10 km")
+                WorkoutExercise(name: "Carrera", reps: "10 km", notes: "Ritmo moderado")
             ],
             timeCapMinutes: nil,
             isForTime: true
