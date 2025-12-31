@@ -12,10 +12,26 @@ struct WorkoutsView: View {
     @State private var workoutToCustomize: Workout?
     @State private var userWorkoutToEdit: UserWorkout?
     @State private var workoutToDelete: UserWorkout?
+    @State private var workoutToHide: Workout?
+    @AppStorage("hiddenWorkoutIds") private var hiddenWorkoutIdsData: Data = Data()
     
-    // Merge hardcoded + user workouts
+    // Hidden workout IDs
+    private var hiddenWorkoutIds: Set<String> {
+        get {
+            (try? JSONDecoder().decode(Set<String>.self, from: hiddenWorkoutIdsData)) ?? []
+        }
+    }
+    
+    private func hideWorkout(_ id: String) {
+        var hidden = hiddenWorkoutIds
+        hidden.insert(id)
+        hiddenWorkoutIdsData = (try? JSONEncoder().encode(hidden)) ?? Data()
+    }
+    
+    // Merge hardcoded + user workouts (excluding hidden)
     private var allWorkouts: [Workout] {
         let hardcoded = Workout.workouts(for: selectedCategory)
+            .filter { !hiddenWorkoutIds.contains($0.id) }
         let userConverted = userWorkoutService.userWorkouts
             .filter { $0.workoutCategory == selectedCategory }
             .map { $0.toWorkout() }
@@ -79,12 +95,20 @@ struct WorkoutsView: View {
                             .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: isUserWorkout) {
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                 if let userWorkout = userWorkout {
+                                    // User workout: delete from Firebase
                                     Button(role: .destructive) {
                                         workoutToDelete = userWorkout
                                     } label: {
                                         Label("Eliminar", systemImage: "trash")
+                                    }
+                                } else {
+                                    // System workout: hide locally
+                                    Button(role: .destructive) {
+                                        workoutToHide = workout
+                                    } label: {
+                                        Label("Ocultar", systemImage: "eye.slash")
                                     }
                                 }
                             }
@@ -223,6 +247,27 @@ struct WorkoutsView: View {
                 }
             } message: {
                 Text("Los resultados guardados no se eliminarán.")
+            }
+            .confirmationDialog(
+                "¿Ocultar entrenamiento?",
+                isPresented: Binding(
+                    get: { workoutToHide != nil },
+                    set: { if !$0 { workoutToHide = nil } }
+                ),
+                titleVisibility: .visible
+            ) {
+                Button("Ocultar \(workoutToHide?.name ?? "")", role: .destructive) {
+                    if let workout = workoutToHide {
+                        hideWorkout(workout.id)
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    }
+                    workoutToHide = nil
+                }
+                Button("Cancelar", role: .cancel) {
+                    workoutToHide = nil
+                }
+            } message: {
+                Text("Puedes restaurar los entrenamientos ocultos desde Ajustes.")
             }
 
         }

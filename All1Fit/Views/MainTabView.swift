@@ -213,6 +213,14 @@ struct SettingsView: View {
                 }
             }
             .pickerStyle(.menu)
+            
+            // Restore hidden workouts
+            Button {
+                UserDefaults.standard.removeObject(forKey: "hiddenWorkoutIds")
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+            } label: {
+                Label("Restaurar entrenos ocultos", systemImage: "arrow.counterclockwise")
+            }
         }
     }
     
