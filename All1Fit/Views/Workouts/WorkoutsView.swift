@@ -63,6 +63,9 @@ struct WorkoutsView: View {
                     // Workouts
                     Section {
                         ForEach(filteredWorkouts) { workout in
+                            let userWorkout = userWorkoutService.userWorkouts.first(where: { $0.id == workout.id })
+                            let isUserWorkout = userWorkout != nil
+                            
                             NavigationLink {
                                 WorkoutDetailView(workout: workout)
                                     .environmentObject(workoutService)
@@ -76,8 +79,8 @@ struct WorkoutsView: View {
                             .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                if let userWorkout = userWorkoutService.userWorkouts.first(where: { $0.id == workout.id }) {
+                            .swipeActions(edge: .trailing, allowsFullSwipe: isUserWorkout) {
+                                if let userWorkout = userWorkout {
                                     Button(role: .destructive) {
                                         workoutToDelete = userWorkout
                                     } label: {
@@ -86,7 +89,7 @@ struct WorkoutsView: View {
                                 }
                             }
                             .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                                if let userWorkout = userWorkoutService.userWorkouts.first(where: { $0.id == workout.id }) {
+                                if let userWorkout = userWorkout {
                                     Button {
                                         userWorkoutToEdit = userWorkout
                                     } label: {
