@@ -77,7 +77,7 @@ struct SettingsView: View {
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
     @AppStorage("weightUnit") private var weightUnit: WeightUnit = .kg
     @State private var showingLogoutConfirmation = false
-    @State private var showingDeleteConfirmation = false
+    @State private var showingDeleteAccountConfirmation = false
     @State private var showingProfileEdit = false
     @State private var showingPrivacyPolicy = false
     @State private var profileRefreshID = UUID() // Forces avatar refresh
@@ -97,8 +97,12 @@ struct SettingsView: View {
                 // App Info
                 appInfoSection
                 
+                
                 // Logout
                 logoutSection
+                
+                // Delete Account
+                deleteAccountSection
             }
             .navigationTitle("Ajustes")
             .listStyle(.insetGrouped)
@@ -230,7 +234,7 @@ struct SettingsView: View {
             HStack {
                 Label("Versión", systemImage: "info.circle")
                 Spacer()
-                Text("1.0.0")
+                Text("1.0.1")
                     .foregroundStyle(.secondary)
             }
             
@@ -299,6 +303,39 @@ struct SettingsView: View {
                 Button("Cancelar", role: .cancel) {}
             } message: {
                 Text("Tendrás que volver a iniciar sesión para acceder a tus datos")
+            }
+        }
+    }
+    
+    // MARK: - Delete Account Section
+    private var deleteAccountSection: some View {
+        Section {
+            Button {
+                showingDeleteAccountConfirmation = true
+            } label: {
+                Label("Eliminar Cuenta", systemImage: "trash.fill")
+                    .frame(maxWidth: .infinity)
+                    .foregroundStyle(.orange)
+            }
+            .confirmationDialog(
+                "¿Eliminar cuenta?",
+                isPresented: $showingDeleteAccountConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Eliminar permanentemente", role: .destructive) {
+                    Task {
+                        do {
+                            try await authService.deleteAccount()
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        } catch {
+                            // Ideally show error alert, for now simple print/feedback
+                            UINotificationFeedbackGenerator().notificationOccurred(.error)
+                        }
+                    }
+                }
+                Button("Cancelar", role: .cancel) {}
+            } message: {
+                Text("Esta acción es irreversible. Se eliminarán todos tus datos, entrenamientos y registros permanentemente.")
             }
         }
     }

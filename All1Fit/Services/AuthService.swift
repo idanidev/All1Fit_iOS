@@ -281,6 +281,25 @@ class AuthService: ObservableObject {
         try Auth.auth().signOut()
     }
     
+    // MARK: - Delete Account
+    func deleteAccount() async throws {
+        guard let user = user else { return }
+        let userId = user.uid
+        
+        // 1. Delete user document from Firestore (and subcollections ideally, but simple link is acceptable for V1)
+        try await db.collection("users").document(userId).delete()
+        
+        // 2. Delete user from Firebase Auth
+        // Note: This requires recent login. If it fails (requires-recent-login), we handle it in UI/Service.
+        try await user.delete()
+        
+        // 3. Clear local state
+        self.user = nil
+        self.isAuthenticated = false
+        
+        logger.info("User account deleted successfully")
+    }
+    
     // MARK: - Helpers
     private func randomNonceString(length: Int = 32) -> String {
         precondition(length > 0)

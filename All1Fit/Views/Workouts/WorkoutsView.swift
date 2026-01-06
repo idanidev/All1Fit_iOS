@@ -80,7 +80,7 @@ struct WorkoutsView: View {
                     Section {
                         ForEach(filteredWorkouts) { workout in
                             let userWorkout = userWorkoutService.userWorkouts.first(where: { $0.id == workout.id })
-                            let isUserWorkout = userWorkout != nil
+                            // let isUserWorkout = userWorkout != nil - removed unused variable
                             
                             NavigationLink {
                                 WorkoutDetailView(workout: workout)

@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -30,6 +30,7 @@
 		33321DFC2EFABCF900B3B102 /* BodyMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33321DFA2EFABCF900B3B102 /* BodyMapView.swift */; };
 		33321DFD2EFABCF900B3B102 /* MobilityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33321DFB2EFABCF900B3B102 /* MobilityView.swift */; };
 		335068772EF9FDAE0094B0E7 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 335068762EF9FDAE0094B0E7 /* GoogleService-Info.plist */; };
+		335685862F07FF8E00573F41 /* PhoneConnectivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335685842F07FF8E00573F41 /* PhoneConnectivityService.swift */; };
 		33570AE12F0452DB00BFBC11 /* LogoToolbarModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33570AE02F0452DB00BFBC11 /* LogoToolbarModifier.swift */; };
 		335D55722EFA9706009688E1 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335D55712EFA9706009688E1 /* OnboardingView.swift */; };
 		3362C4D02EFAB755000E5518 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3362C4CF2EFAB755000E5518 /* KeychainHelper.swift */; };
@@ -43,12 +44,51 @@
 		33BCDE072EFAD13000C4C203 /* WorkoutsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BCDE062EFAD13000C4C203 /* WorkoutsView.swift */; };
 		33BCDE092EFAD14000C4C203 /* WorkoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BCDE082EFAD14000C4C203 /* WorkoutDetailView.swift */; };
 		33BCDE0B2EFAD15000C4C203 /* WorkoutResultSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BCDE0A2EFAD15000C4C203 /* WorkoutResultSheet.swift */; };
+		33C9ACC72F07FD4C00358E39 /* All1FitWatch Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 33C9ACC62F07FD4C00358E39 /* All1FitWatch Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		33CDEF012EFB100000D5D304 /* UserWorkoutService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CDEF002EFB100000D5D304 /* UserWorkoutService.swift */; };
 		33CDEF032EFB110000D5D304 /* WorkoutFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CDEF022EFB110000D5D304 /* WorkoutFormView.swift */; };
 		33CDEF052EFB120000D5D304 /* WorkoutHistoryChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CDEF042EFB120000D5D304 /* WorkoutHistoryChartView.swift */; };
 		33DD91062F0007AF00601DE3 /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33DD91052F0007AF00601DE3 /* NetworkMonitor.swift */; };
 		33DD91072F0007AF00601DE3 /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33DD91042F0007AF00601DE3 /* ImageCache.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		33C9ACC82F07FD4C00358E39 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1A0000000000000000000070 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 33C9ACC52F07FD4C00358E39;
+			remoteInfo = "All1FitWatch Watch App";
+		};
+		33C9ACD62F07FD4D00358E39 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1A0000000000000000000070 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 33C9ACC52F07FD4C00358E39;
+			remoteInfo = "All1FitWatch Watch App";
+		};
+		33C9ACE02F07FD4D00358E39 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1A0000000000000000000070 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 33C9ACC52F07FD4C00358E39;
+			remoteInfo = "All1FitWatch Watch App";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		33C9ACE92F07FD4D00358E39 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				33C9ACC72F07FD4C00358E39 /* All1FitWatch Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		1A0000000000000000000010 /* All1Fit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = All1Fit.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -70,6 +110,7 @@
 		33321DFA2EFABCF900B3B102 /* BodyMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyMapView.swift; sourceTree = "<group>"; };
 		33321DFB2EFABCF900B3B102 /* MobilityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobilityView.swift; sourceTree = "<group>"; };
 		335068762EF9FDAE0094B0E7 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		335685842F07FF8E00573F41 /* PhoneConnectivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneConnectivityService.swift; sourceTree = "<group>"; };
 		33570AE02F0452DB00BFBC11 /* LogoToolbarModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogoToolbarModifier.swift; sourceTree = "<group>"; };
 		335D55712EFA9706009688E1 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		3362C4CF2EFAB755000E5518 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
@@ -85,12 +126,22 @@
 		33BCDE062EFAD13000C4C203 /* WorkoutsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutsView.swift; sourceTree = "<group>"; };
 		33BCDE082EFAD14000C4C203 /* WorkoutDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutDetailView.swift; sourceTree = "<group>"; };
 		33BCDE0A2EFAD15000C4C203 /* WorkoutResultSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutResultSheet.swift; sourceTree = "<group>"; };
+		33C9ACC12F07FD4C00358E39 /* All1FitWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = All1FitWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		33C9ACC62F07FD4C00358E39 /* All1FitWatch Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "All1FitWatch Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		33C9ACD52F07FD4D00358E39 /* All1FitWatch Watch AppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "All1FitWatch Watch AppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		33C9ACDF2F07FD4D00358E39 /* All1FitWatch Watch AppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "All1FitWatch Watch AppUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		33CDEF002EFB100000D5D304 /* UserWorkoutService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserWorkoutService.swift; sourceTree = "<group>"; };
 		33CDEF022EFB110000D5D304 /* WorkoutFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutFormView.swift; sourceTree = "<group>"; };
 		33CDEF042EFB120000D5D304 /* WorkoutHistoryChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutHistoryChartView.swift; sourceTree = "<group>"; };
 		33DD91042F0007AF00601DE3 /* ImageCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCache.swift; sourceTree = "<group>"; };
 		33DD91052F0007AF00601DE3 /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		33C9ACCA2F07FD4C00358E39 /* All1FitWatch Watch App */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "All1FitWatch Watch App"; sourceTree = "<group>"; };
+		33C9ACD82F07FD4D00358E39 /* All1FitWatch Watch AppTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "All1FitWatch Watch AppTests"; sourceTree = "<group>"; };
+		33C9ACE22F07FD4D00358E39 /* All1FitWatch Watch AppUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "All1FitWatch Watch AppUITests"; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		1A0000000000000000000020 /* Frameworks */ = {
@@ -105,6 +156,27 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		33C9ACC32F07FD4C00358E39 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		33C9ACD22F07FD4D00358E39 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		33C9ACDC2F07FD4D00358E39 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -112,6 +184,9 @@
 			isa = PBXGroup;
 			children = (
 				1A0000000000000000000031 /* All1Fit */,
+				33C9ACCA2F07FD4C00358E39 /* All1FitWatch Watch App */,
+				33C9ACD82F07FD4D00358E39 /* All1FitWatch Watch AppTests */,
+				33C9ACE22F07FD4D00358E39 /* All1FitWatch Watch AppUITests */,
 				1A0000000000000000000040 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -129,6 +204,7 @@
 				1A0000000000000000000034 /* Views */,
 				1A0000000000000000000035 /* Utils */,
 				1A000000000000000000001D /* Assets.xcassets */,
+				335685852F07FF8E00573F41 /* iOS_Integration */,
 			);
 			path = All1Fit;
 			sourceTree = "<group>";
@@ -215,6 +291,10 @@
 			isa = PBXGroup;
 			children = (
 				1A0000000000000000000010 /* All1Fit.app */,
+				33C9ACC12F07FD4C00358E39 /* All1FitWatch.app */,
+				33C9ACC62F07FD4C00358E39 /* All1FitWatch Watch App.app */,
+				33C9ACD52F07FD4D00358E39 /* All1FitWatch Watch AppTests.xctest */,
+				33C9ACDF2F07FD4D00358E39 /* All1FitWatch Watch AppUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -226,6 +306,14 @@
 				33321DFB2EFABCF900B3B102 /* MobilityView.swift */,
 			);
 			path = Mobility;
+			sourceTree = "<group>";
+		};
+		335685852F07FF8E00573F41 /* iOS_Integration */ = {
+			isa = PBXGroup;
+			children = (
+				335685842F07FF8E00573F41 /* PhoneConnectivityService.swift */,
+			);
+			path = iOS_Integration;
 			sourceTree = "<group>";
 		};
 		33670A5E2F041B33000651DC /* Settings */ = {
@@ -276,6 +364,93 @@
 			productReference = 1A0000000000000000000010 /* All1Fit.app */;
 			productType = "com.apple.product-type.application";
 		};
+		33C9ACC02F07FD4C00358E39 /* All1FitWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 33C9ACF12F07FD4D00358E39 /* Build configuration list for PBXNativeTarget "All1FitWatch" */;
+			buildPhases = (
+				33C9ACBF2F07FD4C00358E39 /* Resources */,
+				33C9ACE92F07FD4D00358E39 /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				33C9ACC92F07FD4C00358E39 /* PBXTargetDependency */,
+			);
+			name = All1FitWatch;
+			packageProductDependencies = (
+			);
+			productName = All1FitWatch;
+			productReference = 33C9ACC12F07FD4C00358E39 /* All1FitWatch.app */;
+			productType = "com.apple.product-type.application.watchapp2-container";
+		};
+		33C9ACC52F07FD4C00358E39 /* All1FitWatch Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 33C9ACF02F07FD4D00358E39 /* Build configuration list for PBXNativeTarget "All1FitWatch Watch App" */;
+			buildPhases = (
+				33C9ACC22F07FD4C00358E39 /* Sources */,
+				33C9ACC32F07FD4C00358E39 /* Frameworks */,
+				33C9ACC42F07FD4C00358E39 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				33C9ACCA2F07FD4C00358E39 /* All1FitWatch Watch App */,
+			);
+			name = "All1FitWatch Watch App";
+			packageProductDependencies = (
+			);
+			productName = "All1FitWatch Watch App";
+			productReference = 33C9ACC62F07FD4C00358E39 /* All1FitWatch Watch App.app */;
+			productType = "com.apple.product-type.application";
+		};
+		33C9ACD42F07FD4D00358E39 /* All1FitWatch Watch AppTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 33C9ACF22F07FD4D00358E39 /* Build configuration list for PBXNativeTarget "All1FitWatch Watch AppTests" */;
+			buildPhases = (
+				33C9ACD12F07FD4D00358E39 /* Sources */,
+				33C9ACD22F07FD4D00358E39 /* Frameworks */,
+				33C9ACD32F07FD4D00358E39 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				33C9ACD72F07FD4D00358E39 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				33C9ACD82F07FD4D00358E39 /* All1FitWatch Watch AppTests */,
+			);
+			name = "All1FitWatch Watch AppTests";
+			packageProductDependencies = (
+			);
+			productName = "All1FitWatch Watch AppTests";
+			productReference = 33C9ACD52F07FD4D00358E39 /* All1FitWatch Watch AppTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		33C9ACDE2F07FD4D00358E39 /* All1FitWatch Watch AppUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 33C9ACF32F07FD4D00358E39 /* Build configuration list for PBXNativeTarget "All1FitWatch Watch AppUITests" */;
+			buildPhases = (
+				33C9ACDB2F07FD4D00358E39 /* Sources */,
+				33C9ACDC2F07FD4D00358E39 /* Frameworks */,
+				33C9ACDD2F07FD4D00358E39 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				33C9ACE12F07FD4D00358E39 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				33C9ACE22F07FD4D00358E39 /* All1FitWatch Watch AppUITests */,
+			);
+			name = "All1FitWatch Watch AppUITests";
+			packageProductDependencies = (
+			);
+			productName = "All1FitWatch Watch AppUITests";
+			productReference = 33C9ACDF2F07FD4D00358E39 /* All1FitWatch Watch AppUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -283,11 +458,25 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1500;
-				LastUpgradeCheck = 1500;
+				LastSwiftUpdateCheck = 2610;
+				LastUpgradeCheck = 2610;
 				TargetAttributes = {
 					1A0000000000000000000050 = {
 						CreatedOnToolsVersion = 15.0;
+					};
+					33C9ACC02F07FD4C00358E39 = {
+						CreatedOnToolsVersion = 26.1.1;
+					};
+					33C9ACC52F07FD4C00358E39 = {
+						CreatedOnToolsVersion = 26.1.1;
+					};
+					33C9ACD42F07FD4D00358E39 = {
+						CreatedOnToolsVersion = 26.1.1;
+						TestTargetID = 33C9ACC52F07FD4C00358E39;
+					};
+					33C9ACDE2F07FD4D00358E39 = {
+						CreatedOnToolsVersion = 26.1.1;
+						TestTargetID = 33C9ACC52F07FD4C00358E39;
 					};
 				};
 			};
@@ -310,6 +499,10 @@
 			projectRoot = "";
 			targets = (
 				1A0000000000000000000050 /* All1Fit */,
+				33C9ACC02F07FD4C00358E39 /* All1FitWatch */,
+				33C9ACC52F07FD4C00358E39 /* All1FitWatch Watch App */,
+				33C9ACD42F07FD4D00358E39 /* All1FitWatch Watch AppTests */,
+				33C9ACDE2F07FD4D00358E39 /* All1FitWatch Watch AppUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -321,6 +514,34 @@
 			files = (
 				1A000000000000000000000D /* Assets.xcassets in Resources */,
 				335068772EF9FDAE0094B0E7 /* GoogleService-Info.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		33C9ACBF2F07FD4C00358E39 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		33C9ACC42F07FD4C00358E39 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		33C9ACD32F07FD4D00358E39 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		33C9ACDD2F07FD4D00358E39 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -365,10 +586,50 @@
 				33670A602F041B33000651DC /* PrivacyPolicyView.swift in Sources */,
 				33CDEF032EFB110000D5D304 /* WorkoutFormView.swift in Sources */,
 				33CDEF052EFB120000D5D304 /* WorkoutHistoryChartView.swift in Sources */,
+				335685862F07FF8E00573F41 /* PhoneConnectivityService.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		33C9ACC22F07FD4C00358E39 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		33C9ACD12F07FD4D00358E39 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		33C9ACDB2F07FD4D00358E39 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		33C9ACC92F07FD4C00358E39 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 33C9ACC52F07FD4C00358E39 /* All1FitWatch Watch App */;
+			targetProxy = 33C9ACC82F07FD4C00358E39 /* PBXContainerItemProxy */;
+		};
+		33C9ACD72F07FD4D00358E39 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 33C9ACC52F07FD4C00358E39 /* All1FitWatch Watch App */;
+			targetProxy = 33C9ACD62F07FD4D00358E39 /* PBXContainerItemProxy */;
+		};
+		33C9ACE12F07FD4D00358E39 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 33C9ACC52F07FD4C00358E39 /* All1FitWatch Watch App */;
+			targetProxy = 33C9ACE02F07FD4D00358E39 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		1A00000000000000000000A0 /* Debug */ = {
@@ -376,6 +637,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -406,6 +668,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = AXK73U74AC;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -429,6 +692,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -439,6 +703,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -469,6 +734,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = AXK73U74AC;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -485,6 +751,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -497,9 +764,8 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = All1Fit/All1Fit.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = AXK73U74AC;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = All1Fit/Info.plist;
@@ -514,12 +780,12 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.idanidev.All1Fit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -530,9 +796,8 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = All1Fit/All1Fit.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = AXK73U74AC;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = All1Fit/Info.plist;
@@ -547,12 +812,192 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.idanidev.All1Fit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		33C9ACE72F07FD4D00358E39 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_KEY_CFBundleDisplayName = All1FitWatch;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = idanidev.All1FitWatch;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		33C9ACE82F07FD4D00358E39 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_KEY_CFBundleDisplayName = All1FitWatch;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = idanidev.All1FitWatch;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		33C9ACEA2F07FD4D00358E39 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = All1FitWatch;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKWatchOnly = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = idanidev.All1FitWatch.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+			};
+			name = Debug;
+		};
+		33C9ACEB2F07FD4D00358E39 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = All1FitWatch;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKWatchOnly = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = idanidev.All1FitWatch.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+			};
+			name = Release;
+		};
+		33C9ACEC2F07FD4D00358E39 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "idanidev.All1FitWatch-Watch-AppTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/All1FitWatch Watch App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/All1FitWatch Watch App";
+				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+			};
+			name = Debug;
+		};
+		33C9ACED2F07FD4D00358E39 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "idanidev.All1FitWatch-Watch-AppTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/All1FitWatch Watch App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/All1FitWatch Watch App";
+				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+			};
+			name = Release;
+		};
+		33C9ACEE2F07FD4D00358E39 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "idanidev.All1FitWatch-Watch-AppUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_TARGET_NAME = "All1FitWatch Watch App";
+				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+			};
+			name = Debug;
+		};
+		33C9ACEF2F07FD4D00358E39 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "idanidev.All1FitWatch-Watch-AppUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				TEST_TARGET_NAME = "All1FitWatch Watch App";
+				WATCHOS_DEPLOYMENT_TARGET = 26.1;
 			};
 			name = Release;
 		};
@@ -573,6 +1018,42 @@
 			buildConfigurations = (
 				1A00000000000000000000A0 /* Debug */,
 				1A00000000000000000000A1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		33C9ACF02F07FD4D00358E39 /* Build configuration list for PBXNativeTarget "All1FitWatch Watch App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				33C9ACEA2F07FD4D00358E39 /* Debug */,
+				33C9ACEB2F07FD4D00358E39 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		33C9ACF12F07FD4D00358E39 /* Build configuration list for PBXNativeTarget "All1FitWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				33C9ACE72F07FD4D00358E39 /* Debug */,
+				33C9ACE82F07FD4D00358E39 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		33C9ACF22F07FD4D00358E39 /* Build configuration list for PBXNativeTarget "All1FitWatch Watch AppTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				33C9ACEC2F07FD4D00358E39 /* Debug */,
+				33C9ACED2F07FD4D00358E39 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		33C9ACF32F07FD4D00358E39 /* Build configuration list for PBXNativeTarget "All1FitWatch Watch AppUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				33C9ACEE2F07FD4D00358E39 /* Debug */,
+				33C9ACEF2F07FD4D00358E39 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
