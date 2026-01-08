@@ -45,6 +45,7 @@ struct All1FitApp: App {
 // MARK: - Root View
 struct RootView: View {
     @StateObject private var authService = AuthService()
+    @StateObject private var phoneConnectivity = PhoneConnectivityService.shared
     @AppStorage("hasCompletedOnboarding") private var localOnboardingComplete = false
     
     /// Combined onboarding status: local OR Firebase

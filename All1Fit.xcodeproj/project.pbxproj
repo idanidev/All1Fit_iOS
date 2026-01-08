@@ -37,6 +37,9 @@
 		33670A5F2F041B33000651DC /* ProfileEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33670A5D2F041B33000651DC /* ProfileEditView.swift */; };
 		33670A602F041B33000651DC /* PrivacyPolicyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33670A5C2F041B33000651DC /* PrivacyPolicyView.swift */; };
 		33904BA72EFA945E00EE9AB8 /* WeightUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33904BA62EFA945E00EE9AB8 /* WeightUnit.swift */; };
+		33959F5D2F0FEC980061FB26 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 33959EC42F0FE3A00061FB26 /* WidgetKit.framework */; };
+		33959F5E2F0FEC980061FB26 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 33959EC62F0FE3A00061FB26 /* SwiftUI.framework */; };
+		33959F6D2F0FEC990061FB26 /* All1FitWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 33959F5C2F0FEC980061FB26 /* All1FitWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		33ABCD032EFAC12000B3B102 /* VideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33ABCD022EFAC12000B3B102 /* VideoPlayerView.swift */; };
 		33BCDE012EFAD10000C4C203 /* Workout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BCDE002EFAD10000C4C203 /* Workout.swift */; };
 		33BCDE032EFAD11000C4C203 /* WorkoutResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BCDE022EFAD11000C4C203 /* WorkoutResult.swift */; };
@@ -50,9 +53,29 @@
 		33CDEF052EFB120000D5D304 /* WorkoutHistoryChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CDEF042EFB120000D5D304 /* WorkoutHistoryChartView.swift */; };
 		33DD91062F0007AF00601DE3 /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33DD91052F0007AF00601DE3 /* NetworkMonitor.swift */; };
 		33DD91072F0007AF00601DE3 /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33DD91042F0007AF00601DE3 /* ImageCache.swift */; };
+		4D66B970EEC2140D76A658D1 /* Tabata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FB3FFD040101CFDC833EFBF /* Tabata.swift */; };
+		4D76CE8B1D15EAC5AA0487D4 /* TabataLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BFC56024BD5476F49D0E8C /* TabataLiveActivity.swift */; };
+		5EBF96630A69ADA46F8CE481 /* TabataDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0169D56AAC3A397DAFE2E1E4 /* TabataDetailView.swift */; };
+		6D7ED6A176E0A897CE9AB9D8 /* TabataListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E28DDE867731A4FC892C22 /* TabataListView.swift */; };
+		8067A1FD0E10F7E3FA0328C6 /* Tabata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FB3FFD040101CFDC833EFBF /* Tabata.swift */; };
+		835B18365A500E451506AC5A /* TabataSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90E23B48221ED1C00124CD3 /* TabataSessionManager.swift */; };
+		887C8B84EAFA6CD5BA0F0B09 /* TabataMiniPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C2DA8C96C7C9BFEDC37CD3A /* TabataMiniPlayer.swift */; };
+		8F7D2D70B10BCA4A445CE511 /* TabataTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65E1B8DC3059D7060E631D50 /* TabataTimerView.swift */; };
+		94F9F0188C418E3D032CF4FD /* TabataActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 475803AF51DF6B991D71167E /* TabataActivityManager.swift */; };
+		A0996D64AF5A58D03AD0C3C9 /* TabataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FD7F6B4D1488CDADBCA0DA6 /* TabataService.swift */; };
+		C8FE7DA6E2D0A58F9453E9CC /* TabataFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05762C03119EB7759D8E5892 /* TabataFormView.swift */; };
+		E0A8A9E2ECA9EAE2F6E74107 /* TabataActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117BA76938E64C3DA7226252 /* TabataActivityAttributes.swift */; };
+		F9CCB27322EE1A00D9F27E5B /* TabataActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117BA76938E64C3DA7226252 /* TabataActivityAttributes.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		33959F6B2F0FEC990061FB26 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1A0000000000000000000070 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 33959F5B2F0FEC980061FB26;
+			remoteInfo = All1FitWidgetsExtension;
+		};
 		33C9ACC82F07FD4C00358E39 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 1A0000000000000000000070 /* Project object */;
@@ -77,6 +100,27 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		33959ED52F0FE3A10061FB26 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		33959F722F0FEC990061FB26 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				33959F6D2F0FEC990061FB26 /* All1FitWidgetsExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		33C9ACE92F07FD4D00358E39 /* Embed Watch Content */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -91,6 +135,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0169D56AAC3A397DAFE2E1E4 /* TabataDetailView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TabataDetailView.swift; path = All1Fit/Views/Tabatas/TabataDetailView.swift; sourceTree = "<group>"; };
+		05762C03119EB7759D8E5892 /* TabataFormView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TabataFormView.swift; path = All1Fit/Views/Tabatas/TabataFormView.swift; sourceTree = "<group>"; };
+		117BA76938E64C3DA7226252 /* TabataActivityAttributes.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TabataActivityAttributes.swift; path = All1Fit/Models/TabataActivityAttributes.swift; sourceTree = "<group>"; };
 		1A0000000000000000000010 /* All1Fit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = All1Fit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A0000000000000000000011 /* All1FitApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = All1FitApp.swift; sourceTree = "<group>"; };
 		1A0000000000000000000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -106,6 +153,8 @@
 		1A000000000000000000001C /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		1A000000000000000000001D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1A000000000000000000001F /* LogoLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogoLoader.swift; sourceTree = "<group>"; };
+		1C2DA8C96C7C9BFEDC37CD3A /* TabataMiniPlayer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TabataMiniPlayer.swift; path = All1Fit/Views/Tabatas/TabataMiniPlayer.swift; sourceTree = "<group>"; };
+		2FD7F6B4D1488CDADBCA0DA6 /* TabataService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TabataService.swift; path = All1Fit/Services/TabataService.swift; sourceTree = "<group>"; };
 		33321DF82EFABCD000B3B102 /* MobilityExercise.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobilityExercise.swift; sourceTree = "<group>"; };
 		33321DFA2EFABCF900B3B102 /* BodyMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyMapView.swift; sourceTree = "<group>"; };
 		33321DFB2EFABCF900B3B102 /* MobilityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobilityView.swift; sourceTree = "<group>"; };
@@ -118,6 +167,9 @@
 		33670A5C2F041B33000651DC /* PrivacyPolicyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyPolicyView.swift; sourceTree = "<group>"; };
 		33670A5D2F041B33000651DC /* ProfileEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileEditView.swift; sourceTree = "<group>"; };
 		33904BA62EFA945E00EE9AB8 /* WeightUnit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightUnit.swift; sourceTree = "<group>"; };
+		33959EC42F0FE3A00061FB26 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		33959EC62F0FE3A00061FB26 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		33959F5C2F0FEC980061FB26 /* All1FitWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = All1FitWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		339983292F03156500171A0C /* All1Fit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = All1Fit.entitlements; sourceTree = "<group>"; };
 		33ABCD022EFAC12000B3B102 /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
 		33BCDE002EFAD10000C4C203 /* Workout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Workout.swift; sourceTree = "<group>"; };
@@ -135,12 +187,92 @@
 		33CDEF042EFB120000D5D304 /* WorkoutHistoryChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutHistoryChartView.swift; sourceTree = "<group>"; };
 		33DD91042F0007AF00601DE3 /* ImageCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCache.swift; sourceTree = "<group>"; };
 		33DD91052F0007AF00601DE3 /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
+		475803AF51DF6B991D71167E /* TabataActivityManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TabataActivityManager.swift; path = All1Fit/Services/TabataActivityManager.swift; sourceTree = "<group>"; };
+		4FB3FFD040101CFDC833EFBF /* Tabata.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Tabata.swift; path = All1Fit/Models/Tabata.swift; sourceTree = "<group>"; };
+		65E1B8DC3059D7060E631D50 /* TabataTimerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TabataTimerView.swift; path = All1Fit/Views/Tabatas/TabataTimerView.swift; sourceTree = "<group>"; };
+		C90E23B48221ED1C00124CD3 /* TabataSessionManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TabataSessionManager.swift; path = All1Fit/Services/TabataSessionManager.swift; sourceTree = "<group>"; };
+		D0BFC56024BD5476F49D0E8C /* TabataLiveActivity.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TabataLiveActivity.swift; path = All1FitWidgets/TabataLiveActivity.swift; sourceTree = "<group>"; };
+		F5E28DDE867731A4FC892C22 /* TabataListView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TabataListView.swift; path = All1Fit/Views/Tabatas/TabataListView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		33959F6E2F0FEC990061FB26 /* Exceptions for "All1FitWidgets" folder in "All1FitWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 33959F5B2F0FEC980061FB26 /* All1FitWidgetsExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		33C9ACCA2F07FD4C00358E39 /* All1FitWatch Watch App */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "All1FitWatch Watch App"; sourceTree = "<group>"; };
-		33C9ACD82F07FD4D00358E39 /* All1FitWatch Watch AppTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "All1FitWatch Watch AppTests"; sourceTree = "<group>"; };
-		33C9ACE22F07FD4D00358E39 /* All1FitWatch Watch AppUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "All1FitWatch Watch AppUITests"; sourceTree = "<group>"; };
+		33959EC82F0FE3A00061FB26 /* All1FitWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = All1FitWidgets;
+			sourceTree = "<group>";
+		};
+		33959F0D2F0FEA770061FB26 /* All1FitWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = All1FitWidgets;
+			sourceTree = "<group>";
+		};
+		33959F5F2F0FEC980061FB26 /* All1FitWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				33959F6E2F0FEC990061FB26 /* Exceptions for "All1FitWidgets" folder in "All1FitWidgetsExtension" target */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = All1FitWidgets;
+			sourceTree = "<group>";
+		};
+		33C9ACCA2F07FD4C00358E39 /* All1FitWatch Watch App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = "All1FitWatch Watch App";
+			sourceTree = "<group>";
+		};
+		33C9ACD82F07FD4D00358E39 /* All1FitWatch Watch AppTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = "All1FitWatch Watch AppTests";
+			sourceTree = "<group>";
+		};
+		33C9ACE22F07FD4D00358E39 /* All1FitWatch Watch AppUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = "All1FitWatch Watch AppUITests";
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -153,6 +285,15 @@
 				1A00000000000000000000F1 /* FirebaseStorage in Frameworks */,
 				1A00000000000000000000E5 /* GoogleSignIn in Frameworks */,
 				1A00000000000000000000E7 /* GoogleSignInSwift in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		33959F592F0FEC980061FB26 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				33959F5E2F0FEC980061FB26 /* SwiftUI.framework in Frameworks */,
+				33959F5D2F0FEC980061FB26 /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -187,7 +328,22 @@
 				33C9ACCA2F07FD4C00358E39 /* All1FitWatch Watch App */,
 				33C9ACD82F07FD4D00358E39 /* All1FitWatch Watch AppTests */,
 				33C9ACE22F07FD4D00358E39 /* All1FitWatch Watch AppUITests */,
+				33959EC82F0FE3A00061FB26 /* All1FitWidgets */,
+				33959F0D2F0FEA770061FB26 /* All1FitWidgets */,
+				33959F5F2F0FEC980061FB26 /* All1FitWidgets */,
+				33959EC32F0FE3A00061FB26 /* Frameworks */,
 				1A0000000000000000000040 /* Products */,
+				4FB3FFD040101CFDC833EFBF /* Tabata.swift */,
+				2FD7F6B4D1488CDADBCA0DA6 /* TabataService.swift */,
+				F5E28DDE867731A4FC892C22 /* TabataListView.swift */,
+				05762C03119EB7759D8E5892 /* TabataFormView.swift */,
+				0169D56AAC3A397DAFE2E1E4 /* TabataDetailView.swift */,
+				65E1B8DC3059D7060E631D50 /* TabataTimerView.swift */,
+				117BA76938E64C3DA7226252 /* TabataActivityAttributes.swift */,
+				475803AF51DF6B991D71167E /* TabataActivityManager.swift */,
+				D0BFC56024BD5476F49D0E8C /* TabataLiveActivity.swift */,
+				C90E23B48221ED1C00124CD3 /* TabataSessionManager.swift */,
+				1C2DA8C96C7C9BFEDC37CD3A /* TabataMiniPlayer.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -243,6 +399,7 @@
 				1A0000000000000000000037 /* RMs */,
 				33321DF72EFABCF900B3B102 /* Mobility */,
 				33BCDE0C2EFAD16000C4C203 /* Workouts */,
+				D1440F4BD9D4F6199A101A01 /* Tabatas */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -295,6 +452,7 @@
 				33C9ACC62F07FD4C00358E39 /* All1FitWatch Watch App.app */,
 				33C9ACD52F07FD4D00358E39 /* All1FitWatch Watch AppTests.xctest */,
 				33C9ACDF2F07FD4D00358E39 /* All1FitWatch Watch AppUITests.xctest */,
+				33959F5C2F0FEC980061FB26 /* All1FitWidgetsExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -325,6 +483,15 @@
 			path = Settings;
 			sourceTree = "<group>";
 		};
+		33959EC32F0FE3A00061FB26 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				33959EC42F0FE3A00061FB26 /* WidgetKit.framework */,
+				33959EC62F0FE3A00061FB26 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		33BCDE0C2EFAD16000C4C203 /* Workouts */ = {
 			isa = PBXGroup;
 			children = (
@@ -337,6 +504,13 @@
 			path = Workouts;
 			sourceTree = "<group>";
 		};
+		D1440F4BD9D4F6199A101A01 /* Tabatas */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Tabatas;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -347,10 +521,12 @@
 				1A0000000000000000000051 /* Sources */,
 				1A0000000000000000000020 /* Frameworks */,
 				1A0000000000000000000052 /* Resources */,
+				33959F722F0FEC990061FB26 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				33959F6C2F0FEC990061FB26 /* PBXTargetDependency */,
 			);
 			name = All1Fit;
 			packageProductDependencies = (
@@ -363,6 +539,26 @@
 			productName = All1Fit;
 			productReference = 1A0000000000000000000010 /* All1Fit.app */;
 			productType = "com.apple.product-type.application";
+		};
+		33959F5B2F0FEC980061FB26 /* All1FitWidgetsExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 33959F6F2F0FEC990061FB26 /* Build configuration list for PBXNativeTarget "All1FitWidgetsExtension" */;
+			buildPhases = (
+				33959F582F0FEC980061FB26 /* Sources */,
+				33959F592F0FEC980061FB26 /* Frameworks */,
+				33959F5A2F0FEC980061FB26 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				33959F5F2F0FEC980061FB26 /* All1FitWidgets */,
+			);
+			name = All1FitWidgetsExtension;
+			productName = All1FitWidgetsExtension;
+			productReference = 33959F5C2F0FEC980061FB26 /* All1FitWidgetsExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 		33C9ACC02F07FD4C00358E39 /* All1FitWatch */ = {
 			isa = PBXNativeTarget;
@@ -377,8 +573,6 @@
 				33C9ACC92F07FD4C00358E39 /* PBXTargetDependency */,
 			);
 			name = All1FitWatch;
-			packageProductDependencies = (
-			);
 			productName = All1FitWatch;
 			productReference = 33C9ACC12F07FD4C00358E39 /* All1FitWatch.app */;
 			productType = "com.apple.product-type.application.watchapp2-container";
@@ -390,6 +584,7 @@
 				33C9ACC22F07FD4C00358E39 /* Sources */,
 				33C9ACC32F07FD4C00358E39 /* Frameworks */,
 				33C9ACC42F07FD4C00358E39 /* Resources */,
+				33959ED52F0FE3A10061FB26 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
@@ -399,8 +594,6 @@
 				33C9ACCA2F07FD4C00358E39 /* All1FitWatch Watch App */,
 			);
 			name = "All1FitWatch Watch App";
-			packageProductDependencies = (
-			);
 			productName = "All1FitWatch Watch App";
 			productReference = 33C9ACC62F07FD4C00358E39 /* All1FitWatch Watch App.app */;
 			productType = "com.apple.product-type.application";
@@ -422,8 +615,6 @@
 				33C9ACD82F07FD4D00358E39 /* All1FitWatch Watch AppTests */,
 			);
 			name = "All1FitWatch Watch AppTests";
-			packageProductDependencies = (
-			);
 			productName = "All1FitWatch Watch AppTests";
 			productReference = 33C9ACD52F07FD4D00358E39 /* All1FitWatch Watch AppTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -445,8 +636,6 @@
 				33C9ACE22F07FD4D00358E39 /* All1FitWatch Watch AppUITests */,
 			);
 			name = "All1FitWatch Watch AppUITests";
-			packageProductDependencies = (
-			);
 			productName = "All1FitWatch Watch AppUITests";
 			productReference = 33C9ACDF2F07FD4D00358E39 /* All1FitWatch Watch AppUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
@@ -463,6 +652,9 @@
 				TargetAttributes = {
 					1A0000000000000000000050 = {
 						CreatedOnToolsVersion = 15.0;
+					};
+					33959F5B2F0FEC980061FB26 = {
+						CreatedOnToolsVersion = 26.1.1;
 					};
 					33C9ACC02F07FD4C00358E39 = {
 						CreatedOnToolsVersion = 26.1.1;
@@ -503,6 +695,7 @@
 				33C9ACC52F07FD4C00358E39 /* All1FitWatch Watch App */,
 				33C9ACD42F07FD4D00358E39 /* All1FitWatch Watch AppTests */,
 				33C9ACDE2F07FD4D00358E39 /* All1FitWatch Watch AppUITests */,
+				33959F5B2F0FEC980061FB26 /* All1FitWidgetsExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -514,6 +707,13 @@
 			files = (
 				1A000000000000000000000D /* Assets.xcassets in Resources */,
 				335068772EF9FDAE0094B0E7 /* GoogleService-Info.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		33959F5A2F0FEC980061FB26 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -587,6 +787,25 @@
 				33CDEF032EFB110000D5D304 /* WorkoutFormView.swift in Sources */,
 				33CDEF052EFB120000D5D304 /* WorkoutHistoryChartView.swift in Sources */,
 				335685862F07FF8E00573F41 /* PhoneConnectivityService.swift in Sources */,
+				4D66B970EEC2140D76A658D1 /* Tabata.swift in Sources */,
+				A0996D64AF5A58D03AD0C3C9 /* TabataService.swift in Sources */,
+				6D7ED6A176E0A897CE9AB9D8 /* TabataListView.swift in Sources */,
+				C8FE7DA6E2D0A58F9453E9CC /* TabataFormView.swift in Sources */,
+				5EBF96630A69ADA46F8CE481 /* TabataDetailView.swift in Sources */,
+				8F7D2D70B10BCA4A445CE511 /* TabataTimerView.swift in Sources */,
+				F9CCB27322EE1A00D9F27E5B /* TabataActivityAttributes.swift in Sources */,
+				94F9F0188C418E3D032CF4FD /* TabataActivityManager.swift in Sources */,
+				835B18365A500E451506AC5A /* TabataSessionManager.swift in Sources */,
+				887C8B84EAFA6CD5BA0F0B09 /* TabataMiniPlayer.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		33959F582F0FEC980061FB26 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4D76CE8B1D15EAC5AA0487D4 /* TabataLiveActivity.swift in Sources */,
+				E0A8A9E2ECA9EAE2F6E74107 /* TabataActivityAttributes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -594,6 +813,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8067A1FD0E10F7E3FA0328C6 /* Tabata.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -614,6 +834,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		33959F6C2F0FEC990061FB26 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 33959F5B2F0FEC980061FB26 /* All1FitWidgetsExtension */;
+			targetProxy = 33959F6B2F0FEC990061FB26 /* PBXContainerItemProxy */;
+		};
 		33C9ACC92F07FD4C00358E39 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 33C9ACC52F07FD4C00358E39 /* All1FitWatch Watch App */;
@@ -764,7 +989,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = All1Fit/All1Fit.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -780,7 +1005,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.idanidev.All1Fit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -796,7 +1021,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = All1Fit/All1Fit.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -812,12 +1037,72 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.idanidev.All1Fit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		33959F702F0FEC990061FB26 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = All1FitWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = All1FitWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.idanidev.All1Fit.All1FitWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		33959F712F0FEC990061FB26 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = All1FitWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = All1FitWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.idanidev.All1Fit.All1FitWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -827,8 +1112,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				INFOPLIST_KEY_CFBundleDisplayName = All1FitWatch;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = idanidev.All1FitWatch;
+				MARKETING_VERSION = 1.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.idanidev.All1Fit.watchkit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
@@ -842,8 +1127,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				INFOPLIST_KEY_CFBundleDisplayName = All1FitWatch;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = idanidev.All1FitWatch;
+				MARKETING_VERSION = 1.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.idanidev.All1Fit.watchkit;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
@@ -867,8 +1152,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = idanidev.All1FitWatch.watchkitapp;
+				MARKETING_VERSION = 1.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.idanidev.All1Fit.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -879,7 +1164,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Debug;
 		};
@@ -899,8 +1184,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = idanidev.All1FitWatch.watchkitapp;
+				MARKETING_VERSION = 1.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.idanidev.All1Fit.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -911,7 +1196,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Release;
 		};
@@ -922,7 +1207,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "idanidev.All1FitWatch-Watch-AppTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -933,7 +1218,7 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/All1FitWatch Watch App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/All1FitWatch Watch App";
-				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Debug;
 		};
@@ -944,7 +1229,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "idanidev.All1FitWatch-Watch-AppTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -955,7 +1240,7 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/All1FitWatch Watch App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/All1FitWatch Watch App";
-				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Release;
 		};
@@ -965,7 +1250,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "idanidev.All1FitWatch-Watch-AppUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -976,7 +1261,7 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
 				TEST_TARGET_NAME = "All1FitWatch Watch App";
-				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Debug;
 		};
@@ -986,7 +1271,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "idanidev.All1FitWatch-Watch-AppUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -997,7 +1282,7 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
 				TEST_TARGET_NAME = "All1FitWatch Watch App";
-				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Release;
 		};
@@ -1018,6 +1303,15 @@
 			buildConfigurations = (
 				1A00000000000000000000A0 /* Debug */,
 				1A00000000000000000000A1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		33959F6F2F0FEC990061FB26 /* Build configuration list for PBXNativeTarget "All1FitWidgetsExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				33959F702F0FEC990061FB26 /* Debug */,
+				33959F712F0FEC990061FB26 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

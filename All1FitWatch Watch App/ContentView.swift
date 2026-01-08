@@ -44,6 +44,25 @@ struct ContentView: View {
                     }
                 }
                 
+                // Tabatas Section
+                NavigationLink {
+                    TabataWatchView()
+                } label: {
+                    HStack {
+                        Image(systemName: "flame.fill")
+                            .foregroundStyle(.orange)
+                            .frame(width: 30)
+                        
+                        VStack(alignment: .leading) {
+                            Text("Tabatas")
+                                .font(.headline)
+                            Text("HIIT & Cinta")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                
                 // Quick Timer
                 NavigationLink {
                     QuickTimerView()
@@ -64,9 +83,6 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("All1Fit")
-        }
-        .onAppear {
-            connectivityService.requestDataFromPhone()
         }
     }
 }

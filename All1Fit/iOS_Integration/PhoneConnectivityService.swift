@@ -22,12 +22,38 @@ class PhoneConnectivityService: NSObject, ObservableObject {
             session = WCSession.default
             session?.delegate = self
             session?.activate()
+            
+            // Send initial data after a short delay to allow activation
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                Task { @MainActor in
+                    await self.sendInitialDataToWatch()
+                }
+            }
         }
+    }
+    
+    // MARK: - Send Initial Data
+    private func sendInitialDataToWatch() async {
+        guard let session = session, session.isPaired else { return }
+        
+        print("📱 Sending initial data to Watch...")
+        
+        // Fetch and send ejercicios (no reply needed for initial send)
+        await fetchAndSendEjercicios(replyHandler: { _ in })
+        
+        // Fetch and send tabatas (no reply needed for initial send)
+        await fetchAndSendTabatas(replyHandler: { _ in })
     }
     
     // MARK: - Send Ejercicios to Watch
     func sendEjerciciosToWatch(_ ejercicios: [Ejercicio]) {
-        guard let session = session, session.isPaired else { return }
+        guard let session = session, session.isPaired else {
+            print("⌚️ Watch not paired - can't send ejercicios")
+            return
+        }
+        
+        print("📱 Attempting to send \(ejercicios.count) ejercicios to Watch...")
+        print("📱 Session paired: \(session.isPaired), reachable: \(session.isReachable)")
         
         // Convert to WatchEjercicio format
         let watchEjercicios = ejercicios.map { ejercicio -> [String: Any] in
@@ -44,20 +70,73 @@ class PhoneConnectivityService: NSObject, ObservableObject {
         do {
             let data = try JSONSerialization.data(withJSONObject: watchEjercicios)
             
-            let context: [String: Any] = [
-                "ejercicios": data,
-                "weightUnit": UserDefaults.standard.string(forKey: "weightUnit") ?? "kg"
-            ]
+            var context = session.applicationContext
+            context["ejercicios"] = data
+            context["weightUnit"] = UserDefaults.standard.string(forKey: "weightUnit") ?? "kg"
             
             // Use application context for persistence
+            try session.updateApplicationContext(context)
+            print("✅ Successfully sent ejercicios via application context")
+            
+            // Also send immediately if reachable
+            if session.isReachable {
+                session.sendMessage(context, replyHandler: { response in
+                    print("✅ Watch replied to sendMessage")
+                }, errorHandler: { error in
+                    print("⚠️ Error on sendMessage (not critical): \(error.localizedDescription)")
+                })
+            } else {
+                print("⚠️ Watch not reachable - data sent via context only")
+            }
+        } catch {
+            print("❌ Error sending ejercicios to watch: \(error)")
+        }
+    }
+    
+    // MARK: - Send Tabatas to Watch
+    func sendTabatasToWatch(_ tabatas: [Tabata]) {
+        guard let session = session, session.isPaired else { return }
+        
+        do {
+            let data = try JSONEncoder().encode(tabatas)
+            
+            var context = session.applicationContext
+            context["tabatas"] = data
+            
+            // Use application context
             try session.updateApplicationContext(context)
             
             // Also send immediately if reachable
             if session.isReachable {
-                session.sendMessage(context, replyHandler: nil, errorHandler: nil)
+                session.sendMessage(["tabatas": data], replyHandler: nil, errorHandler: nil)
             }
         } catch {
-            print("❌ Error sending ejercicios to watch: \(error)")
+            print("❌ Error sending tabatas to watch: \(error)")
+        }
+    }
+    
+    // MARK: - Send Tabata Start Signal to Watch
+    func sendTabataStartToWatch(_ tabata: Tabata) {
+        guard let session = session, session.isPaired, session.isReachable else {
+            print("⌚️ Watch not reachable - can't start Tabata remotely")
+            return
+        }
+        
+        do {
+            let encoder = JSONEncoder()
+            let tabataData = try encoder.encode(tabata)
+            
+            session.sendMessage(
+                ["action": "startTabata", "tabata": tabataData],
+                replyHandler: { response in
+                    print("✅ Watch received Tabata start command")
+                },
+                errorHandler: { error in
+                    print("❌ Failed to send Tabata to Watch: \(error.localizedDescription)")
+                }
+            )
+        } catch {
+            print("❌ Failed to encode Tabata: \(error)")
         }
     }
     
@@ -94,6 +173,58 @@ class PhoneConnectivityService: NSObject, ObservableObject {
                 }
             }
     }
+    
+    // MARK: - Handle RM Save from Watch
+    private func handleSaveRM(_ message: [String: Any], replyHandler: (([String: Any]) -> Void)? = nil) {
+        guard let userId = Auth.auth().currentUser?.uid,
+              let ejercicioName = message["ejercicioName"] as? String,
+              let valor = message["valor"] as? Double else {
+            replyHandler?(["status": "error", "message": "Invalid data"])
+            return
+        }
+        
+        let fecha = message["fecha"] as? TimeInterval ?? Date().timeIntervalSince1970
+        let ejercicioId = message["ejercicioId"] as? String
+        
+        let rmEntry: [String: Any] = [
+            "valor": valor,
+            "fecha": Timestamp(date: Date(timeIntervalSince1970: fecha))
+        ]
+        
+        let ejerciciosRef = db.collection("users").document(userId).collection("ejercicios")
+        
+        if let existingId = ejercicioId {
+            // Update existing ejercicio
+            ejerciciosRef.document(existingId).updateData([
+                "rmHistory": FieldValue.arrayUnion([rmEntry])
+            ]) { error in
+                if let error = error {
+                    print("❌ Error updating RM from watch: \(error)")
+                    replyHandler?(["status": "error"])
+                } else {
+                    print("✅ RM updated from watch")
+                    replyHandler?(["status": "saved"])
+                }
+            }
+        } else {
+            // Create new ejercicio with this RM
+            let newEjercicio: [String: Any] = [
+                "name": ejercicioName,
+                "rmHistory": [rmEntry],
+                "createdAt": FieldValue.serverTimestamp()
+            ]
+            
+            ejerciciosRef.addDocument(data: newEjercicio) { error in
+                if let error = error {
+                    print("❌ Error creating ejercicio from watch: \(error)")
+                    replyHandler?(["status": "error"])
+                } else {
+                    print("✅ New ejercicio created from watch")
+                    replyHandler?(["status": "saved"])
+                }
+            }
+        }
+    }
 }
 
 // MARK: - WCSession Delegate
@@ -123,9 +254,13 @@ extension PhoneConnectivityService: WCSessionDelegate {
             if message["request"] as? String == "ejercicios" {
                 // Watch is requesting data - fetch and send
                 await self.fetchAndSendEjercicios(replyHandler: replyHandler)
+            } else if message["request"] as? String == "tabatas" {
+                await self.fetchAndSendTabatas(replyHandler: replyHandler)
             } else if message["action"] as? String == "saveWorkoutResult" {
                 self.handleWorkoutResult(message)
                 replyHandler(["status": "saved"])
+            } else if message["action"] as? String == "saveRM" {
+                self.handleSaveRM(message, replyHandler: replyHandler)
             }
         }
     }
@@ -134,6 +269,8 @@ extension PhoneConnectivityService: WCSessionDelegate {
         Task { @MainActor in
             if message["action"] as? String == "saveWorkoutResult" {
                 self.handleWorkoutResult(message)
+            } else if message["action"] as? String == "saveRM" {
+                self.handleSaveRM(message)
             }
         }
     }
@@ -142,6 +279,8 @@ extension PhoneConnectivityService: WCSessionDelegate {
         Task { @MainActor in
             if userInfo["action"] as? String == "saveWorkoutResult" {
                 self.handleWorkoutResult(userInfo)
+            } else if userInfo["action"] as? String == "saveRM" {
+                self.handleSaveRM(userInfo)
             }
         }
     }
@@ -195,6 +334,40 @@ extension PhoneConnectivityService: WCSessionDelegate {
         } catch {
             print("❌ Error fetching ejercicios for watch: \(error)")
             replyHandler(["error": error.localizedDescription])
+        }
+    }
+    
+    @MainActor
+    private func fetchAndSendTabatas(replyHandler: @escaping ([String: Any]) -> Void) async {
+        guard let userId = Auth.auth().currentUser?.uid else {
+            replyHandler(["error": "Not authenticated"])
+            return
+        }
+        
+        // Start with default tabatas
+        var allTabatas = Tabata.all
+        
+        do {
+            // Fetch custom tabatas
+            let snapshot = try await db.collection("users")
+                .document(userId)
+                .collection("tabatas")
+                .getDocuments()
+            
+            let customTabatas = snapshot.documents.compactMap { try? $0.data(as: Tabata.self) }
+            allTabatas.append(contentsOf: customTabatas)
+            
+            let data = try JSONEncoder().encode(allTabatas)
+            replyHandler(["tabatas": data])
+            
+        } catch {
+            print("❌ Error fetching tabatas for watch: \(error)")
+            // If error, atleast send defaults
+            if let data = try? JSONEncoder().encode(Tabata.all) {
+                replyHandler(["tabatas": data])
+            } else {
+                replyHandler(["error": error.localizedDescription])
+            }
         }
     }
 }

@@ -12,9 +12,10 @@ struct MainTabView: View {
     @State private var showingAddSheet = false
     @State private var showingAddRM = false
     @State private var showingAddWorkout = false
+    @State private var showingFullPlayer = false
     
     var body: some View {
-        ZStack(alignment: .top) {
+        ZStack(alignment: .bottom) {
             TabView(selection: $selectedTab) {
                 RMListView()
                     .tabItem {
@@ -28,6 +29,12 @@ struct MainTabView: View {
                         Label("Entrenos", systemImage: "figure.run")
                     }
                     .tag(1)
+                
+                TabataListView()
+                    .tabItem {
+                        Label("Tabatas", systemImage: "timer")
+                    }
+                    .tag(2)
                 
                 // TODO: Mobility - Coming in v1.1
                 // if authService.isAdmin {
@@ -46,9 +53,17 @@ struct MainTabView: View {
             }
             .tint(.orange)
             
-            // Offline indicator banner
-            OfflineBanner()
-                .animation(.spring(duration: 0.3), value: NetworkMonitor.shared.isConnected)
+            // Mini Player for Tabata (floating above tab bar)
+            VStack {
+                Spacer()
+                TabataMiniPlayer(showFullPlayer: $showingFullPlayer)
+                    .padding(.bottom, 50) // Above tab bar
+            }
+        }
+        .fullScreenCover(isPresented: $showingFullPlayer) {
+            if let activeTabata = TabataSessionManager.shared.activeTabata {
+                TabataTimerView(tabata: activeTabata, syncWithWatch: true)
+            }
         }
         .confirmationDialog("¿Qué quieres añadir?", isPresented: $showingAddSheet, titleVisibility: .visible) {
             Button("Nuevo RM") {
@@ -234,7 +249,7 @@ struct SettingsView: View {
             HStack {
                 Label("Versión", systemImage: "info.circle")
                 Spacer()
-                Text("1.0.1")
+                Text("1.1.0")
                     .foregroundStyle(.secondary)
             }
             

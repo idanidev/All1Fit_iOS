@@ -111,7 +111,6 @@ struct RMDetailWatchView: View {
     private func percentageRow(item: (porcentaje: Int, peso: Double)) -> some View {
         let converted = connectivityService.weightUnit.convert(item.peso)
         let isHighIntensity = item.porcentaje >= 85
-        let isMediumIntensity = item.porcentaje >= 70 && item.porcentaje < 85
         
         return HStack {
             // Percentage

@@ -27,7 +27,8 @@ struct RMListWatchView: View {
     
     // MARK: - Empty State
     private var emptyState: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
+            // Actually empty - no loading spinner if iPhone not connected
             Image(systemName: "dumbbell.fill")
                 .font(.system(size: 40))
                 .foregroundStyle(.orange.opacity(0.5))
@@ -63,6 +64,15 @@ struct RMListWatchView: View {
             }
         }
         .searchable(text: $searchText, prompt: "Buscar")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink {
+                    AddRMWatchView()
+                } label: {
+                    Image(systemName: "plus")
+                }
+            }
+        }
     }
 }
 

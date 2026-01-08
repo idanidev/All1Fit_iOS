@@ -45,6 +45,9 @@ class EjercicioService: ObservableObject {
                 try? doc.data(as: Ejercicio.self)
             }
             lastFetchTime = Date()
+            
+            // Auto-sync with Apple Watch
+            PhoneConnectivityService.shared.sendEjerciciosToWatch(ejercicios)
         } catch {
             errorMessage = error.localizedDescription
         }
