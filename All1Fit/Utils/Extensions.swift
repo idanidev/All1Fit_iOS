@@ -73,11 +73,15 @@ extension View {
 // MARK: - Animation Extensions
 extension Animation {
     static var smoothSpring: Animation {
-        .spring(duration: 0.4, bounce: 0.2)
+        .spring(response: 0.3, dampingFraction: 0.65)
     }
     
     static var gentleSpring: Animation {
         .spring(duration: 0.6, bounce: 0.1)
+    }
+
+    static var fluidSpring: Animation {
+        .spring(response: 0.5, dampingFraction: 0.7, blendDuration: 0.3)
     }
 }
 
@@ -94,40 +98,7 @@ extension View {
 }
 
 // MARK: - Shimmer Effect
-struct ShimmerModifier: ViewModifier {
-    @State private var phase: CGFloat = 0
-    
-    func body(content: Content) -> some View {
-        content
-            .overlay(
-                GeometryReader { geometry in
-                    LinearGradient(
-                        colors: [
-                            .clear,
-                            .white.opacity(0.3),
-                            .clear
-                        ],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                    .frame(width: geometry.size.width * 2)
-                    .offset(x: -geometry.size.width + phase * geometry.size.width * 2)
-                }
-                .mask(content)
-            )
-            .onAppear {
-                withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
-                    phase = 1
-                }
-            }
-    }
-}
 
-extension View {
-    func shimmer() -> some View {
-        modifier(ShimmerModifier())
-    }
-}
 
 // MARK: - iOS 26 Glass Effect Compatibility
 

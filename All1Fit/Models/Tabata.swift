@@ -163,17 +163,35 @@ struct Tabata: Identifiable, Codable, Hashable {
     
     // MARK: - Predefined Tabatas
     
-    static let all: [Tabata] = [
-        // 🔥 Infierno - Default (most intense)
-        Tabata(
-            id: "infierno",
-            name: "🔥 Infierno",
-            workSeconds: 30,
-            restSeconds: 10,
-            rounds: 10,
-            sets: 1,
-            setRestSeconds: 0
-        ),
+    static let all: [Tabata] = {
+        var tabatas: [Tabata] = []
+        
+        #if DEBUG
+        // 🧪 Debug Test - Quick test with short times (only in DEBUG)
+        tabatas.append(
+            Tabata(
+                id: "debug-test",
+                name: "🧪 DEBUG Test (3s)",
+                workSeconds: 3,
+                restSeconds: 2,
+                rounds: 3,
+                sets: 1,
+                setRestSeconds: 0
+            )
+        )
+        #endif
+        
+        tabatas.append(contentsOf: [
+            // 🔥 Infierno - Default (most intense)
+            Tabata(
+                id: "infierno",
+                name: "🔥 Infierno",
+                workSeconds: 30,
+                restSeconds: 10,
+                rounds: 10,
+                sets: 1,
+                setRestSeconds: 0
+            ),
         
         // Clásico - Original Dr. Izumi Tabata
         Tabata(
@@ -350,7 +368,10 @@ struct Tabata: Identifiable, Codable, Hashable {
                 )
             ]
         )
-    ]
+        ])
+        
+        return tabatas
+    }()
     
     static func tabata(withId id: String) -> Tabata? {
         all.first { $0.id == id }

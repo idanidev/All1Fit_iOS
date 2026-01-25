@@ -120,16 +120,8 @@ struct SettingsView: View {
                 deleteAccountSection
             }
             .navigationTitle("Ajustes")
+            .navigationBarTitleDisplayMode(.large)
             .listStyle(.insetGrouped)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Image("Logo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 80) // Reduced to fit Dynamic Island
-                        .shadow(color: .white.opacity(0.5), radius: 10)
-                }
-            }
             .sheet(isPresented: $showingProfileEdit, onDismiss: {
                 // Force refresh of avatar image when profile is edited
                 profileRefreshID = UUID()

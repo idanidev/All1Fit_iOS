@@ -124,7 +124,11 @@ struct UserWorkout: Identifiable, Codable, Hashable {
             description: description,
             exercises: exercises.map { $0.toWorkoutExercise() },
             timeCapMinutes: timeCapMinutes,
-            isForTime: isForTime
+            isForTime: isForTime,
+            difficulty: .intermediate,  // Default for user workouts
+            estimatedDurationMinutes: timeCapMinutes ?? 20,
+            tags: ["Personalizado"],
+            equipment: []
         )
     }
 }

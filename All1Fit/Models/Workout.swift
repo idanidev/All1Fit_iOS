@@ -1,5 +1,33 @@
 import Foundation
 
+// MARK: - Difficulty Level
+enum DifficultyLevel: String, CaseIterable, Identifiable, Codable {
+    case beginner = "Principiante"
+    case intermediate = "Intermedio"
+    case advanced = "Avanzado"
+    case elite = "Elite"
+    
+    var id: String { rawValue }
+    
+    var icon: String {
+        switch self {
+        case .beginner: return "star.fill"
+        case .intermediate: return "star.leadinghalf.filled"
+        case .advanced: return "flame.fill"
+        case .elite: return "crown.fill"
+        }
+    }
+    
+    var color: String {
+        switch self {
+        case .beginner: return "green"
+        case .intermediate: return "blue"
+        case .advanced: return "orange"
+        case .elite: return "purple"
+        }
+    }
+}
+
 // MARK: - Workout Category
 enum WorkoutCategory: String, CaseIterable, Identifiable {
     case running = "Running"
@@ -49,6 +77,12 @@ struct Workout: Identifiable, Hashable {
     let timeCapMinutes: Int? // Optional time cap
     let isForTime: Bool // true = for time, false = AMRAP or distance
     
+    // New metadata fields
+    let difficulty: DifficultyLevel
+    let estimatedDurationMinutes: Int
+    let tags: [String]
+    let equipment: [String]
+    
     // MARK: - Predefined Workouts
     static let all: [Workout] = [
         // Running
@@ -61,7 +95,11 @@ struct Workout: Identifiable, Hashable {
                 WorkoutExercise(name: "Carrera", reps: "5 km", notes: "Ritmo constante")
             ],
             timeCapMinutes: nil,
-            isForTime: true
+            isForTime: true,
+            difficulty: .beginner,
+            estimatedDurationMinutes: 25,
+            tags: ["cardio", "endurance", "running"],
+            equipment: ["Running shoes"]
         ),
         Workout(
             id: "10k",
@@ -72,7 +110,11 @@ struct Workout: Identifiable, Hashable {
                 WorkoutExercise(name: "Carrera", reps: "10 km", notes: "Ritmo moderado")
             ],
             timeCapMinutes: nil,
-            isForTime: true
+            isForTime: true,
+            difficulty: .intermediate,
+            estimatedDurationMinutes: 50,
+            tags: ["cardio", "endurance", "running"],
+            equipment: ["Running shoes"]
         ),
         Workout(
             id: "media-maraton",
@@ -83,7 +125,11 @@ struct Workout: Identifiable, Hashable {
                 WorkoutExercise(name: "Carrera", reps: "21.1 km")
             ],
             timeCapMinutes: nil,
-            isForTime: true
+            isForTime: true,
+            difficulty: .advanced,
+            estimatedDurationMinutes: 120,
+            tags: ["cardio", "endurance", "running", "race"],
+            equipment: ["Running shoes"]
         ),
         Workout(
             id: "maraton",
@@ -94,7 +140,11 @@ struct Workout: Identifiable, Hashable {
                 WorkoutExercise(name: "Carrera", reps: "42.195 km")
             ],
             timeCapMinutes: nil,
-            isForTime: true
+            isForTime: true,
+            difficulty: .elite,
+            estimatedDurationMinutes: 240,
+            tags: ["cardio", "endurance", "running", "race"],
+            equipment: ["Running shoes"]
         ),
         
         // CrossFit
@@ -111,7 +161,11 @@ struct Workout: Identifiable, Hashable {
                 WorkoutExercise(name: "Run", reps: "1 milla")
             ],
             timeCapMinutes: nil,
-            isForTime: true
+            isForTime: true,
+            difficulty: .advanced,
+            estimatedDurationMinutes: 45,
+            tags: ["hero", "bodyweight", "running", "benchmark"],
+            equipment: ["Pull-up bar", "Weighted vest (optional)"]
         ),
         Workout(
             id: "cindy",
@@ -124,7 +178,11 @@ struct Workout: Identifiable, Hashable {
                 WorkoutExercise(name: "Air Squats", reps: "15")
             ],
             timeCapMinutes: 20,
-            isForTime: false
+            isForTime: false,
+            difficulty: .intermediate,
+            estimatedDurationMinutes: 20,
+            tags: ["amrap", "bodyweight", "benchmark"],
+            equipment: ["Pull-up bar"]
         ),
         Workout(
             id: "fran",
@@ -136,7 +194,11 @@ struct Workout: Identifiable, Hashable {
                 WorkoutExercise(name: "Pull-ups", reps: "21-15-9")
             ],
             timeCapMinutes: nil,
-            isForTime: true
+            isForTime: true,
+            difficulty: .advanced,
+            estimatedDurationMinutes: 8,
+            tags: ["benchmark", "weightlifting", "gymnastics"],
+            equipment: ["Barbell", "Pull-up bar", "Plates"]
         ),
         Workout(
             id: "helen",
@@ -149,7 +211,11 @@ struct Workout: Identifiable, Hashable {
                 WorkoutExercise(name: "Pull-ups", reps: "12")
             ],
             timeCapMinutes: nil,
-            isForTime: true
+            isForTime: true,
+            difficulty: .intermediate,
+            estimatedDurationMinutes: 12,
+            tags: ["benchmark", "running", "kettlebell"],
+            equipment: ["Kettlebell", "Pull-up bar"]
         ),
         
         // Competitions
@@ -177,7 +243,11 @@ struct Workout: Identifiable, Hashable {
                 WorkoutExercise(name: "Wall Balls", reps: "100", notes: "9/6 kg")
             ],
             timeCapMinutes: nil,
-            isForTime: true
+            isForTime: true,
+            difficulty: .elite,
+            estimatedDurationMinutes: 75,
+            tags: ["competition", "endurance", "functional", "running"],
+            equipment: ["SkiErg", "Sled", "Rower", "Kettlebells", "Sandbag", "Wall ball"]
         ),
         Workout(
             id: "dekka",
@@ -197,7 +267,11 @@ struct Workout: Identifiable, Hashable {
                 WorkoutExercise(name: "Zona 10: Wall Balls", reps: "25")
             ],
             timeCapMinutes: nil,
-            isForTime: true
+            isForTime: true,
+            difficulty: .advanced,
+            estimatedDurationMinutes: 40,
+            tags: ["competition", "functional", "circuit"],
+            equipment: ["Box", "Assault Bike", "Dead Ball", "SkiErg", "Rower", "Tank", "Kettlebells", "Wall ball"]
         )
     ]
     

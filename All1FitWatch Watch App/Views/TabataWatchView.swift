@@ -8,35 +8,22 @@ struct TabataWatchView: View {
     
     var body: some View {
         NavigationStack {
-            List {
-                // Intervals
-                let intervalTabatas = connectivityService.tabatas.filter { $0.type == .intervals }
-                if !intervalTabatas.isEmpty {
-                    Section("🔥 Intervalos") {
-                        ForEach(intervalTabatas) { tabata in
-                            NavigationLink {
-                                TabataTimerWatchView(tabata: tabata)
-                            } label: {
-                                TabataRowWatch(tabata: tabata)
-                            }
-                        }
-                    }
+            VStack(spacing: 0) {
+                // Main Content
+                if connectivityService.syncStatus == .syncing && connectivityService.tabatas.isEmpty {
+                    WatchSkeletonLoader(count: 4)
                 } else if connectivityService.tabatas.isEmpty {
-                    Text("Cargando tabatas...")
-                }
-                
-                // Treadmill
-                let treadmillTabatas = connectivityService.tabatas.filter { $0.type == .treadmill }
-                if !treadmillTabatas.isEmpty {
-                    Section("🏃 Cinta") {
-                        ForEach(treadmillTabatas) { tabata in
-                            NavigationLink {
-                                TreadmillTimerWatchView(tabata: tabata)
-                            } label: {
-                                TabataRowWatch(tabata: tabata)
-                            }
+                    WatchEmptyStateView(
+                        icon: "timer",
+                        title: "Sin Tabatas",
+                        message: "Los tabatas se sincronizarán automáticamente desde tu iPhone",
+                        actionTitle: "Sincronizar",
+                        action: {
+                            connectivityService.requestDataFromPhone()
                         }
-                    }
+                    )
+                } else {
+                    tabatasList
                 }
             }
             .navigationTitle("Tabatas")
@@ -46,7 +33,43 @@ struct TabataWatchView: View {
                 connectivityService.requestDataFromPhone()
             }
         }
-
+    }
+    
+    // MARK: - Tabatas List
+    private var tabatasList: some View {
+        List {
+            // Intervals
+            let intervalTabatas = connectivityService.tabatas.filter { $0.type == .intervals }
+            if !intervalTabatas.isEmpty {
+                Section("🔥 Intervalos") {
+                    ForEach(intervalTabatas) { tabata in
+                        NavigationLink {
+                            TabataTimerWatchView(tabata: tabata)
+                        } label: {
+                            TabataRowWatch(tabata: tabata)
+                        }
+                    }
+                }
+            }
+            
+            // Treadmill
+            let treadmillTabatas = connectivityService.tabatas.filter { $0.type == .treadmill }
+            if !treadmillTabatas.isEmpty {
+                Section("🏃 Cinta") {
+                    ForEach(treadmillTabatas) { tabata in
+                        NavigationLink {
+                            TreadmillTimerWatchView(tabata: tabata)
+                        } label: {
+                            TabataRowWatch(tabata: tabata)
+                        }
+                    }
+                }
+            }
+        }
+        .refreshable {
+            connectivityService.requestDataFromPhone()
+            try? await Task.sleep(for: .seconds(1))
+        }
     }
 }
 

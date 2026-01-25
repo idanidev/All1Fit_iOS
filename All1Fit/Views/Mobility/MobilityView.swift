@@ -25,15 +25,8 @@ struct MobilityView: View {
                 .padding()
             }
             .background(Color(uiColor: .systemGroupedBackground))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Image("Logo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 40)
-                }
-            }
+            .navigationTitle("Movilidad")
+            .navigationBarTitleDisplayMode(.large)
         }
     }
     

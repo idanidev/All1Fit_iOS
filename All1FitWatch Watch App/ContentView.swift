@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var connectivityService: WatchConnectivityService
-    
+
     var body: some View {
         NavigationStack {
             List {
@@ -10,11 +10,7 @@ struct ContentView: View {
                 NavigationLink {
                     RMListWatchView()
                 } label: {
-                    HStack {
-                        Image(systemName: "dumbbell.fill")
-                            .foregroundStyle(.orange)
-                            .frame(width: 30)
-                        
+                    Label {
                         VStack(alignment: .leading) {
                             Text("Mis RMs")
                                 .font(.headline)
@@ -22,6 +18,9 @@ struct ContentView: View {
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
                         }
+                    } icon: {
+                        Image(systemName: "dumbbell.fill")
+                            .foregroundStyle(.orange)
                     }
                 }
                 
@@ -29,37 +28,25 @@ struct ContentView: View {
                 NavigationLink {
                     WorkoutsWatchView()
                 } label: {
-                    HStack {
-                        Image(systemName: "figure.run")
-                            .foregroundStyle(.red)
-                            .frame(width: 30)
-                        
-                        VStack(alignment: .leading) {
-                            Text("Entrenos")
-                                .font(.headline)
-                            Text("WODs y Running")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
+                    Label("Entrenos", systemImage: "figure.run")
+                        .foregroundStyle(.red)
                 }
                 
                 // Tabatas Section
                 NavigationLink {
                     TabataWatchView()
                 } label: {
-                    HStack {
-                        Image(systemName: "flame.fill")
-                            .foregroundStyle(.orange)
-                            .frame(width: 30)
-                        
+                    Label {
                         VStack(alignment: .leading) {
                             Text("Tabatas")
                                 .font(.headline)
-                            Text("HIIT & Cinta")
+                            Text("\(connectivityService.tabatas.count) disponibles")
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
                         }
+                    } icon: {
+                        Image(systemName: "timer")
+                            .foregroundStyle(.green)
                     }
                 }
                 
@@ -67,22 +54,32 @@ struct ContentView: View {
                 NavigationLink {
                     QuickTimerView()
                 } label: {
-                    HStack {
-                        Image(systemName: "timer")
-                            .foregroundStyle(.green)
-                            .frame(width: 30)
-                        
-                        VStack(alignment: .leading) {
-                            Text("Cronómetro")
-                                .font(.headline)
-                            Text("Timer rápido")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
+                    Label("Cronómetro", systemImage: "stopwatch")
+                        .foregroundStyle(.cyan)
                 }
             }
             .navigationTitle("All1Fit")
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    NavigationLink {
+                        SettingsView()
+                    } label: {
+                        Image(systemName: "gearshape.fill")
+                            .foregroundStyle(.gray)
+                    }
+                }
+
+                ToolbarItem(placement: .topBarTrailing) {
+                    CompactSyncStatus(connectivity: connectivityService)
+                }
+            }
+            .safeAreaInset(edge: .bottom) {
+                if connectivityService.syncStatus == .syncing {
+                    SyncStatusIndicator(connectivity: connectivityService)
+                        .padding(.bottom, 8)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
         }
     }
 }

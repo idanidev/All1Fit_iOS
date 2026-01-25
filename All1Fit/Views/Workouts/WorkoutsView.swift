@@ -42,8 +42,16 @@ struct WorkoutsView: View {
         if searchText.isEmpty {
             return allWorkouts
         }
-        return allWorkouts.filter {
-            $0.name.localizedCaseInsensitiveContains(searchText)
+        return allWorkouts.filter { workout in
+            // Search in name, description, and exercises
+            workout.name.localizedCaseInsensitiveContains(searchText) ||
+            workout.description.localizedCaseInsensitiveContains(searchText) ||
+            workout.exercises.contains { exercise in
+                exercise.name.localizedCaseInsensitiveContains(searchText)
+            } ||
+            workout.tags.contains { tag in
+                tag.localizedCaseInsensitiveContains(searchText)
+            }
         }
     }
     
@@ -66,8 +74,7 @@ struct WorkoutsView: View {
     
     var body: some View {
         NavigationStack {
-            ZStack(alignment: .bottomTrailing) {
-                List {
+            List {
                     // Category selector as header
                     Section {
                         categorySelector
@@ -76,59 +83,50 @@ struct WorkoutsView: View {
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
                     
+                    // Stats Header
+                    if !searchText.isEmpty {
+                        Section {
+                            VStack(spacing: 4) {
+                                Text("RESULTADOS")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .textCase(.uppercase)
+                                
+                                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                    Text("\(filteredWorkouts.count)")
+                                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                                        .foregroundStyle(categoryShadowColor)
+                                    
+                                    Text(filteredWorkouts.count == 1 ? "entrenamiento" : "entrenamientos")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(.ultraThinMaterial)
+                            )
+                            .padding(.horizontal)
+                        }
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                    }
+                    
                     // Workouts
                     Section {
                         ForEach(filteredWorkouts) { workout in
-                            let userWorkout = userWorkoutService.userWorkouts.first(where: { $0.id == workout.id })
-                            // let isUserWorkout = userWorkout != nil - removed unused variable
-                            
-                            NavigationLink {
-                                WorkoutDetailView(workout: workout)
-                                    .environmentObject(workoutService)
-                            } label: {
-                                WorkoutCard(
-                                    workout: workout,
-                                    recordCount: workoutService.results[workout.id]?.count ?? 0,
-                                    lastResult: workoutService.results[workout.id]?.first
-                                )
-                            }
-                            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                if let userWorkout = userWorkout {
-                                    // User workout: delete from Firebase
-                                    Button(role: .destructive) {
-                                        workoutToDelete = userWorkout
-                                    } label: {
-                                        Label("Eliminar", systemImage: "trash")
-                                    }
-                                } else {
-                                    // System workout: hide locally
-                                    Button(role: .destructive) {
-                                        workoutToHide = workout
-                                    } label: {
-                                        Label("Ocultar", systemImage: "eye.slash")
-                                    }
-                                }
-                            }
-                            .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                                if let userWorkout = userWorkout {
-                                    Button {
-                                        userWorkoutToEdit = userWorkout
-                                    } label: {
-                                        Label("Editar", systemImage: "pencil")
-                                    }
-                                    .tint(.orange)
-                                } else {
-                                    Button {
-                                        workoutToCustomize = workout
-                                    } label: {
-                                        Label("Personalizar", systemImage: "slider.horizontal.3")
-                                    }
-                                    .tint(.blue)
-                                }
-                            }
+                            WorkoutListRow(
+                                workout: workout,
+                                workoutToCustomize: $workoutToCustomize,
+                                userWorkoutToEdit: $userWorkoutToEdit,
+                                workoutToDelete: $workoutToDelete,
+                                workoutToHide: $workoutToHide,
+                                userWorkoutService: userWorkoutService,
+                                workoutService: workoutService
+                            )
                         }
                     }
                 }
@@ -148,48 +146,26 @@ struct WorkoutsView: View {
                         .background(.ultraThinMaterial)
                     }
                 }
-                
-                // Floating Add Button - Color dinámico según categoría
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        Button {
-                            showingAddWorkout = true
-                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "plus")
-                                    .font(.title3.bold())
-                                Text("Añadir")
-                                    .font(.headline)
-                            }
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 14)
-                            .background(
+            .navigationTitle("Entrenamientos")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showingAddWorkout = true
+                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title2)
+                            .foregroundStyle(
                                 LinearGradient(
                                     colors: categoryColors,
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
                             )
-                            .clipShape(Capsule())
-                            .shadow(color: categoryShadowColor.opacity(0.4), radius: 8, y: 4)
-                        }
-                        .padding(.trailing, 20)
-                        .padding(.bottom, 30)
+                            .symbolRenderingMode(.hierarchical)
                     }
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Image("Logo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 80) // Reduced to fit Dynamic Island
-                        .shadow(color: .white.opacity(0.5), radius: 10)
                 }
             }
             .sheet(isPresented: $showingAddWorkout) {
@@ -292,6 +268,111 @@ struct WorkoutsView: View {
                 }
             }
             .padding(.horizontal, 16)
+        }
+    }
+}
+
+// MARK: - Workout List Row
+struct WorkoutListRow: View {
+    let workout: Workout
+    @Binding var workoutToCustomize: Workout?
+    @Binding var userWorkoutToEdit: UserWorkout?
+    @Binding var workoutToDelete: UserWorkout?
+    @Binding var workoutToHide: Workout?
+    @ObservedObject var userWorkoutService: UserWorkoutService
+    @ObservedObject var workoutService: WorkoutService
+
+    var body: some View {
+        let userWorkout = userWorkoutService.userWorkouts.first(where: { $0.id == workout.id })
+        let categoryColors: [Color] = {
+            switch workout.category {
+            case .running: return [.orange, .yellow]
+            case .crossfit: return [.red, .pink]
+            case .competition: return [.purple, .blue]
+            }
+        }()
+
+        NavigationLink {
+            WorkoutDetailView(workout: workout)
+                .environmentObject(workoutService)
+        } label: {
+            All1FitProCard(
+                gradient: LinearGradient(
+                    colors: categoryColors,
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            ) {
+                WorkoutCard(
+                    workout: workout,
+                    recordCount: workoutService.results[workout.id]?.count ?? 0,
+                    lastResult: workoutService.results[workout.id]?.first
+                )
+            }
+        }
+        .buttonStyle(.plain)
+        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            if let userWorkout = userWorkout {
+                // User workout: delete from Firebase
+                Button(role: .destructive) {
+                    workoutToDelete = userWorkout
+                    UINotificationFeedbackGenerator().notificationOccurred(.warning)
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: "trash.fill")
+                            .font(.system(size: 20, weight: .semibold))
+                        Text("Eliminar")
+                            .font(.system(size: 11, weight: .medium))
+                    }
+                }
+                .tint(.red)
+            } else {
+                // System workout: hide locally
+                Button(role: .destructive) {
+                    workoutToHide = workout
+                    UINotificationFeedbackGenerator().notificationOccurred(.warning)
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: "eye.slash.fill")
+                            .font(.system(size: 20, weight: .semibold))
+                        Text("Ocultar")
+                            .font(.system(size: 11, weight: .medium))
+                    }
+                }
+                .tint(.orange)
+            }
+        }
+        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+            if let userWorkout = userWorkout {
+                Button {
+                    userWorkoutToEdit = userWorkout
+                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: "pencil.circle.fill")
+                            .font(.system(size: 20, weight: .semibold))
+                        Text("Editar")
+                            .font(.system(size: 11, weight: .medium))
+                    }
+                }
+                .tint(.blue)
+            } else {
+                Button {
+                    workoutToCustomize = workout
+                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: "slider.horizontal.3")
+                            .font(.system(size: 20, weight: .semibold))
+                        Text("Personalizar")
+                            .font(.system(size: 11, weight: .medium))
+                    }
+                }
+                .tint(.purple)
+            }
         }
     }
 }

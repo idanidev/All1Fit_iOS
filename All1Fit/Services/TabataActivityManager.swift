@@ -57,13 +57,13 @@ class TabataActivityManager: ObservableObject {
             currentActivity = activity
             isActivityActive = true
             
-            print("✅ Live Activity started: \(activity.id)")
+            debugLog("Live Activity started: \(activity.id)", category: Log.tabata)
             
             // Trigger haptic
             triggerHaptic(for: .countdown)
             
         } catch {
-            print("❌ Failed to start Live Activity: \(error)")
+            debugLog("Failed to start Live Activity: \(error)", category: Log.tabata)
             throw TabataActivityError.failedToStart(error)
         }
     }
@@ -71,7 +71,10 @@ class TabataActivityManager: ObservableObject {
     // MARK: - Update Activity
     
     func updateActivity(with state: TabataActivityAttributes.ContentState, alertConfig: AlertConfiguration? = nil) async {
-        guard let activity = currentActivity else { return }
+        guard let activity = currentActivity else {
+            debugLog("⚠️ No current activity to update!", category: Log.tabata)
+            return
+        }
         
         let content = ActivityContent(
             state: state,
@@ -79,12 +82,14 @@ class TabataActivityManager: ObservableObject {
             relevanceScore: state.currentPhase == "complete" ? 0 : 100
         )
         
+        debugLog("📲 Sending update to Live Activity: phase=\(state.currentPhase), endTime=\(state.endTime)", category: Log.tabata)
         await activity.update(content)
     }
     
     // MARK: - Update for Work Phase
     
     func updateToWork(round: Int, totalRounds: Int, seconds: Int) async {
+        debugLog("Updating Live Activity to WORK: round \(round)/\(totalRounds), \(seconds)s", category: Log.tabata)
         let state = TabataActivityAttributes.ContentState.work(
             round: round,
             totalRounds: totalRounds,
@@ -97,6 +102,7 @@ class TabataActivityManager: ObservableObject {
     // MARK: - Update for Rest Phase
     
     func updateToRest(round: Int, totalRounds: Int, seconds: Int) async {
+        debugLog("Updating Live Activity to REST: round \(round)/\(totalRounds), \(seconds)s", category: Log.tabata)
         let state = TabataActivityAttributes.ContentState.rest(
             round: round,
             totalRounds: totalRounds,
@@ -160,7 +166,7 @@ class TabataActivityManager: ObservableObject {
         isActivityActive = false
         
         triggerHaptic(for: .complete)
-        print("✅ Live Activity completed")
+        debugLog("Live Activity completed", category: Log.tabata)
     }
     
     // MARK: - End Activity (cancel)
@@ -172,8 +178,6 @@ class TabataActivityManager: ObservableObject {
         
         currentActivity = nil
         isActivityActive = false
-        
-        print("🛑 Live Activity ended")
     }
     
     // MARK: - Haptic Feedback

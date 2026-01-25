@@ -16,6 +16,10 @@ struct TabataTimerWatchView: View {
     @State private var isComplete = false
     @State private var timer: Timer?
     
+    // HealthKit
+    @StateObject private var healthKit = HealthKitService.shared
+    @State private var workoutStartDate: Date?
+    
     private var phaseColor: Color {
         switch phase {
         case .countdown: return .orange
@@ -41,9 +45,38 @@ struct TabataTimerWatchView: View {
             
             // Round info
             if phase != .countdown && phase != .complete {
-                Text("R\(currentRound)/\(tabata.rounds)")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 12) {
+                    Text("R\(currentRound)/\(tabata.rounds)")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    
+                    // Heart rate if available
+                    if healthKit.currentHeartRate > 0 {
+                        HStack(spacing: 2) {
+                            Image(systemName: "heart.fill")
+                                .foregroundStyle(.red)
+                            Text("\(Int(healthKit.currentHeartRate))")
+                        }
+                        .font(.caption2)
+                    }
+                }
+            }
+            
+            // Completion stats
+            if isComplete {
+                VStack(spacing: 4) {
+                    if healthKit.activeCalories > 0 {
+                        HStack(spacing: 4) {
+                            Image(systemName: "flame.fill")
+                                .foregroundStyle(.orange)
+                            Text("\(Int(healthKit.activeCalories)) kcal")
+                        }
+                        .font(.caption)
+                    }
+                    Text("\(formattedTime(totalElapsed))")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
             }
             
             // Controls
@@ -91,7 +124,13 @@ struct TabataTimerWatchView: View {
     private func startCountdown() {
         phase = .countdown
         secondsRemaining = 3
+        workoutStartDate = Date()
         playHaptic(.start)
+        
+        // Start HealthKit workout
+        Task {
+            try? await healthKit.startWorkout()
+        }
         
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             tick()
@@ -161,6 +200,11 @@ struct TabataTimerWatchView: View {
         phase = .complete
         isComplete = true
         playHaptic(.success)
+        
+        // End HealthKit workout and save to Health
+        Task {
+            let _ = try? await healthKit.endWorkout()
+        }
         
         // Triple haptic celebration
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {

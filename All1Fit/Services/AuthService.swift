@@ -25,6 +25,10 @@ class AuthService: ObservableObject {
     private let db = Firestore.firestore()
     
     init() {
+        // Load initial state from UserDefaults for instant startup
+        self.hasCompletedOnboarding = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+        self.isAdmin = false // Safe default
+        
         setupAuthListener()
     }
     
@@ -36,16 +40,21 @@ class AuthService: ObservableObject {
                 self.user = firebaseUser
                 self.isAuthenticated = firebaseUser != nil
                 
-                // Fetch user data when user logs in
+                // Set ready immediately to avoid splash screen hang
+                // Data will update reactively when fetchUserData completes
+                if !self.isReady {
+                    self.isReady = true
+                }
+                
+                // Fetch user data in background
                 if firebaseUser != nil {
-                    await self.fetchUserData()
+                    // Start background fetch without awaiting block
+                    Task {
+                        await self.fetchUserData()
+                    }
                 } else {
                     self.hasCompletedOnboarding = false
                     self.isAdmin = false
-                }
-                
-                if !self.isReady {
-                    self.isReady = true
                 }
             }
         }

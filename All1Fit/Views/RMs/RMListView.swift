@@ -26,38 +26,10 @@ struct RMListView: View {
                 // Background
                 Color(uiColor: .systemGroupedBackground)
                     .ignoresSafeArea()
-                
+
                 // Content
                 content
-                
-                // Floating Add Button
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        Button {
-                            showingAddSheet = true
-                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        } label: {
-                            Image(systemName: "plus")
-                                .font(.title2.bold())
-                                .foregroundStyle(.white)
-                                .frame(width: 56, height: 56)
-                                .background(
-                                    LinearGradient(
-                                        colors: [.orange, .yellow],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .clipShape(Circle())
-                                .shadow(color: .orange.opacity(0.4), radius: 8, y: 4)
-                        }
-                        .padding(.trailing, 20)
-                        .padding(.bottom, 20)
-                    }
-                }
-                
+
                 // Loading overlay
                 if ejercicioService.isLoading {
                     VStack {
@@ -71,16 +43,27 @@ struct RMListView: View {
                     .background(.ultraThinMaterial)
                 }
             }
+            .navigationTitle("RMs")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Image("Logo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 80) // Reduced to fit Dynamic Island
-                        .shadow(color: .white.opacity(0.5), radius: 10) // Glow for dark mode
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showingAddSheet = true
+                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title2)
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.orange, .pink],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .symbolRenderingMode(.hierarchical)
+                    }
                 }
-
             }
             .searchable(text: $searchText, prompt: "Buscar ejercicio...")
             .refreshable {
@@ -159,23 +142,61 @@ struct RMListView: View {
     
     // MARK: - Ejercicios List
     private var ejerciciosList: some View {
-        List {
-            ForEach(filteredEjercicios) { ejercicio in
-                VStack(spacing: 0) {
-                    // Main row with navigation
-                    HStack {
-                        NavigationLink {
-                            RMChartView(ejercicio: ejercicio)
-                        } label: {
-                            EjercicioRowView(
-                                ejercicio: ejercicio,
-                                onAddRM: {
-                                    selectedEjercicio = ejercicio
-                                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                                }
-                            )
-                        }
-                        
+        ScrollViewReader { proxy in
+            List {
+                ForEach(filteredEjercicios) { ejercicio in
+                    RMListRow(
+                        ejercicio: ejercicio,
+                        expandedEjercicioId: $expandedEjercicioId,
+                        selectedEjercicio: $selectedEjercicio,
+                        ejercicioToDelete: $ejercicioToDelete,
+                        proxy: proxy,
+                        animation: animation
+                    )
+                    .id(ejercicio.id)
+                    .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+                }
+            }
+            .listStyle(.plain)
+            .animation(.smooth, value: filteredEjercicios.count)
+            .animation(.spring(duration: 0.3), value: expandedEjercicioId)
+        }
+    }
+
+
+// MARK: - List Row View
+struct RMListRow: View {
+    let ejercicio: Ejercicio
+    @Binding var expandedEjercicioId: String?
+    @Binding var selectedEjercicio: Ejercicio?
+    @Binding var ejercicioToDelete: Ejercicio?
+    let proxy: ScrollViewProxy
+    var animation: Namespace.ID
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Main card with navigation
+            NavigationLink {
+                RMChartView(ejercicio: ejercicio)
+            } label: {
+                All1FitProCard(
+                    gradient: LinearGradient(
+                        colors: [.orange, .pink],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                ) {
+                    HStack(spacing: 0) {
+                        EjercicioRowView(
+                            ejercicio: ejercicio,
+                            onAddRM: {
+                                selectedEjercicio = ejercicio
+                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            }
+                        )
+
                         // Expand button
                         Button {
                             withAnimation(.spring(duration: 0.3)) {
@@ -183,6 +204,12 @@ struct RMListView: View {
                                     expandedEjercicioId = nil
                                 } else {
                                     expandedEjercicioId = ejercicio.id
+                                    // Auto-scroll to make expanded content visible
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                                        withAnimation(.easeInOut(duration: 0.3)) {
+                                            proxy.scrollTo(ejercicio.id, anchor: .top)
+                                        }
+                                    }
                                 }
                             }
                             UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -196,37 +223,57 @@ struct RMListView: View {
                         }
                         .buttonStyle(.plain)
                     }
-                    
-                    // Expandable percentage table
-                    if expandedEjercicioId == ejercicio.id {
-                        ExpandablePorcentajesView(ejercicio: ejercicio)
-                            .transition(.asymmetric(
-                                insertion: .push(from: .top).combined(with: .opacity),
-                                removal: .push(from: .bottom).combined(with: .opacity)
-                            ))
-                    }
-                }
-                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    Button(role: .destructive) {
-                        ejercicioToDelete = ejercicio
-                    } label: {
-                        Label("Eliminar", systemImage: "trash")
-                    }
-                }
-                .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                    Button {
-                        selectedEjercicio = ejercicio
-                    } label: {
-                        Label("Añadir RM", systemImage: "plus.circle")
-                    }
-                    .tint(.orange)
                 }
             }
+            .buttonStyle(.plain)
+
+            // Expandable percentage table
+            if expandedEjercicioId == ejercicio.id {
+                ExpandablePorcentajesView(ejercicio: ejercicio)
+                    .padding(.horizontal)
+                    .transition(.asymmetric(
+                        insertion: .push(from: .top).combined(with: .opacity),
+                        removal: .push(from: .bottom).combined(with: .opacity)
+                    ))
+            }
         }
-        .listStyle(.plain)
-        .animation(.smooth, value: filteredEjercicios.count)
-        .animation(.spring(duration: 0.3), value: expandedEjercicioId)
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button(role: .destructive) {
+                ejercicioToDelete = ejercicio
+                UINotificationFeedbackGenerator().notificationOccurred(.warning)
+            } label: {
+                VStack(spacing: 4) {
+                    Image(systemName: "trash.fill")
+                    .font(.system(size: 20, weight: .semibold))
+                    Text("Eliminar")
+                    .font(.system(size: 11, weight: .medium))
+                }
+            }
+            .tint(.red)
+        }
+        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+            Button {
+                selectedEjercicio = ejercicio
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            } label: {
+                VStack(spacing: 4) {
+                    Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 20, weight: .semibold))
+                    Text("Añadir")
+                    .font(.system(size: 11, weight: .medium))
+                }
+            }
+            .tint(
+                LinearGradient(
+                    colors: [.orange, .pink],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+        }
     }
+}
+    
     
     // MARK: - Empty State
     private var emptyStateView: some View {
@@ -296,117 +343,145 @@ struct RMListView: View {
     }
 }
 
-// MARK: - Ejercicio Row View (iOS 26)
+// MARK: - Ejercicio Row View (Train/Motra style)
 struct EjercicioRowView: View {
     let ejercicio: Ejercicio
     let onAddRM: () -> Void
-    
+    @State private var isPressed = false
+
     @AppStorage("weightUnit") private var weightUnit: WeightUnit = .kg
-    
+
     private var latestRM: Double {
         ejercicio.ultimoRM?.valor ?? 0
     }
-    
+
     private var previousRM: Double? {
         guard ejercicio.rmHistory.count >= 2 else { return nil }
         let sorted = ejercicio.rmHistory.sorted { $0.fecha < $1.fecha }
         return sorted.dropLast().last?.valor
     }
-    
+
     private var trend: Trend {
         guard let previous = previousRM else { return .neutral }
         if latestRM > previous { return .up }
         if latestRM < previous { return .down }
         return .neutral
     }
-    
+
+    private var gradientColors: [Color] {
+        [.orange, .pink]
+    }
+
     var body: some View {
         HStack(spacing: 16) {
-            // Icon with trend indicator
-            ZStack(alignment: .bottomTrailing) {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [.orange.opacity(0.2), .red.opacity(0.1)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
+            // Icon
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: gradientColors.map { $0.opacity(0.15) },
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
                     )
-                    .frame(width: 50, height: 50)
-                
-                Image(systemName: ejercicio.icon)
-                    .font(.title3)
-                    .foregroundStyle(.orange)
-                    .frame(width: 50, height: 50)
-                
-                // Trend badge
-                if trend != .neutral {
-                    Image(systemName: trend == .up ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
-                        .font(.caption)
-                        .foregroundStyle(trend == .up ? .green : .red)
-                        .background(Circle().fill(.background))
-                        .offset(x: 4, y: 4)
+                )
+                .frame(width: 56, height: 56)
+                .overlay {
+                    Image(systemName: ejercicio.icon)
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: gradientColors,
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
                 }
-            }
-            
+
             // Info
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(ejercicio.name)
-                    .font(.headline)
-                
-                HStack(spacing: 4) {
-                    Text("\(ejercicio.rmHistory.count) registros")
-                    
+                    .font(.system(.headline, design: .rounded, weight: .bold))
+
+                HStack(spacing: 8) {
+                    // Record count badge
+                    HStack(spacing: 3) {
+                        Image(systemName: "chart.line.uptrend.xyaxis")
+                            .font(.system(size: 10, weight: .semibold))
+                        Text("\(ejercicio.rmHistory.count)")
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    }
+                    .foregroundStyle(.orange)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(
+                        Capsule()
+                            .fill(.orange.opacity(0.12))
+                    )
+
+                    // Last update date
                     if let ultimoRM = ejercicio.ultimoRM {
-                        Text("•")
                         Text(ultimoRM.fecha.formatted(date: .abbreviated, time: .omitted))
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
                     }
                 }
-                .font(.caption)
-                .foregroundStyle(.secondary)
             }
-            
+
             Spacer()
-            
+
             // RM Value
             VStack(alignment: .trailing, spacing: 2) {
                 Text(formatWeight(weightUnit.convert(latestRM)))
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.system(size: 32, weight: .bold, design: .rounded))
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [.orange, .red],
+                            colors: gradientColors,
                             startPoint: .leading,
                             endPoint: .trailing
                         )
                     )
                     .contentTransition(.numericText())
-                
+
                 Text(weightUnit.symbol)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            
+
             // Quick add button
             Button {
                 onAddRM()
             } label: {
-                Image(systemName: "plus.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(.orange)
-                    .symbolEffect(.bounce, value: latestRM)
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [.orange.opacity(0.15), .pink.opacity(0.12)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 40, height: 40)
+                    .overlay {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.orange, .pink],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                    }
             }
             .buttonStyle(.plain)
         }
-        .padding(.vertical, 8)
     }
-    
+
     private func formatWeight(_ weight: Double) -> String {
         if weight.truncatingRemainder(dividingBy: 1) == 0 {
             return "\(Int(weight))"
         }
         return String(format: "%.1f", weight)
     }
-    
+
     enum Trend {
         case up, down, neutral
     }
@@ -454,14 +529,7 @@ struct SkeletonCard: View {
 struct ExpandablePorcentajesView: View {
     let ejercicio: Ejercicio
     @AppStorage("weightUnit") private var weightUnit: WeightUnit = .kg
-    
-    private let columns = [
-        GridItem(.flexible()),
-        GridItem(.flexible()),
-        GridItem(.flexible()),
-        GridItem(.flexible())
-    ]
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Header
@@ -469,36 +537,51 @@ struct ExpandablePorcentajesView: View {
                 Label("Tabla de Porcentajes", systemImage: "percent")
                     .font(.caption.bold())
                     .foregroundStyle(.secondary)
-                
+
                 Spacer()
-                
+
                 if let rm = ejercicio.ultimoRM {
                     Text("RM: \(formatWeight(weightUnit.convert(rm.valor))) \(weightUnit.symbol)")
                         .font(.caption.bold())
                         .foregroundStyle(.orange)
                 }
             }
-            
-            // Grid
-            LazyVGrid(columns: columns, spacing: 8) {
+
+            // Compact table with better visual hierarchy
+            VStack(spacing: 6) {
                 ForEach(ejercicio.porcentajes, id: \.porcentaje) { item in
-                    VStack(spacing: 2) {
-                        Text("\(item.porcentaje)%")
-                            .font(.caption2.bold())
-                            .foregroundStyle(colorForPercentage(item.porcentaje))
-                        
-                        Text(formatWeight(weightUnit.convert(item.peso)))
-                            .font(.subheadline.bold())
-                            .foregroundStyle(.primary)
-                        
-                        Text(weightUnit.symbol)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+                    HStack(spacing: 0) {
+                        // Percentage with color bar
+                        HStack(spacing: 8) {
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(colorForPercentage(item.porcentaje))
+                                .frame(width: 4, height: 28)
+
+                            Text("\(item.porcentaje)%")
+                                .font(.system(.callout, design: .rounded, weight: .semibold))
+                                .foregroundStyle(colorForPercentage(item.porcentaje))
+                                .frame(width: 50, alignment: .leading)
+                        }
+
+                        Spacer()
+
+                        // Weight value - larger and more prominent
+                        HStack(alignment: .firstTextBaseline, spacing: 3) {
+                            Text(formatWeight(weightUnit.convert(item.peso)))
+                                .font(.system(.title3, design: .rounded, weight: .bold))
+                                .foregroundStyle(.primary)
+
+                            Text(weightUnit.symbol)
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        }
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
-                    .background(colorForPercentage(item.porcentaje).opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(colorForPercentage(item.porcentaje).opacity(0.08))
+                    )
                 }
             }
         }
@@ -507,7 +590,7 @@ struct ExpandablePorcentajesView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .padding(.top, 8)
     }
-    
+
     private func colorForPercentage(_ percentage: Int) -> Color {
         switch percentage {
         case 100: return .red
@@ -521,7 +604,7 @@ struct ExpandablePorcentajesView: View {
         default: return .gray
         }
     }
-    
+
     private func formatWeight(_ weight: Double) -> String {
         if weight.truncatingRemainder(dividingBy: 1) == 0 {
             return "\(Int(weight))"

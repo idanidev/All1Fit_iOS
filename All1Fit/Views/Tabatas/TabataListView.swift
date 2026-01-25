@@ -24,8 +24,7 @@ struct TabataListView: View {
     
     var body: some View {
         NavigationStack {
-            ZStack(alignment: .bottomTrailing) {
-                List {
+            List {
                     // Type selector
                     Section {
                         typeSelector
@@ -37,38 +36,13 @@ struct TabataListView: View {
                     // Tabatas
                     Section {
                         ForEach(filteredTabatas) { tabata in
-                            NavigationLink {
-                                TabataDetailView(tabata: tabata)
-                                    .environmentObject(tabataService)
-                            } label: {
-                                TabataCard(
-                                    tabata: tabata,
-                                    resultCount: tabataService.resultCount(for: tabata.id),
-                                    lastResult: tabataService.lastResult(for: tabata.id)
-                                )
-                            }
-                            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                if tabata.isCustom {
-                                    Button(role: .destructive) {
-                                        tabataToDelete = tabata
-                                    } label: {
-                                        Label("Eliminar", systemImage: "trash")
-                                    }
-                                }
-                            }
-                            .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                                if tabata.isCustom {
-                                    Button {
-                                        tabataToEdit = tabata
-                                    } label: {
-                                        Label("Editar", systemImage: "pencil")
-                                    }
-                                    .tint(.orange)
-                                }
-                            }
+                            TabataListRow(
+                                tabata: tabata,
+                                selectedType: selectedType,
+                                tabataToDelete: $tabataToDelete,
+                                tabataToEdit: $tabataToEdit,
+                                tabataService: tabataService
+                            )
                         }
                     }
                 }
@@ -82,48 +56,26 @@ struct TabataListView: View {
                             .background(.ultraThinMaterial)
                     }
                 }
-                
-                // Floating Add Button
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        Button {
-                            showingAddTabata = true
-                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "plus")
-                                    .font(.title3.bold())
-                                Text("Crear")
-                                    .font(.headline)
-                            }
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 14)
-                            .background(
+            .navigationTitle("Tabatas")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showingAddTabata = true
+                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title2)
+                            .foregroundStyle(
                                 LinearGradient(
                                     colors: typeColors,
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
                             )
-                            .clipShape(Capsule())
-                            .shadow(color: typeColors[0].opacity(0.4), radius: 8, y: 4)
-                        }
-                        .padding(.trailing, 20)
-                        .padding(.bottom, 30)
+                            .symbolRenderingMode(.hierarchical)
                     }
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Image("Logo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 80)
-                        .shadow(color: .white.opacity(0.5), radius: 10)
                 }
             }
             .sheet(isPresented: $showingAddTabata) {
@@ -185,6 +137,72 @@ struct TabataListView: View {
                 }
             }
             .padding(.horizontal, 16)
+        }
+    }
+}
+
+// MARK: - Tabata List Row
+struct TabataListRow: View {
+    let tabata: Tabata
+    let selectedType: TabataType
+    @Binding var tabataToDelete: Tabata?
+    @Binding var tabataToEdit: Tabata?
+    @ObservedObject var tabataService: TabataService
+
+    var body: some View {
+        NavigationLink {
+            TabataDetailView(tabata: tabata)
+                .environmentObject(tabataService)
+        } label: {
+            All1FitProCard(
+                gradient: LinearGradient(
+                    colors: tabata.type == .intervals ? [.orange, .pink] : [.blue, .cyan],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            ) {
+                TabataCard(
+                    tabata: tabata,
+                    resultCount: tabataService.resultCount(for: tabata.id),
+                    lastResult: tabataService.lastResult(for: tabata.id)
+                )
+            }
+        }
+        .buttonStyle(.plain)
+        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            if tabata.isCustom {
+                Button(role: .destructive) {
+                    tabataToDelete = tabata
+                    UINotificationFeedbackGenerator().notificationOccurred(.warning)
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: "trash.fill")
+                            .font(.system(size: 20, weight: .semibold))
+                        Text("Eliminar")
+                            .font(.system(size: 11, weight: .medium))
+                    }
+                }
+                .tint(.red)
+            }
+        }
+        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+            if tabata.isCustom {
+                Button {
+                    tabataToEdit = tabata
+                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: "pencil.circle.fill")
+                            .font(.system(size: 20, weight: .semibold))
+                        Text("Editar")
+                            .font(.system(size: 11, weight: .medium))
+                    }
+                }
+                .tint(.blue)
+            }
         }
     }
 }

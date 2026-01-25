@@ -15,41 +15,34 @@ struct RMListWatchView: View {
     }
     
     var body: some View {
-        Group {
-            if connectivityService.ejercicios.isEmpty {
-                emptyState
-            } else {
-                ejerciciosList
+        NavigationStack {
+            VStack(spacing: 0) {
+                // Main Content
+                Group {
+                    if connectivityService.syncStatus == .syncing && connectivityService.ejercicios.isEmpty {
+                        WatchSkeletonLoader(count: 5)
+                    } else if connectivityService.ejercicios.isEmpty {
+                        emptyState
+                    } else {
+                        ejerciciosList
+                    }
+                }
             }
+            .navigationTitle("RMs")
         }
-        .navigationTitle("RMs")
     }
     
     // MARK: - Empty State
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            // Actually empty - no loading spinner if iPhone not connected
-            Image(systemName: "dumbbell.fill")
-                .font(.system(size: 40))
-                .foregroundStyle(.orange.opacity(0.5))
-            
-            Text("Sin ejercicios")
-                .font(.headline)
-            
-            Text("Añade ejercicios desde tu iPhone")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-            
-            Button {
+        WatchEmptyStateView(
+            icon: "dumbbell.fill",
+            title: "Sin ejercicios",
+            message: "Añade ejercicios desde tu iPhone para empezar a trackear tus RMs",
+            actionTitle: "Sincronizar",
+            action: {
                 connectivityService.requestDataFromPhone()
-            } label: {
-                Label("Sincronizar", systemImage: "arrow.triangle.2.circlepath")
             }
-            .buttonStyle(.borderedProminent)
-            .tint(.orange)
-        }
-        .padding()
+        )
     }
     
     // MARK: - Ejercicios List
@@ -64,6 +57,10 @@ struct RMListWatchView: View {
             }
         }
         .searchable(text: $searchText, prompt: "Buscar")
+        .refreshable {
+            connectivityService.requestDataFromPhone()
+            try? await Task.sleep(for: .seconds(1))
+        }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 NavigationLink {
