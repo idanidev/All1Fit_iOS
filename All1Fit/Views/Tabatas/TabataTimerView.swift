@@ -1,4 +1,5 @@
 import SwiftUI
+import HealthKit
 
 // MARK: - Tabata Timer View
 struct TabataTimerView: View {
@@ -74,22 +75,28 @@ struct TabataTimerView: View {
         }
         // NOTE: We DO NOT stop the timer on disappear anymore
         
-        .confirmationDialog(
-            "¿Salir del tabata?",
-            isPresented: $showingExitConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button("Terminar entrenamiento", role: .destructive) {
-                sessionManager.stopSession()
-                dismiss()
-            }
-            Button("Continuar en segundo plano", role: .cancel) {
-                // Just dismiss, session keeps running
-                dismiss()
-            }
-        } message: {
-            Text("Si sales, el cronómetro seguirá funcionando en segundo plano.")
-        }
+        .all1FitConfirmation(Binding(
+            get: {
+                guard showingExitConfirmation else { return nil }
+                return All1FitConfirmation(
+                    title: "¿Salir del tabata?",
+                    message: "Puedes terminar el entrenamiento o dejar el cronómetro funcionando en segundo plano.",
+                    icon: "timer",
+                    tint: .all1FitBlue,
+                    confirmTitle: "Terminar entrenamiento",
+                    secondaryTitle: "Continuar en segundo plano",
+                    onConfirm: {
+                        sessionManager.stopSession()
+                        dismiss()
+                    },
+                    onSecondary: {
+                        // Solo cierra la vista; la sesión sigue corriendo
+                        dismiss()
+                    }
+                )
+            },
+            set: { if $0 == nil { showingExitConfirmation = false } }
+        ))
     }
     
     // MARK: - Header
@@ -250,8 +257,16 @@ struct TabataTimerView: View {
         HStack(spacing: 20) {
             if sessionManager.isComplete {
                 Button {
-                    sessionManager.stopSession()
-                    dismiss()
+                    Task {
+                        let duration = sessionManager.totalElapsed
+                        sessionManager.stopSession()
+                        await HealthKitService.shared.saveWorkout(
+                            activityType: .highIntensityIntervalTraining,
+                            startDate: Date().addingTimeInterval(-TimeInterval(duration)),
+                            duration: TimeInterval(duration)
+                        )
+                        dismiss()
+                    }
                 } label: {
                     Label("Terminar", systemImage: "checkmark.circle.fill")
                         .font(.headline)

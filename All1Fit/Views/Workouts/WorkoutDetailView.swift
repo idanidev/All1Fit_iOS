@@ -8,6 +8,7 @@ struct WorkoutDetailView: View {
     @State private var resultToEdit: WorkoutResult?
     @State private var resultToDelete: WorkoutResult?
     @State private var showDeleteConfirmation = false
+    @State private var errorMessage: String?
     
     private var results: [WorkoutResult] {
         workoutService.results[workout.id] ?? []
@@ -72,22 +73,37 @@ struct WorkoutDetailView: View {
         .sheet(item: $resultToEdit) { result in
             WorkoutResultSheet(workout: workout, editingResult: result)
         }
-        .confirmationDialog(
-            "¿Eliminar resultado?",
-            isPresented: $showDeleteConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button("Eliminar", role: .destructive) {
-                if let result = resultToDelete {
-                    Task {
-                        try? await workoutService.deleteResult(result)
-                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        .all1FitConfirmation(Binding(
+            get: {
+                guard showDeleteConfirmation else { return nil }
+                return All1FitConfirmation(
+                    title: "¿Eliminar resultado?",
+                    message: "El resultado se eliminará de tu historial. Esta acción no se puede deshacer.",
+                    icon: "trash.fill",
+                    confirmTitle: "Eliminar"
+                ) {
+                    if let result = resultToDelete {
+                        Task {
+                            do {
+                                try await workoutService.deleteResult(result)
+                                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                            } catch {
+                                errorMessage = error.localizedDescription
+                                UINotificationFeedbackGenerator().notificationOccurred(.error)
+                            }
+                        }
                     }
                 }
-            }
-            Button("Cancelar", role: .cancel) {}
+            },
+            set: { if $0 == nil { showDeleteConfirmation = false } }
+        ))
+        .alert("Error", isPresented: Binding(
+            get: { errorMessage != nil },
+            set: { if !$0 { errorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) { errorMessage = nil }
         } message: {
-            Text("Esta acción no se puede deshacer")
+            Text(errorMessage ?? "")
         }
         .overlay {
             if workoutService.isLoading && results.isEmpty {
