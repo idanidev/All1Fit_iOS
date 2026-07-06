@@ -55,3 +55,6 @@ Gemfile.lock
 
 # Estado de agentes/herramientas locales
 .agent/
+
+# Material fuente (imágenes IA crudas, 59MB) — no versionar
+FotosSVG/
