@@ -38,3 +38,20 @@ migration/
 
 # Mobility assets (coming in v1.1)
 .mobility_assets/
+
+# Logs
+*.log
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output/
+*.ipa
+*.dSYM.zip
+# Valores reales (nunca subir). Sin comentario inline: rompe el patrón.
+.env
+Gemfile.lock
+
+# Estado de agentes/herramientas locales
+.agent/

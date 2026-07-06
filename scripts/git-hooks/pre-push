@@ -1,0 +1,23 @@
+#!/bin/bash
+# Gate de regresión: ejecuta la suite de tests antes de cada push.
+# Activación (una vez por clon): git config core.hooksPath scripts/git-hooks
+# Saltar en emergencias: git push --no-verify
+
+set -e
+
+echo "🧪 Ejecutando tests antes del push..."
+
+DESTINATION="platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5"
+
+if ! xcodebuild test \
+    -scheme "All1Fit" \
+    -destination "$DESTINATION" \
+    ENABLE_TESTABILITY=YES \
+    -quiet 2>&1 | tail -20; then
+    echo ""
+    echo "❌ Tests en rojo: push cancelado."
+    echo "   Arregla los tests o usa 'git push --no-verify' si es una emergencia."
+    exit 1
+fi
+
+echo "✅ Tests en verde. Push permitido."
