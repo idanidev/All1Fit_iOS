@@ -6,6 +6,27 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             List {
+                // Sesión de gym activa (espejo del iPhone)
+                if let gymSession = connectivityService.activeGymSession {
+                    NavigationLink {
+                        GymSessionWatchView()
+                    } label: {
+                        Label {
+                            VStack(alignment: .leading) {
+                                Text("Entreno en curso")
+                                    .font(.headline)
+                                Text("\(gymSession.routineName) · \(gymSession.totalCompletedSets) series")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        } icon: {
+                            Image(systemName: "dumbbell.fill")
+                                .foregroundStyle(.cyan)
+                        }
+                    }
+                    .listItemTint(.cyan.opacity(0.2))
+                }
+
                 // RMs Section
                 NavigationLink {
                     RMListWatchView()

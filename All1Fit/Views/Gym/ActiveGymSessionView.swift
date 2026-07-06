@@ -10,8 +10,6 @@ struct ActiveGymSessionView: View {
 
     @Environment(\.dismiss) private var dismiss
     @AppStorage("weightUnit") private var weightUnit: WeightUnit = .kg
-    @State private var restEndDate: Date?
-    @State private var restTotalSeconds: Int = 0
     @State private var showingLibrary = false
     @State private var showingFinishConfirm = false
     @State private var showingDiscardConfirm = false
@@ -259,7 +257,8 @@ struct ActiveGymSessionView: View {
                 Spacer()
 
                 Button {
-                    restEndDate = restEndDate?.addingTimeInterval(15)
+                    sessionService.activeSession?.restEndDate = restEndDate?.addingTimeInterval(15)
+                    sessionService.persistActiveSnapshot()
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 } label: {
                     Text("+15s")
@@ -297,19 +296,24 @@ struct ActiveGymSessionView: View {
         }
     }
 
+    /// Persistido en la sesión activa: el descanso sobrevive a cierres de app
+    private var restEndDate: Date? {
+        sessionService.activeSession?.restEndDate
+    }
+
     private func startRest(seconds: Int, exerciseName: String) {
         guard seconds > 0 else { return }
         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-            restTotalSeconds = seconds
-            restEndDate = Date().addingTimeInterval(TimeInterval(seconds))
+            sessionService.activeSession?.restEndDate = Date().addingTimeInterval(TimeInterval(seconds))
         }
         GymRestNotifier.schedule(after: TimeInterval(seconds), exerciseName: exerciseName)
     }
 
     private func endRest() {
         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-            restEndDate = nil
+            sessionService.activeSession?.restEndDate = nil
         }
+        sessionService.persistActiveSnapshot()
         GymRestNotifier.cancel()
     }
 

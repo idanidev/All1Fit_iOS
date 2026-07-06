@@ -117,6 +117,33 @@ class PhoneConnectivityService: NSObject, ObservableObject {
         }
     }
     
+    // MARK: - Gym Session Mirror (Watch)
+    /// Espejo de la sesión de gym activa en el Watch vía applicationContext
+    /// (último estado; sobrevive aunque el Watch no esté reachable). nil = limpiar.
+    func sendGymSessionToWatch(_ gymSession: GymSession?) {
+        guard let session = session, session.isPaired, session.isWatchAppInstalled else { return }
+
+        var context = session.applicationContext
+        context["timestamp"] = Date().timeIntervalSince1970
+
+        if let gymSession {
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            guard let data = try? encoder.encode(gymSession) else { return }
+            context["gymSession"] = data
+            context.removeValue(forKey: "gymSessionCleared")
+        } else {
+            context.removeValue(forKey: "gymSession")
+            context["gymSessionCleared"] = Date().timeIntervalSince1970
+        }
+
+        do {
+            try session.updateApplicationContext(context)
+        } catch {
+            debugLog("Error espejando sesión gym al Watch: \(error.localizedDescription)", category: Log.sync)
+        }
+    }
+
     // MARK: - Send Tabata Stop Signal
     func sendTabataStopToWatch() {
         guard let session = session, session.isPaired, session.isWatchAppInstalled else { return }
@@ -200,12 +227,23 @@ class PhoneConnectivityService: NSObject, ObservableObject {
                 replyHandler?(["status": "saved"])
             case "saveRM":
                 handleSaveRM(message, replyHandler: replyHandler)
+            case "toggleGymSet":
+                handleToggleGymSet(message)
+                replyHandler?(["status": "ok"])
             default:
                 replyHandler?(["error": "Unknown action"])
             }
         }
    }
     
+    // MARK: - Handle Gym Set Toggle from Watch
+    private func handleToggleGymSet(_ message: [String: Any]) {
+        guard let exerciseId = message["exerciseId"] as? String,
+              let setId = message["setId"] as? String,
+              let completed = message["completed"] as? Bool else { return }
+        GymSessionService.activeInstance?.toggleSetFromWatch(exerciseId: exerciseId, setId: setId, completed: completed)
+    }
+
     // MARK: - Handle Workout Result from Watch
     private func handleWorkoutResult(_ message: [String: Any]) {
         guard let userId = Auth.auth().currentUser?.uid,

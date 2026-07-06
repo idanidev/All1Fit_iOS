@@ -15,8 +15,12 @@ class GymSessionService: ObservableObject {
     private let cacheTimeout: TimeInterval = 30
     private static let activeSnapshotKey = "activeGymSessionSnapshot"
 
+    /// Instancia viva (la de MainTabView) para acciones que llegan del Watch
+    static weak var activeInstance: GymSessionService?
+
     init() {
         restoreActiveSession()
+        Self.activeInstance = self
     }
 
     private func sessionsCollection(userId: String) -> CollectionReference {
@@ -132,6 +136,7 @@ class GymSessionService: ObservableObject {
 
         session.endDate = Date()
         session.notes = notes
+        session.restEndDate = nil
         // Descarta ejercicios sin ninguna serie completada
         session.exercises = session.exercises.filter { !$0.completedSets.isEmpty }
 
@@ -141,6 +146,18 @@ class GymSessionService: ObservableObject {
         sessions.insert(temp, at: 0)
         activeSession = nil
         clearActiveSnapshot()
+        PhoneConnectivityService.shared.sendGymSessionToWatch(nil)
+
+        // Registrar en Salud como entrenamiento de fuerza (anillos, calorías)
+        let healthStart = session.startDate
+        let healthDuration = session.duration
+        Task {
+            await HealthKitService.shared.saveWorkout(
+                activityType: .traditionalStrengthTraining,
+                startDate: healthStart,
+                duration: healthDuration
+            )
+        }
 
         let docRef = try sessionsCollection(userId: userId).addDocument(from: session)
         if let index = sessions.firstIndex(where: { $0.id == temp.id }) {
@@ -152,6 +169,17 @@ class GymSessionService: ObservableObject {
     func discardActiveSession() {
         activeSession = nil
         clearActiveSnapshot()
+        PhoneConnectivityService.shared.sendGymSessionToWatch(nil)
+    }
+
+    /// El Watch marca/desmarca una serie de la sesión activa
+    func toggleSetFromWatch(exerciseId: String, setId: String, completed: Bool) {
+        guard var session = activeSession,
+              let exIndex = session.exercises.firstIndex(where: { $0.id == exerciseId }),
+              let setIndex = session.exercises[exIndex].sets.firstIndex(where: { $0.id == setId }) else { return }
+        session.exercises[exIndex].sets[setIndex].completed = completed
+        activeSession = session
+        persistActiveSnapshot()
     }
 
     // MARK: - Delete sesión del historial
@@ -257,6 +285,8 @@ class GymSessionService: ObservableObject {
         if let data = try? encoder.encode(session) {
             UserDefaults.standard.set(data, forKey: Self.activeSnapshotKey)
         }
+        // Espejo en el Apple Watch (applicationContext = último estado)
+        PhoneConnectivityService.shared.sendGymSessionToWatch(session)
     }
 
     private func restoreActiveSession() {

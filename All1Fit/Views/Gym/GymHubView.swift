@@ -9,6 +9,7 @@ struct GymHubView: View {
     @StateObject private var routineService = GymRoutineService()
     @StateObject private var measurementService = BodyMeasurementService()
     @AppStorage("weightUnit") private var weightUnit: WeightUnit = .kg
+    @AppStorage("hasSeenGymPlanWizard") private var hasSeenGymPlanWizard = false
     @State private var showingPlanWizard = false
 
     // MARK: - Resumen semanal
@@ -48,6 +49,12 @@ struct GymHubView: View {
             await sessionService.fetchSessions()
             await routineService.fetchRoutines()
             await measurementService.fetchMeasurements()
+
+            // Onboarding: primera visita sin datos → ofrecer el plan a medida
+            if !hasSeenGymPlanWizard && routineService.routines.isEmpty && sessionService.sessions.isEmpty {
+                hasSeenGymPlanWizard = true
+                showingPlanWizard = true
+            }
         }
     }
 

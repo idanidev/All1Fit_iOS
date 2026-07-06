@@ -18,6 +18,8 @@ class WatchConnectivityService: NSObject, ObservableObject {
     @Published var lastSyncDate: Date?
     @Published var syncStatus: SyncStatus = .idle
     @Published var activeRemoteTabata: Tabata?
+    /// Sesión de gym activa espejada desde el iPhone
+    @Published var activeGymSession: WatchGymSession?
     
     enum SyncStatus: Equatable {
         case idle
@@ -194,6 +196,22 @@ class WatchConnectivityService: NSObject, ObservableObject {
             print("📲 Tabata pendiente recibido: \(tabata.name)")
         }
         
+        // Sesión de gym espejada (applicationContext = último estado)
+        if let gymData = data["gymSession"] as? Data {
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            if let gymSession = try? decoder.decode(WatchGymSession.self, from: gymData) {
+                let isNew = self.activeGymSession == nil
+                self.activeGymSession = gymSession
+                if isNew { WKInterfaceDevice.current().play(.notification) }
+            }
+        } else if data["gymSessionCleared"] != nil {
+            if self.activeGymSession != nil {
+                self.activeGymSession = nil
+                WKInterfaceDevice.current().play(.success)
+            }
+        }
+
         // Handle stopTabata action
         if let action = data["action"] as? String, action == "stopTabata" {
             // Clear remote tabata when iPhone stops
@@ -315,6 +333,36 @@ class WatchConnectivityService: NSObject, ObservableObject {
         }
     }
     
+    // MARK: - Gym: marcar serie desde el Watch
+    /// Optimista en local; el iPhone confirma reenviando el espejo actualizado.
+    func toggleGymSet(exerciseId: String, setId: String, completed: Bool) {
+        // Update optimista local
+        if var gymSession = activeGymSession,
+           let exIndex = gymSession.exercises.firstIndex(where: { $0.id == exerciseId }),
+           let setIndex = gymSession.exercises[exIndex].sets.firstIndex(where: { $0.id == setId }) {
+            gymSession.exercises[exIndex].sets[setIndex].completed = completed
+            activeGymSession = gymSession
+        }
+        WKInterfaceDevice.current().play(completed ? .success : .click)
+
+        guard let session = session else { return }
+        let message: [String: Any] = [
+            "action": "toggleGymSet",
+            "exerciseId": exerciseId,
+            "setId": setId,
+            "completed": completed
+        ]
+
+        if session.isReachable {
+            session.sendMessage(message, replyHandler: nil) { _ in
+                // Fallback en cola si el envío directo falla
+                session.transferUserInfo(message)
+            }
+        } else {
+            session.transferUserInfo(message)
+        }
+    }
+
     // MARK: - Clear Remote Tabata
     func clearRemoteTabata() {
         activeRemoteTabata = nil

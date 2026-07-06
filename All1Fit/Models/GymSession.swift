@@ -137,9 +137,11 @@ struct GymSession: Codable, Identifiable {
     var endDate: Date?
     var exercises: [GymExerciseLog]
     var notes: String?
+    /// Fin del descanso en curso (persiste en el snapshot: sobrevive a cierres de app)
+    var restEndDate: Date?
 
     enum CodingKeys: String, CodingKey {
-        case id, routineName, startDate, endDate, exercises, notes
+        case id, routineName, startDate, endDate, exercises, notes, restEndDate
     }
 
     init(routineName: String, startDate: Date = Date(), endDate: Date? = nil, exercises: [GymExerciseLog] = [], notes: String? = nil) {
@@ -159,6 +161,7 @@ struct GymSession: Codable, Identifiable {
         endDate = try c.decodeIfPresent(Date.self, forKey: .endDate)
         exercises = try c.decodeIfPresent([GymExerciseLog].self, forKey: .exercises) ?? []
         notes = try c.decodeIfPresent(String.self, forKey: .notes)
+        restEndDate = try c.decodeIfPresent(Date.self, forKey: .restEndDate)
     }
 
     // El id nunca se serializa: Firestore lo gestiona y el snapshot local no lo necesita
@@ -169,6 +172,7 @@ struct GymSession: Codable, Identifiable {
         try c.encodeIfPresent(endDate, forKey: .endDate)
         try c.encode(exercises, forKey: .exercises)
         try c.encodeIfPresent(notes, forKey: .notes)
+        try c.encodeIfPresent(restEndDate, forKey: .restEndDate)
     }
 
     var totalVolume: Double {
