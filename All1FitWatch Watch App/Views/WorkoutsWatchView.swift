@@ -2,8 +2,17 @@ import SwiftUI
 
 // MARK: - Workouts Watch View
 struct WorkoutsWatchView: View {
+    @EnvironmentObject var connectivity: WatchConnectivityService
     @State private var selectedCategory: WatchWorkoutCategory = .crossfit
-    
+
+    private var allWorkouts: [WatchWorkout] {
+        let predefined = WatchWorkout.workouts(for: selectedCategory)
+        let userSynced = connectivity.userWorkouts
+            .filter { $0.watchCategory == selectedCategory }
+            .map { $0.toWatchWorkout() }
+        return predefined + userSynced
+    }
+
     var body: some View {
         List {
             // Category Picker
@@ -14,14 +23,21 @@ struct WorkoutsWatchView: View {
                 }
             }
             .listRowBackground(Color.clear)
-            
+
             // Workouts
-            ForEach(WatchWorkout.workouts(for: selectedCategory)) { workout in
+            ForEach(allWorkouts) { workout in
                 NavigationLink {
                     WorkoutTimerView(workout: workout)
                 } label: {
                     WorkoutRowWatch(workout: workout)
                 }
+            }
+
+            if allWorkouts.isEmpty {
+                Text("No hay entrenos en esta categoría")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .listRowBackground(Color.clear)
             }
         }
         .navigationTitle("Entrenos")

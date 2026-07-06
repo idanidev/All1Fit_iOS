@@ -1,5 +1,4 @@
 import SwiftUI
-
 // MARK: - Tabata Detail View
 struct TabataDetailView: View {
     let tabata: Tabata

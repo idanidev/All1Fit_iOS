@@ -9,42 +9,68 @@ class WorkoutService: ObservableObject {
     @Published var results: [String: [WorkoutResult]] = [:] // workoutId -> results
     @Published var isLoading = false
     @Published var errorMessage: String?
-    
+
     private let db = Firestore.firestore()
     private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "All1Fit", category: "WorkoutService")
+    private var lastFetchAll: Date?
+    private var lastFetchPerId: [String: Date] = [:]
+    private let cacheInterval: TimeInterval = 30
     
-    // MARK: - Fetch Results for a Workout
-    func fetchResults(for workoutId: String) async {
+    // MARK: - Fetch All Results (single query, replaces per-workout loop)
+    func fetchAllResults(forceRefresh: Bool = false) async {
         guard let userId = Auth.auth().currentUser?.uid else { return }
-        
+        if !forceRefresh, let last = lastFetchAll, Date().timeIntervalSince(last) < cacheInterval { return }
+
         isLoading = true
         defer { isLoading = false }
-        
+
+        do {
+            let snapshot = try await db.collection("users")
+                .document(userId)
+                .collection("workoutResults")
+                .getDocuments()
+
+            var grouped: [String: [WorkoutResult]] = [:]
+            for doc in snapshot.documents {
+                guard let result = try? doc.data(as: WorkoutResult.self) else { continue }
+                grouped[result.workoutId, default: []].append(result)
+            }
+            for key in grouped.keys {
+                grouped[key]?.sort { ($0.date ?? .distantPast) > ($1.date ?? .distantPast) }
+            }
+            results = grouped
+            lastFetchAll = Date()
+            logger.info("fetchAllResults: \(snapshot.documents.count) docs, \(grouped.count) workouts")
+        } catch {
+            logger.error("fetchAllResults error: \(error.localizedDescription)")
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - Fetch Results for a Workout
+    func fetchResults(for workoutId: String, forceRefresh: Bool = false) async {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        if !forceRefresh,
+           let last = lastFetchPerId[workoutId],
+           Date().timeIntervalSince(last) < cacheInterval,
+           results[workoutId] != nil { return }
+
+        isLoading = true
+        defer { isLoading = false }
+
         do {
             let snapshot = try await db.collection("users")
                 .document(userId)
                 .collection("workoutResults")
                 .whereField("workoutId", isEqualTo: workoutId)
-                // .order(by: "date", descending: true) // Disabled: may require composite index
                 .getDocuments()
-            
-            logger.info("Fetched \(snapshot.documents.count) results for workoutId: \(workoutId)")
-            
-            let fetchedResults = snapshot.documents.compactMap { doc -> WorkoutResult? in
-                do {
-                    let result = try doc.data(as: WorkoutResult.self)
-                    self.logger.info("Decoded result: \(result.workoutId), time: \(result.timeSeconds)")
-                    return result
-                } catch {
-                    self.logger.error("Failed to decode result \(doc.documentID): \(error.localizedDescription)")
-                    return nil
-                }
-            }
-            
-            results[workoutId] = fetchedResults
-            logger.info("Stored \(fetchedResults.count) results for \(workoutId). Total workouts with results: \(self.results.count)")
+
+            let fetchedResults = snapshot.documents.compactMap { try? $0.data(as: WorkoutResult.self) }
+            results[workoutId] = fetchedResults.sorted { ($0.date ?? .distantPast) > ($1.date ?? .distantPast) }
+            lastFetchPerId[workoutId] = Date()
+            logger.info("fetchResults[\(workoutId)]: \(fetchedResults.count) results")
         } catch {
-            logger.error("Error fetching results for \(workoutId): \(error.localizedDescription)")
+            logger.error("fetchResults[\(workoutId)] error: \(error.localizedDescription)")
             errorMessage = error.localizedDescription
         }
     }

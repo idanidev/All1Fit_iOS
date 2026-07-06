@@ -7,6 +7,9 @@ struct PremiumOnboardingView: View {
     @State private var isLogoAnimating = false
     @State private var showContent = false
     @Namespace private var animation
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    private var isIPad: Bool { horizontalSizeClass == .regular }
     
     private let pages: [PremiumOnboardingPage] = [
         PremiumOnboardingPage(
@@ -45,75 +48,125 @@ struct PremiumOnboardingView: View {
             // Animated background
             AnimatedMeshGradient(colors: currentPageColors)
                 .ignoresSafeArea()
-            
-            VStack(spacing: 0) {
-                // Content
-                TabView(selection: $currentPage) {
-                    ForEach(0..<pages.count, id: \.self) { index in
-                        PremiumPageView(
-                            page: pages[index],
-                            isActive: currentPage == index
-                        )
+
+            if isIPad {
+                iPadLayout
+            } else {
+                iPhoneLayout
+            }
+        }
+    }
+
+    // MARK: - iPhone Layout
+    private var iPhoneLayout: some View {
+        VStack(spacing: 0) {
+            TabView(selection: $currentPage) {
+                ForEach(0..<pages.count, id: \.self) { index in
+                    PremiumPageView(page: pages[index], isActive: currentPage == index, isIPad: false)
                         .tag(index)
-                    }
                 }
-                .tabViewStyle(.page(indexDisplayMode: .never))
-                
-                // Bottom controls
-                VStack(spacing: 20) {
-                    // Page indicators
-                    HStack(spacing: 8) {
-                        ForEach(0..<pages.count, id: \.self) { index in
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(currentPage == index ? .white : .white.opacity(0.3))
-                                .frame(width: currentPage == index ? 32 : 8, height: 8)
-                                .animation(.spring(response: 0.3), value: currentPage)
-                        }
-                    }
-                    .padding(.horizontal)
-                    
-                    // CTA Button
-                    Button {
-                        withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
-                            if currentPage < pages.count - 1 {
-                                currentPage += 1
-                            } else {
-                                onComplete()
-                            }
-                        }
-                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                    } label: {
-                        HStack(spacing: 12) {
-                            Text(currentPage < pages.count - 1 ? "Continuar" : "¡Empezar!")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                            
-                            Image(systemName: currentPage < pages.count - 1 ? "arrow.right" : "checkmark")
-                                .font(.headline.weight(.bold))
-                        }
-                        .foregroundStyle(.black)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(.white)
-                                .shadow(color: .white.opacity(0.3), radius: 20, y: 10)
-                        )
-                    }
-                    .padding(.horizontal, 32)
-                    
-                    // Skip
-                    if currentPage < pages.count - 1 {
-                        Button("Saltar") {
-                            withAnimation(.smooth) {
-                                onComplete()
-                            }
-                        }
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.white.opacity(0.6))
-                    }
-                }
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+
+            bottomControls(maxButtonWidth: .infinity, horizontalPadding: 32)
                 .padding(.bottom, 50)
+        }
+    }
+
+    // MARK: - iPad Layout
+    private var iPadLayout: some View {
+        HStack(spacing: 0) {
+            // Left: icon area
+            TabView(selection: $currentPage) {
+                ForEach(0..<pages.count, id: \.self) { index in
+                    PremiumPageView(page: pages[index], isActive: currentPage == index, isIPad: true)
+                        .tag(index)
+                }
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .frame(maxWidth: .infinity)
+
+            // Right: text + controls
+            VStack(alignment: .leading, spacing: 32) {
+                Spacer()
+
+                VStack(alignment: .leading, spacing: 16) {
+                    Text(pages[currentPage].title)
+                        .font(.system(size: 52, weight: .black, design: .rounded))
+                        .foregroundStyle(.white)
+                        .animation(.spring(response: 0.4), value: currentPage)
+
+                    Text(pages[currentPage].subtitle)
+                        .font(.title2.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.75))
+                        .animation(.spring(response: 0.4), value: currentPage)
+
+                    Text(pages[currentPage].description)
+                        .font(.body)
+                        .foregroundStyle(.white.opacity(0.6))
+                        .lineSpacing(4)
+                        .animation(.spring(response: 0.4), value: currentPage)
+                }
+
+                Spacer()
+
+                bottomControls(maxButtonWidth: 360, horizontalPadding: 0)
+
+                Spacer()
+            }
+            .padding(.horizontal, 48)
+            .frame(maxWidth: 480)
+        }
+        .padding(.horizontal, 24)
+    }
+
+    // MARK: - Shared bottom controls
+    @ViewBuilder
+    private func bottomControls(maxButtonWidth: CGFloat, horizontalPadding: CGFloat) -> some View {
+        VStack(spacing: 20) {
+            HStack(spacing: 8) {
+                ForEach(0..<pages.count, id: \.self) { index in
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(currentPage == index ? .white : .white.opacity(0.3))
+                        .frame(width: currentPage == index ? 32 : 8, height: 8)
+                        .animation(.spring(response: 0.3), value: currentPage)
+                }
+            }
+
+            Button {
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+                    if currentPage < pages.count - 1 {
+                        currentPage += 1
+                    } else {
+                        onComplete()
+                    }
+                }
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            } label: {
+                HStack(spacing: 12) {
+                    Text(currentPage < pages.count - 1 ? "Continuar" : "¡Empezar!")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                    Image(systemName: currentPage < pages.count - 1 ? "arrow.right" : "checkmark")
+                        .font(.headline.weight(.bold))
+                }
+                .foregroundStyle(.black)
+                .frame(maxWidth: maxButtonWidth == .infinity ? .infinity : maxButtonWidth)
+                .frame(height: 56)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(.white)
+                        .shadow(color: .white.opacity(0.3), radius: 20, y: 10)
+                )
+            }
+            .padding(.horizontal, horizontalPadding)
+
+            if currentPage < pages.count - 1 {
+                Button("Saltar") {
+                    withAnimation(.smooth) { onComplete() }
+                }
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.white.opacity(0.6))
             }
         }
     }
@@ -137,17 +190,23 @@ struct PremiumOnboardingPage {
 struct PremiumPageView: View {
     let page: PremiumOnboardingPage
     let isActive: Bool
-    
+    var isIPad: Bool = false
+
     @State private var animationPhase: AnimationPhase = .idle
-    
+
     enum AnimationPhase {
         case idle, appearing, active
     }
-    
+
+    private var iconSize: CGFloat { isIPad ? 160 : 120 }
+    private var symbolSize: CGFloat { isIPad ? 80 : 60 }
+    private var glowSize: CGFloat { isIPad ? 320 : 240 }
+    private var logoSize: CGFloat { isIPad ? 260 : 200 }
+
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
-            
+
             // Icon/Logo Area
             ZStack {
                 // Pulsing glow
@@ -158,10 +217,10 @@ struct PremiumPageView: View {
                                 colors: [page.gradient[0].opacity(0.4), .clear],
                                 center: .center,
                                 startRadius: 0,
-                                endRadius: 120
+                                endRadius: glowSize / 2
                             )
                         )
-                        .frame(width: 240, height: 240)
+                        .frame(width: glowSize, height: glowSize)
                         .scaleEffect(animationPhase == .active ? 1.2 : 0.8)
                         .opacity(animationPhase == .active ? 0.6 : 0)
                         .animation(
@@ -171,26 +230,24 @@ struct PremiumPageView: View {
                             value: animationPhase
                         )
                 }
-                
+
                 // Icon content
                 if page.showLogo {
-                    // All1Fit Logo
                     Image("Logo")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 200, height: 200)
+                        .frame(width: logoSize, height: logoSize)
                         .shadow(color: .white.opacity(0.5), radius: 30)
                         .scaleEffect(animationPhase == .active ? 1.0 : 0.8)
                         .opacity(animationPhase == .active ? 1.0 : 0)
                 } else if let icon = page.systemIcon {
-                    // SF Symbol
                     ZStack {
                         Circle()
                             .fill(.ultraThinMaterial)
-                            .frame(width: 120, height: 120)
-                        
+                            .frame(width: iconSize, height: iconSize)
+
                         Image(systemName: icon)
-                            .font(.system(size: 60, weight: .medium))
+                            .font(.system(size: symbolSize, weight: .medium))
                             .foregroundStyle(
                                 LinearGradient(
                                     colors: page.gradient,
@@ -207,45 +264,47 @@ struct PremiumPageView: View {
                     )
                 }
             }
-            .frame(height: 280)
+            .frame(height: isIPad ? 360 : 280)
             .offset(y: animationPhase == .active ? 0 : 30)
-            
-            Spacer().frame(height: 60)
-            
-            // Text content
-            VStack(spacing: 16) {
-                Text(page.title)
-                    .font(.system(size: 42, weight: .black, design: .rounded))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.white, .white.opacity(0.8)],
-                            startPoint: .top,
-                            endPoint: .bottom
+
+            // Text content — only shown in iPhone layout (iPad shows text on right panel)
+            if !isIPad {
+                Spacer().frame(height: 60)
+
+                VStack(spacing: 16) {
+                    Text(page.title)
+                        .font(.system(size: 42, weight: .black, design: .rounded))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.white, .white.opacity(0.8)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
                         )
-                    )
-                    .multilineTextAlignment(.center)
-                    .offset(y: animationPhase == .active ? 0 : 20)
-                    .opacity(animationPhase == .active ? 1 : 0)
-                
-                Text(page.subtitle)
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.7))
-                    .multilineTextAlignment(.center)
-                    .offset(y: animationPhase == .active ? 0 : 20)
-                    .opacity(animationPhase == .active ? 1 : 0)
-                
-                Text(page.description)
-                    .font(.body)
-                    .foregroundStyle(.white.opacity(0.6))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
-                    .padding(.top, 8)
-                    .offset(y: animationPhase == .active ? 0 : 20)
-                    .opacity(animationPhase == .active ? 1 : 0)
+                        .multilineTextAlignment(.center)
+                        .offset(y: animationPhase == .active ? 0 : 20)
+                        .opacity(animationPhase == .active ? 1 : 0)
+
+                    Text(page.subtitle)
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.7))
+                        .multilineTextAlignment(.center)
+                        .offset(y: animationPhase == .active ? 0 : 20)
+                        .opacity(animationPhase == .active ? 1 : 0)
+
+                    Text(page.description)
+                        .font(.body)
+                        .foregroundStyle(.white.opacity(0.6))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                        .padding(.top, 8)
+                        .offset(y: animationPhase == .active ? 0 : 20)
+                        .opacity(animationPhase == .active ? 1 : 0)
+                }
             }
-            
+
             Spacer()
-            Spacer()
+            if !isIPad { Spacer() }
         }
         .onChange(of: isActive) { _, active in
             if active {

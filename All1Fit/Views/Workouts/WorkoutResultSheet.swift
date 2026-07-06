@@ -1,4 +1,5 @@
 import SwiftUI
+import HealthKit
 import os
 
 // MARK: - Workout Result Sheet
@@ -354,8 +355,16 @@ struct WorkoutResultSheet: View {
                         rounds: workout.isForTime ? nil : rounds,
                         notes: notes.isEmpty ? nil : notes
                     )
+                    // Save to HealthKit
+                    let activityType: HKWorkoutActivityType = workout.category == .running ? .running : .highIntensityIntervalTraining
+                    let duration = TimeInterval(totalSeconds > 0 ? totalSeconds : 1800)
+                    await HealthKitService.shared.saveWorkout(
+                        activityType: activityType,
+                        startDate: Date().addingTimeInterval(-duration),
+                        duration: duration
+                    )
                 }
-                
+
                 showSuccess = true
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 

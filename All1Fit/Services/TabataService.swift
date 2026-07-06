@@ -11,7 +11,9 @@ class TabataService: ObservableObject {
     @Published var error: String?
     
     private let db = Firestore.firestore()
-    
+    private var lastFetchAll: Date?
+    private let cacheInterval: TimeInterval = 30
+
     private var userId: String? {
         Auth.auth().currentUser?.uid
     }
@@ -134,11 +136,38 @@ class TabataService: ObservableObject {
         tabataResults[result.tabataId]?.insert(result, at: 0)
     }
     
+    // MARK: - Fetch All Tabata Results (single query)
+
+    func fetchAllResults(forceRefresh: Bool = false) async {
+        guard let userId = userId else { return }
+        if !forceRefresh, let last = lastFetchAll, Date().timeIntervalSince(last) < cacheInterval { return }
+
+        do {
+            let snapshot = try await db.collection("users")
+                .document(userId)
+                .collection("tabataResults")
+                .getDocuments()
+
+            var grouped: [String: [TabataResult]] = [:]
+            for doc in snapshot.documents {
+                guard let result = try? doc.data(as: TabataResult.self) else { continue }
+                grouped[result.tabataId, default: []].append(result)
+            }
+            for key in grouped.keys {
+                grouped[key]?.sort { $0.completedAt > $1.completedAt }
+            }
+            tabataResults = grouped
+            lastFetchAll = Date()
+        } catch {
+            print("❌ fetchAllResults error: \(error)")
+        }
+    }
+
     // MARK: - Fetch Results for a Tabata
-    
+
     func fetchResults(for tabataId: String) async {
         guard let userId = userId else { return }
-        
+
         do {
             let snapshot = try await db.collection("users")
                 .document(userId)
@@ -147,11 +176,8 @@ class TabataService: ObservableObject {
                 .order(by: "completedAt", descending: true)
                 .limit(to: 20)
                 .getDocuments()
-            
-            let results = snapshot.documents.compactMap { doc in
-                try? doc.data(as: TabataResult.self)
-            }
-            
+
+            let results = snapshot.documents.compactMap { try? $0.data(as: TabataResult.self) }
             tabataResults[tabataId] = results
         } catch {
             print("❌ Error fetching tabata results: \(error)")

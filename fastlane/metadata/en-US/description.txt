@@ -1,0 +1,37 @@
+All1Fit is your ultimate companion for CrossFit, gym, and functional training. Track your RMs, run timed WODs, and train with tabatas — all from your iPhone and Apple Watch.
+
+REP MAXES (RM)
+- Log and track your RMs for any exercise
+- 1RM calculator from reps (Epley formula)
+- Auto percentage table (30% to 100%)
+- Full history with trends and charts
+- Support for barbell, dumbbell, and kettlebell
+
+WORKOUTS / WOD
+- Classic WOD library: Murph, Fran, Cindy, Helen...
+- Create your own custom workouts
+- Competitions: HYROX, DEKKA and more
+- Built-in For Time and AMRAP timer
+- Running: 5K, 10K, Half Marathon
+- Cacos: customizable walk/run intervals
+
+TABATA & HIIT
+- Tabata timer with work and rest phases
+- Create custom tabatas with your own intervals
+- Treadmill mode with speed phases
+- Haptics and sound cues for each phase
+- Dynamic Island with Live Activity during workouts
+
+APPLE WATCH
+- Native standalone watchOS app
+- Auto-sync of RMs, workouts, and tabatas
+- Log new RMs from your wrist
+- WOD timer on your Watch
+
+FREE WITH NO LIMITS
+- No subscriptions or hidden purchases
+- All your data synced to the cloud
+- Optimized dark theme
+- Support for kg and lbs
+
+Built by an athlete, for athletes. Download All1Fit and take your training to the next level.

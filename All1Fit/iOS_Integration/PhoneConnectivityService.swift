@@ -85,6 +85,21 @@ class PhoneConnectivityService: NSObject, ObservableObject {
         }
     }
     
+    // MARK: - Send User Workouts to Watch
+    func sendUserWorkoutsToWatch(_ workouts: [UserWorkout]) {
+        guard let session = session, session.isPaired else { return }
+
+        do {
+            let data = try JSONEncoder().encode(workouts)
+            session.transferUserInfo([
+                "userWorkouts": data,
+                "timestamp": Date().timeIntervalSince1970
+            ])
+        } catch {
+            debugLog("Error syncing user workouts: \(error.localizedDescription)", category: Log.sync)
+        }
+    }
+
     // MARK: - Send Tabata Start Signal
     func sendTabataStartToWatch(_ tabata: Tabata) {
         guard let session = session, session.isPaired else { return }
@@ -104,7 +119,7 @@ class PhoneConnectivityService: NSObject, ObservableObject {
     
     // MARK: - Send Tabata Stop Signal
     func sendTabataStopToWatch() {
-        guard let session = session, session.isPaired, session.isReachable else { return }
+        guard let session = session, session.isPaired, session.isWatchAppInstalled else { return }
         
         do {
             try session.updateApplicationContext([

@@ -1,6 +1,7 @@
 import SwiftUI
 import AudioToolbox
 import ActivityKit
+import UIKit
 
 // MARK: - Tabata Session Manager
 /// Singleton class to manage the active Tabata session (Timer, State, Audio)
@@ -30,6 +31,9 @@ class TabataSessionManager: ObservableObject {
     private var phaseDuration: Int = 0
     private var pausedAtSeconds: Int?
     private var sessionStartTime: Date?
+
+    // Background execution
+    private var backgroundTaskId: UIBackgroundTaskIdentifier = .invalid
     
     // Computed Progress
     var progress: Double {
@@ -46,6 +50,11 @@ class TabataSessionManager: ObservableObject {
     // Internal Timer (only for UI refresh, not time source)
     private var timer: Timer?
     
+    // MARK: - Persistence keys
+    private static let kSessionTabataId  = "tsm.activeTabataId"
+    private static let kSessionStartedAt = "tsm.sessionStartedAt"
+    private static let kSessionTabataData = "tsm.activeTabataData"
+
     private init() {
         // Observe app lifecycle for background recovery
         NotificationCenter.default.addObserver(
@@ -54,9 +63,61 @@ class TabataSessionManager: ObservableObject {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                self?.recoverFromBackground()
+                guard let self else { return }
+                // Try restore first (in case process was killed) then recover
+                if !self.isActive {
+                    _ = self.restoreSessionIfNeeded()
+                } else {
+                    self.recoverFromBackground()
+                }
             }
         }
+    }
+
+    /// Restore session from persisted state if app was killed during a session.
+    /// Returns true if restored successfully.
+    @discardableResult
+    func restoreSessionIfNeeded() -> Bool {
+        guard !isActive,
+              let data = UserDefaults.standard.data(forKey: Self.kSessionTabataData),
+              let tabata = try? JSONDecoder().decode(Tabata.self, from: data),
+              let started = UserDefaults.standard.object(forKey: Self.kSessionStartedAt) as? Date
+        else { return false }
+
+        // Recreate initial state at the originally recorded start
+        self.activeTabata = tabata
+        self.isActive = true
+        self.isPaused = false
+        self.isComplete = false
+        self.sessionStartTime = started
+        self.phase = .countdown
+        self.phaseDuration = 3
+        self.secondsRemaining = 3
+        self.phaseStartTime = started
+        self.currentRound = 1
+        self.currentSet = 1
+        self.currentPhaseIndex = 0
+
+        // Fast-forward to correct phase based on real elapsed time
+        recoverFromBackground()
+
+        beginBackgroundExecution()
+        startTimer()
+        return true
+    }
+
+    private func persistSession(for tabata: Tabata) {
+        UserDefaults.standard.set(tabata.id, forKey: Self.kSessionTabataId)
+        UserDefaults.standard.set(sessionStartTime, forKey: Self.kSessionStartedAt)
+        if let data = try? JSONEncoder().encode(tabata) {
+            UserDefaults.standard.set(data, forKey: Self.kSessionTabataData)
+        }
+    }
+
+    private func clearPersistedSession() {
+        UserDefaults.standard.removeObject(forKey: Self.kSessionTabataId)
+        UserDefaults.standard.removeObject(forKey: Self.kSessionStartedAt)
+        UserDefaults.standard.removeObject(forKey: Self.kSessionTabataData)
     }
     
     // MARK: - Session Control
@@ -70,7 +131,7 @@ class TabataSessionManager: ObservableObject {
         self.isComplete = false
         self.totalElapsed = 0
         self.sessionStartTime = Date()
-        
+
         // Initial State
         self.phase = .countdown
         self.phaseDuration = 3
@@ -79,15 +140,21 @@ class TabataSessionManager: ObservableObject {
         self.currentRound = 1
         self.currentSet = 1
         self.currentPhaseIndex = 0
-        
+
+        // Persist for app-relaunch recovery
+        persistSession(for: tabata)
+
         // Start Live Activity
         startLiveActivity(for: tabata)
-        
+
         // Send to Apple Watch
         Task {
             PhoneConnectivityService.shared.sendTabataStartToWatch(tabata)
         }
-        
+
+        // Request background execution so phase transitions keep firing
+        beginBackgroundExecution()
+
         // Start UI refresh timer
         startTimer()
         playHaptic(for: .countdown)
@@ -96,14 +163,17 @@ class TabataSessionManager: ObservableObject {
     func stopSession() {
         timer?.invalidate()
         timer = nil
-        
+
+        clearPersistedSession()
+        endBackgroundExecution()
+
         Task {
             await activityManager.endActivity()
         }
-        
+
         // Notify Watch
         PhoneConnectivityService.shared.sendTabataStopToWatch()
-        
+
         withAnimation {
             self.isActive = false
             self.activeTabata = nil
@@ -130,21 +200,27 @@ class TabataSessionManager: ObservableObject {
     
     private func recoverFromBackground() {
         guard isActive, !isPaused, let startTime = phaseStartTime, let tabata = activeTabata else { return }
-        
+
         // Calculate how much time has passed
         let elapsed = Int(Date().timeIntervalSince(startTime))
         let newRemaining = max(0, phaseDuration - elapsed)
-        
+
         if newRemaining <= 0 {
             // Phase should have ended while backgrounded - advance phases
             advanceMultiplePhases(tabata: tabata, elapsedSincePhaseStart: elapsed)
         } else {
             secondsRemaining = newRemaining
         }
-        
+
         // Recalculate total elapsed
         if let sessionStart = sessionStartTime {
             totalElapsed = Int(Date().timeIntervalSince(sessionStart))
+        }
+
+        // Always force-refresh Live Activity after coming back from background
+        // so the widget endTime stays in sync with the real phase state.
+        if !isComplete {
+            updateLiveActivity()
         }
     }
     
@@ -170,7 +246,7 @@ class TabataSessionManager: ObservableObject {
     
     private func startTimer() {
         timer?.invalidate()
-        timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.tick()
             }
@@ -294,7 +370,9 @@ class TabataSessionManager: ObservableObject {
         phase = .complete
         isComplete = true
         playHaptic(for: .complete)
-        
+
+        endBackgroundExecution()
+
         Task {
             await activityManager.completeActivity()
         }
@@ -328,22 +406,27 @@ class TabataSessionManager: ObservableObject {
     
     private func updateLiveActivity() {
         guard let tabata = activeTabata else { return }
-        
-        Task {
+        // Snapshot values on MainActor before dispatching async work
+        let snapPhase = phase
+        let snapRound = currentRound
+        let snapDuration = phaseDuration
+        let snapIdx = currentPhaseIndex
+
+        Task(priority: .userInitiated) {
             if tabata.type == .intervals {
-                if phase == .work {
-                    await activityManager.updateToWork(round: currentRound, totalRounds: tabata.rounds, seconds: phaseDuration)
-                } else if phase == .rest || phase == .setRest {
-                    await activityManager.updateToRest(round: currentRound, totalRounds: tabata.rounds, seconds: phaseDuration)
+                if snapPhase == .work {
+                    await activityManager.updateToWork(round: snapRound, totalRounds: tabata.rounds, seconds: snapDuration)
+                } else if snapPhase == .rest || snapPhase == .setRest {
+                    await activityManager.updateToRest(round: snapRound, totalRounds: tabata.rounds, seconds: snapDuration)
                 }
             } else {
-                if let phases = tabata.treadmillPhases, currentPhaseIndex < phases.count {
-                    let p = phases[currentPhaseIndex]
+                if let phases = tabata.treadmillPhases, snapIdx < phases.count {
+                    let p = phases[snapIdx]
                     await activityManager.updateToTreadmill(
                         phaseName: p.name,
-                        phaseIndex: currentPhaseIndex,
+                        phaseIndex: snapIdx,
                         totalPhases: phases.count,
-                        seconds: phaseDuration,
+                        seconds: snapDuration,
                         incline: p.inclinePercent,
                         speed: p.speedKmh
                     )
@@ -352,8 +435,37 @@ class TabataSessionManager: ObservableObject {
         }
     }
     
+    // MARK: - Background Execution
+
+    private func beginBackgroundExecution() {
+        guard backgroundTaskId == .invalid else { return }
+        backgroundTaskId = UIApplication.shared.beginBackgroundTask(withName: "TabataSession") { [weak self] in
+            // Expiration handler: end old task and immediately request a new one
+            // This keeps the app alive for the full session
+            self?.renewBackgroundExecution()
+        }
+    }
+
+    private func renewBackgroundExecution() {
+        let oldId = backgroundTaskId
+        backgroundTaskId = .invalid
+        // Request new slot before ending the old one
+        backgroundTaskId = UIApplication.shared.beginBackgroundTask(withName: "TabataSession") { [weak self] in
+            self?.renewBackgroundExecution()
+        }
+        if oldId != .invalid {
+            UIApplication.shared.endBackgroundTask(oldId)
+        }
+    }
+
+    private func endBackgroundExecution() {
+        guard backgroundTaskId != .invalid else { return }
+        UIApplication.shared.endBackgroundTask(backgroundTaskId)
+        backgroundTaskId = .invalid
+    }
+
     // MARK: - Helpers
-    
+
     private func playHaptic(for event: TabataEvent) {
         switch event {
         case .countdown:

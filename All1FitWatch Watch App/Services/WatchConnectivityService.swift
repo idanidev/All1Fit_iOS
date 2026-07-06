@@ -11,6 +11,7 @@ class WatchConnectivityService: NSObject, ObservableObject {
     
     @Published var ejercicios: [WatchEjercicio] = []
     @Published var tabatas: [Tabata] = []
+    @Published var userWorkouts: [WatchUserWorkout] = []
     @Published var weightUnit: WatchWeightUnit = .kg
     @Published var isConnected = false
     @Published var isPhoneReachable = false
@@ -167,6 +168,14 @@ class WatchConnectivityService: NSObject, ObservableObject {
             newTabatas = decoded
             cacheData(ejerciciosData: nil, tabatasData: tabatasData)
             print("✅ Decoded \(decoded.count) tabatas")
+        }
+
+        // Decodificar user workouts
+        if let workoutsData = data["userWorkouts"] as? Data,
+           let decoded = try? JSONDecoder().decode([WatchUserWorkout].self, from: workoutsData) {
+            await MainActor.run { self.userWorkouts = decoded }
+            UserDefaults.standard.set(workoutsData, forKey: "cachedUserWorkouts")
+            print("✅ Decoded \(decoded.count) user workouts")
         }
 
         // Decodificar Tabata remoto
@@ -356,6 +365,12 @@ class WatchConnectivityService: NSObject, ObservableObject {
             print("✅ Cache: \(tabatas.count) tabatas")
         }
 
+        var loadedUserWorkouts: [WatchUserWorkout] = []
+        if let data = UserDefaults.standard.data(forKey: "cachedUserWorkouts"),
+           let workouts = try? JSONDecoder().decode([WatchUserWorkout].self, from: data) {
+            loadedUserWorkouts = workouts
+        }
+
         if let unit = UserDefaults.standard.string(forKey: "weightUnit"),
            let weightUnit = WatchWeightUnit(rawValue: unit) {
             loadedUnit = weightUnit
@@ -367,6 +382,7 @@ class WatchConnectivityService: NSObject, ObservableObject {
         Task { @MainActor in
             self.ejercicios = loadedEjercicios
             self.tabatas = loadedTabatas
+            self.userWorkouts = loadedUserWorkouts
             self.weightUnit = loadedUnit
             self.lastSyncDate = loadedDate
         }

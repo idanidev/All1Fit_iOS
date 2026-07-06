@@ -1,0 +1,5 @@
+app_identifier("com.idanidev.All1Fit")
+apple_id(ENV["APPLE_ID"])
+
+itc_team_id(ENV["ITC_TEAM_ID"]) # App Store Connect Team ID
+team_id(ENV["TEAM_ID"])          # Apple Developer Team ID

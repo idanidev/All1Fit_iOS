@@ -1,0 +1,5 @@
+Novedades en v2.0:
+- Dynamic Island y Live Activity rediseñados para Tabata
+- Onboarding optimizado para iPad
+- Nuevo diseño premium del temporizador en pantalla de bloqueo
+- Correcciones de estabilidad y rendimiento

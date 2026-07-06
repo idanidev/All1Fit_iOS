@@ -28,6 +28,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     }
 }
 
+// MARK: - Notifications
+extension Notification.Name {
+    static let openActiveTabata = Notification.Name("openActiveTabata")
+}
+
 // MARK: - Main App
 @main
 struct All1FitApp: App {
@@ -45,7 +50,7 @@ struct All1FitApp: App {
 // MARK: - Root View
 struct RootView: View {
     @StateObject private var authService = AuthService()
-    @StateObject private var phoneConnectivity = PhoneConnectivityService.shared
+    @ObservedObject private var phoneConnectivity = PhoneConnectivityService.shared
     @AppStorage("hasCompletedOnboarding") private var localOnboardingComplete = false
 
     /// Combined onboarding status: local OR Firebase
@@ -75,6 +80,11 @@ struct RootView: View {
         }
         .environmentObject(authService)
         .environmentObject(phoneConnectivity)
+        .onOpenURL { url in
+            if url.scheme == "all1fit" && url.host == "tabata" {
+                NotificationCenter.default.post(name: .openActiveTabata, object: nil)
+            }
+        }
         .animation(.easeInOut(duration: 0.3), value: authService.isReady)
         .animation(.easeInOut(duration: 0.3), value: authService.isAuthenticated)
         .animation(.easeInOut(duration: 0.3), value: hasCompletedOnboarding)

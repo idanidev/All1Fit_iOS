@@ -1,0 +1,5 @@
+What's new in v2.0:
+- Redesigned Dynamic Island and Live Activity for Tabata
+- iPad-optimized onboarding
+- New premium Lock Screen timer design
+- Stability and performance fixes

@@ -11,6 +11,8 @@ extension Color {
     static let all1FitRed = Color(red: 1.0, green: 0.27, blue: 0.23) // #FF453A
     static let all1FitPurple = Color(red: 0.75, green: 0.35, blue: 0.95) // #BF5AF2
     static let all1FitBlue = Color(red: 0.04, green: 0.52, blue: 1.0) // #0A84FF
+    static let all1FitCyan = Color(red: 0.19, green: 0.82, blue: 0.95) // #30D1F2
+    static let all1FitPink = Color(red: 1.0, green: 0.22, blue: 0.56) // #FF3890
 
     // MARK: Semantic Colors
     static let all1FitSuccess = Color(red: 0.19, green: 0.82, blue: 0.35) // #30D158
@@ -21,6 +23,19 @@ extension Color {
     static let all1FitBackground = Color(red: 0.0, green: 0.0, blue: 0.0) // Pure black
     static let all1FitBackgroundSecondary = Color(red: 0.11, green: 0.11, blue: 0.12) // #1C1C1E
     static let all1FitBackgroundTertiary = Color(red: 0.17, green: 0.17, blue: 0.18) // #2C2C2E
+
+    // MARK: Gradient Namespace
+    enum Gradients {
+        static var rm: LinearGradient {
+            LinearGradient(colors: [.all1FitOrange, .all1FitRed], startPoint: .topLeading, endPoint: .bottomTrailing)
+        }
+        static var tabata: LinearGradient {
+            LinearGradient(colors: [.all1FitBlue, .all1FitCyan], startPoint: .topLeading, endPoint: .bottomTrailing)
+        }
+        static var workout: LinearGradient {
+            LinearGradient(colors: [.all1FitPurple, .all1FitPink], startPoint: .topLeading, endPoint: .bottomTrailing)
+        }
+    }
 
     // MARK: Gradient Presets
     static var all1FitCrossFitGradient: LinearGradient {
@@ -327,6 +342,37 @@ extension View {
     func all1FitPressable(scale: CGFloat = 0.97) -> some View {
         modifier(All1FitPressableModifier(scale: scale))
     }
+}
+
+// MARK: - Layout Tokens (alias de All1FitSpacing + All1FitCornerRadius)
+/// Namespace conveniente para acceder a los tokens sin el prefijo largo
+enum Layout {
+    // Spacing
+    static let xxs: CGFloat = All1FitSpacing.xxs   // 4
+    static let xs: CGFloat  = All1FitSpacing.xs    // 8
+    static let sm: CGFloat  = All1FitSpacing.sm    // 12
+    static let md: CGFloat  = All1FitSpacing.md    // 16
+    static let lg: CGFloat  = All1FitSpacing.lg    // 24
+    static let xl: CGFloat  = All1FitSpacing.xl    // 32
+    static let xxl: CGFloat = All1FitSpacing.xxl   // 48
+
+    // Corner radii
+    static let radiusSm: CGFloat = All1FitCornerRadius.xs   // 8
+    static let radiusMd: CGFloat = All1FitCornerRadius.sm   // 12
+    static let radiusLg: CGFloat = All1FitCornerRadius.lg   // 20
+    static let radiusXl: CGFloat = All1FitCornerRadius.xl   // 24
+}
+
+// MARK: - Font Aliases
+/// Aliases cortos para usar en vistas sin el prefijo completo
+extension Font {
+    static let all1FitHeaderLarge  = all1FitHeadlineLarge   // 28pt bold rounded
+    static let all1FitHeaderMedium = all1FitHeadlineMedium  // 22pt semibold rounded
+    static let all1FitHeaderSmall  = all1FitHeadlineSmall   // 18pt semibold rounded
+    static let all1FitBody         = all1FitBodyLarge        // 17pt regular
+    static let all1FitBodyBold     = Font.system(size: 17, weight: .semibold, design: .default)
+    static let all1FitSmall        = all1FitBodySmall        // 13pt regular
+    static let all1FitTiny         = all1FitCaption          // 11pt regular
 }
 
 // MARK: - Pressable Modifier

@@ -57,6 +57,14 @@ struct ContentView: View {
                     Label("Cronómetro", systemImage: "stopwatch")
                         .foregroundStyle(.cyan)
                 }
+
+                // Cacos Section
+                NavigationLink {
+                    CacosWatchView()
+                } label: {
+                    Label("Cacos", systemImage: "figure.run.circle")
+                        .foregroundStyle(.orange)
+                }
             }
             .navigationTitle("All1Fit")
             .toolbar {

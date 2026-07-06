@@ -1,0 +1,12 @@
+git_url(ENV["MATCH_GIT_URL"]) # e.g. "git@github.com:tuusuario/all1fit-certs.git"
+
+storage_mode("git")
+type("development") # default type
+
+app_identifier([
+  "com.idanidev.All1Fit",
+  "com.idanidev.All1Fit.watchkitapp",
+  "com.idanidev.All1Fit.All1FitWidgets"
+])
+
+username(ENV["APPLE_ID"])

@@ -103,6 +103,41 @@ struct WatchWorkout: Identifiable, Codable, Hashable {
     }
 }
 
+// MARK: - User Workout (Watch — synced from iPhone)
+struct WatchUserWorkout: Codable, Identifiable, Hashable {
+    var id: String?
+    var name: String
+    var description: String
+    var category: String
+    var exercises: [WatchUserExercise]
+    var timeCapMinutes: Int?
+    var isForTime: Bool
+
+    var watchCategory: WatchWorkoutCategory {
+        WatchWorkoutCategory.allCases.first {
+            $0.rawValue.caseInsensitiveCompare(category) == .orderedSame
+        } ?? .crossfit
+    }
+
+    /// Convert to WatchWorkout for display
+    func toWatchWorkout() -> WatchWorkout {
+        WatchWorkout(
+            id: id ?? UUID().uuidString,
+            name: name,
+            category: watchCategory,
+            description: exercises.map { "\($0.reps) \($0.name)" }.joined(separator: " · "),
+            isForTime: isForTime,
+            timeCapMinutes: timeCapMinutes
+        )
+    }
+}
+
+struct WatchUserExercise: Codable, Hashable {
+    var name: String
+    var reps: String
+    var notes: String?
+}
+
 // MARK: - Weight Unit
 enum WatchWeightUnit: String, CaseIterable, Codable {
     case kg, lbs

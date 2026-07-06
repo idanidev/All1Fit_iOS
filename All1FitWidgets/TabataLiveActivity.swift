@@ -2,7 +2,7 @@ import WidgetKit
 import SwiftUI
 import ActivityKit
 
-// MARK: - Tabata Live Activity Widget
+// MARK: - Widget Bundle
 @main
 struct All1FitWidgetsBundle: WidgetBundle {
     var body: some Widget {
@@ -10,463 +10,334 @@ struct All1FitWidgetsBundle: WidgetBundle {
     }
 }
 
+// MARK: - Activity Configuration
 struct TabataLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: TabataActivityAttributes.self) { context in
-            // Lock Screen / Banner UI
             TabataLockScreenView(context: context)
+                .activityBackgroundTint(Color.black)
+                .activitySystemActionForegroundColor(Color.white)
         } dynamicIsland: { context in
             DynamicIsland {
-                // Expanded UI - Redesigned
                 DynamicIslandExpandedRegion(.leading) {
-                    TabataExpandedLeading(context: context)
+                    DIExpandedLeading(context: context)
                 }
-
                 DynamicIslandExpandedRegion(.trailing) {
-                    TabataExpandedTrailing(context: context)
+                    DIExpandedTrailing(context: context)
                 }
-
-                DynamicIslandExpandedRegion(.center) {
-                    TabataExpandedCenter(context: context)
-                }
-
                 DynamicIslandExpandedRegion(.bottom) {
-                    TabataExpandedBottom(context: context)
+                    DIExpandedBottom(context: context)
                 }
             } compactLeading: {
-                TabataCompactLeading(context: context)
+                DICompactLeading(context: context)
             } compactTrailing: {
-                TabataCompactTrailing(context: context)
+                DICompactTrailing(context: context)
             } minimal: {
-                TabataMinimalView(context: context)
+                DIMinimal(context: context)
             }
+            .keylineTint(LADesign.phaseColor(context.state.currentPhase))
+            .widgetURL(URL(string: "all1fit://tabata"))
         }
     }
 }
 
-// MARK: - Lock Screen View
+// MARK: - Design Tokens (matches All1Fit Design System)
+private enum LADesign {
+    // Tabata brand gradient (Blue → Cyan per design.md)
+    static let tabataStart = Color(red: 0.04, green: 0.52, blue: 1.0)
+    static let tabataEnd   = Color(red: 0.19, green: 0.82, blue: 0.95)
+
+    static func phaseColor(_ phase: String) -> Color {
+        switch phase {
+        case "work":      Color(red: 0.19, green: 0.82, blue: 0.35)
+        case "rest":      Color(red: 1.0, green: 0.27, blue: 0.23)
+        case "countdown": Color(red: 1.0, green: 0.58, blue: 0.0)
+        case "setRest":   Color(red: 1.0, green: 0.82, blue: 0.0)
+        case "complete":  tabataEnd
+        default:          tabataStart
+        }
+    }
+
+    static func phaseGradient(_ phase: String) -> LinearGradient {
+        let c = phaseColor(phase)
+        return LinearGradient(
+            colors: [c, c.opacity(0.7)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    static func phaseLabel(_ phase: String) -> String {
+        switch phase {
+        case "work":      "Trabajo"
+        case "rest":      "Descanso"
+        case "countdown": "Preparado"
+        case "setRest":   "Descanso serie"
+        case "complete":  "Completado"
+        default:          phase.capitalized
+        }
+    }
+
+    static func phaseIcon(_ phase: String) -> String {
+        switch phase {
+        case "work":      "flame.fill"
+        case "rest":      "leaf.fill"
+        case "countdown": "timer"
+        case "setRest":   "pause.fill"
+        case "complete":  "checkmark.seal.fill"
+        default:          "timer"
+        }
+    }
+}
+
+// MARK: - Lock Screen / Banner
 struct TabataLockScreenView: View {
     let context: ActivityViewContext<TabataActivityAttributes>
 
-    private var phaseColor: Color {
-        switch context.state.currentPhase {
-        case "work": return .green
-        case "rest": return .red
-        case "countdown": return .orange
-        case "complete": return .purple
-        default: return .orange
-        }
-    }
-
-    private var progress: CGFloat {
-        context.state.progress
-    }
+    private var color: Color { LADesign.phaseColor(context.state.currentPhase) }
+    private var isComplete: Bool { context.state.currentPhase == "complete" }
 
     var body: some View {
-        HStack(spacing: 0) {
-            // Left side: Large progress ring
+        HStack(spacing: 12) {
+            // Phase block
             ZStack {
-                // Background ring
-                Circle()
-                    .stroke(phaseColor.opacity(0.2), lineWidth: 8)
-                    .frame(width: 80, height: 80)
-
-                // Progress ring with animation
-                Circle()
-                    .trim(from: 0, to: progress)
-                    .stroke(
-                        AngularGradient(
-                            colors: [phaseColor, phaseColor.opacity(0.6)],
-                            center: .center
-                        ),
-                        style: StrokeStyle(lineWidth: 8, lineCap: .round)
-                    )
-                    .frame(width: 80, height: 80)
-                    .rotationEffect(.degrees(-90))
-                    .animation(.linear(duration: 1), value: progress)
-
-                // Center content
-                VStack(spacing: 2) {
-                    if context.state.totalRounds > 0 && context.state.currentPhase != "complete" {
-                        Text("\(context.state.currentRound)")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundStyle(phaseColor)
-                            .contentTransition(.numericText())
-
-                        Text("/\(context.state.totalRounds)")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(.secondary)
-                    } else if context.state.currentPhase == "complete" {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 36))
-                            .foregroundStyle(.green)
-                            .symbolEffect(.bounce, value: context.state.currentPhase)
-                    } else {
-                        Image(systemName: "figure.run")
-                            .font(.system(size: 32))
-                            .foregroundStyle(phaseColor)
-                            .symbolEffect(.pulse)
-                    }
-                }
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(LADesign.phaseGradient(context.state.currentPhase))
+                Image(systemName: LADesign.phaseIcon(context.state.currentPhase))
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(.white)
             }
-            .padding(.leading, 16)
-            .padding(.vertical, 12)
+            .frame(width: 44, height: 44)
 
-            // Right side: Info
-            VStack(alignment: .leading, spacing: 6) {
+            // Info
+            VStack(alignment: .leading, spacing: 1) {
                 Text(context.attributes.tabataName)
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(.primary)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.5))
                     .lineLimit(1)
 
-                Text(context.state.phaseDisplayName)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(phaseColor)
-                    .contentTransition(.interpolate)
+                Text(context.state.treadmillPhaseName ?? LADesign.phaseLabel(context.state.currentPhase))
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
 
-                if context.state.currentPhase != "complete" {
-                    HStack(spacing: 4) {
-                        Image(systemName: "timer")
-                            .font(.system(size: 12))
-                            .foregroundStyle(.secondary)
-
-                        Text(timerInterval: Date()...context.state.endTime, countsDown: true)
-                            .font(.system(size: 20, weight: .bold, design: .rounded))
-                            .monospacedDigit()
-                            .foregroundStyle(.primary)
+                if context.state.totalRounds > 0 && !isComplete {
+                    if let incline = context.state.treadmillIncline,
+                       let speed = context.state.treadmillSpeed {
+                        Text("\(Int(incline))% · \(String(format: "%.1f", speed)) km/h · \(context.state.currentRound)/\(context.state.totalRounds)")
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.45))
+                            .lineLimit(1)
+                    } else {
+                        Text("Ronda \(context.state.currentRound)/\(context.state.totalRounds)")
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.45))
                             .contentTransition(.numericText())
                     }
-                } else {
-                    Text("¡Completado!")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(.green)
-                }
-
-                if let _ = context.state.treadmillPhaseName,
-                   let incline = context.state.treadmillIncline,
-                   let speed = context.state.treadmillSpeed {
-                    HStack(spacing: 4) {
-                        Image(systemName: "figure.walk")
-                            .font(.system(size: 10))
-                        Text("\(Int(incline))% • \(String(format: "%.1f", speed)) km/h")
-                            .font(.system(size: 11))
-                    }
-                    .foregroundStyle(.secondary)
                 }
             }
-            .padding(.leading, 12)
-            .padding(.trailing, 16)
-            .padding(.vertical, 12)
 
-            Spacer()
+            Spacer(minLength: 4)
+
+            // Timer
+            if !isComplete {
+                Text(timerInterval: Date()...context.state.endTime, countsDown: true)
+                    .font(.system(size: 32, weight: .black, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(color)
+                    .contentTransition(.numericText())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+            } else {
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.system(size: 32))
+                    .foregroundStyle(color)
+            }
         }
-        .background(Color(uiColor: .systemBackground))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
     }
 }
 
-// MARK: - Dynamic Island Expanded Views (IMPROVED)
-struct TabataExpandedLeading: View {
-    let context: ActivityViewContext<TabataActivityAttributes>
+// MARK: - Dynamic Island Expanded
 
-    private var phaseColor: Color {
-        switch context.state.currentPhase {
-        case "work": return .green
-        case "rest": return .red
-        case "countdown": return .orange
-        case "complete": return .purple
-        default: return .orange
-        }
-    }
+struct DIExpandedLeading: View {
+    let context: ActivityViewContext<TabataActivityAttributes>
+    private var color: Color { LADesign.phaseColor(context.state.currentPhase) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            // Round indicator with icon
-            HStack(spacing: 4) {
-                Circle()
-                    .fill(phaseColor.gradient)
-                    .frame(width: 8, height: 8)
-
-                if context.state.totalRounds > 0 {
-                    Text("\(context.state.currentRound)")
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
-                        .foregroundStyle(phaseColor)
-                        .contentTransition(.numericText())
-
-                    Text("/\(context.state.totalRounds)")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                }
+        HStack(spacing: 8) {
+            // Phase chip
+            HStack(spacing: 5) {
+                Image(systemName: LADesign.phaseIcon(context.state.currentPhase))
+                    .font(.system(size: 11, weight: .bold))
+                Text(LADesign.phaseLabel(context.state.currentPhase))
+                    .font(.system(size: 12, weight: .bold))
+                    .lineLimit(1)
             }
+            .foregroundStyle(color)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 4)
+            .background(Capsule().fill(color.opacity(0.18)))
 
-            // Phase name
-            Text(context.state.phaseDisplayName)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(.secondary)
-                .textCase(.uppercase)
+            // Round
+            if context.state.totalRounds > 0 && context.state.currentPhase != "complete" {
+                Text("\(context.state.currentRound)/\(context.state.totalRounds)")
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.6))
+                    .contentTransition(.numericText())
+            }
+        }
+        .padding(.leading, 4)
+    }
+}
+
+struct DIExpandedTrailing: View {
+    let context: ActivityViewContext<TabataActivityAttributes>
+    private var color: Color { LADesign.phaseColor(context.state.currentPhase) }
+
+    var body: some View {
+        // Hero timer
+        if context.state.currentPhase != "complete" {
+            Text(timerInterval: Date()...context.state.endTime, countsDown: true)
+                .font(.system(size: 22, weight: .black, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(color)
+                .contentTransition(.numericText())
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .frame(minWidth: 64, alignment: .trailing)
+                .padding(.trailing, 4)
+        } else {
+            Image(systemName: "checkmark.seal.fill")
+                .font(.system(size: 22))
+                .foregroundStyle(color)
+                .padding(.trailing, 4)
         }
     }
 }
 
-struct TabataExpandedTrailing: View {
+struct DIExpandedBottom: View {
     let context: ActivityViewContext<TabataActivityAttributes>
-
-    private var phaseColor: Color {
-        switch context.state.currentPhase {
-        case "work": return .green
-        case "rest": return .red
-        case "countdown": return .orange
-        case "complete": return .purple
-        default: return .orange
-        }
-    }
-
-    private var phaseIcon: String {
-        switch context.state.currentPhase {
-        case "work": return "flame.fill"
-        case "rest": return "wind"
-        case "countdown": return "timer"
-        case "complete": return "checkmark.circle.fill"
-        default: return "timer"
-        }
-    }
+    private var color: Color { LADesign.phaseColor(context.state.currentPhase) }
 
     var body: some View {
         VStack(spacing: 6) {
-            // Animated icon
-            Image(systemName: phaseIcon)
-                .font(.system(size: 24))
-                .foregroundStyle(phaseColor.gradient)
-                .symbolEffect(.pulse, options: .repeating, value: context.state.currentPhase)
-
-            // Progress percentage
-            Text("\(Int(context.state.progress * 100))%")
-                .font(.system(size: 10, weight: .bold, design: .rounded))
-                .foregroundStyle(.secondary)
-                .contentTransition(.numericText())
-        }
-    }
-}
-
-struct TabataExpandedCenter: View {
-    let context: ActivityViewContext<TabataActivityAttributes>
-
-    private var phaseColor: Color {
-        switch context.state.currentPhase {
-        case "work": return .green
-        case "rest": return .red
-        case "countdown": return .orange
-        case "complete": return .purple
-        default: return .orange
-        }
-    }
-
-    var body: some View {
-        VStack(spacing: 4) {
-            if context.state.currentPhase != "complete" {
-                // Big timer
-                Text(timerInterval: Date()...context.state.endTime, countsDown: true)
-                    .font(.system(size: 42, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(phaseColor.gradient)
-                    .contentTransition(.numericText())
-
-                // Tabata name
-                Text(context.attributes.tabataName)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            } else {
-                // Completion state
-                VStack(spacing: 8) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 40))
-                        .foregroundStyle(.green.gradient)
-                        .symbolEffect(.bounce, value: context.state.currentPhase)
-
-                    Text("¡Completado!")
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(.green)
-                }
-            }
-        }
-    }
-}
-
-struct TabataExpandedBottom: View {
-    let context: ActivityViewContext<TabataActivityAttributes>
-
-    private var phaseColor: Color {
-        switch context.state.currentPhase {
-        case "work": return .green
-        case "rest": return .red
-        case "countdown": return .orange
-        case "complete": return .purple
-        default: return .orange
-        }
-    }
-
-    var body: some View {
-        VStack(spacing: 8) {
-            // Progress bar with better visual
-            GeometryReader { geometry in
+            // Progress bar
+            GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    // Background
                     Capsule()
-                        .fill(.tertiary)
-                        .frame(height: 8)
-
-                    // Progress with gradient
+                        .fill(.white.opacity(0.12))
+                        .frame(height: 5)
                     Capsule()
                         .fill(
                             LinearGradient(
-                                colors: [phaseColor.opacity(0.8), phaseColor],
+                                colors: [color.opacity(0.7), color],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
                         )
-                        .frame(width: max(8, geometry.size.width * context.state.progress), height: 8)
+                        .frame(width: max(5, geo.size.width * context.state.progress), height: 5)
                         .animation(.linear(duration: 1), value: context.state.progress)
                 }
             }
-            .frame(height: 8)
+            .frame(height: 5)
 
-            // Treadmill info if applicable
-            if let phaseName = context.state.treadmillPhaseName,
-               let incline = context.state.treadmillIncline,
-               let speed = context.state.treadmillSpeed {
-                HStack(spacing: 8) {
-                    Label {
-                        Text("\(Int(incline))%")
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    } icon: {
-                        Image(systemName: "arrow.up.right")
-                            .font(.system(size: 9))
-                    }
+            // Bottom info row
+            HStack(spacing: 4) {
+                Text(context.state.treadmillPhaseName ?? context.attributes.tabataName)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.5))
+                    .lineLimit(1)
 
-                    Label {
-                        Text("\(String(format: "%.1f", speed)) km/h")
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    } icon: {
-                        Image(systemName: "speedometer")
-                            .font(.system(size: 9))
-                    }
+                Spacer()
 
-                    Spacer()
-
-                    Text(phaseName)
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(.secondary)
+                if let incline = context.state.treadmillIncline,
+                   let speed = context.state.treadmillSpeed {
+                    Text("\(Int(incline))% · \(String(format: "%.1f", speed)) km/h")
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(color.opacity(0.85))
+                        .lineLimit(1)
+                } else {
+                    Text("\(Int(context.state.progress * 100))%")
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .foregroundStyle(color.opacity(0.7))
+                        .contentTransition(.numericText())
                 }
-                .foregroundStyle(phaseColor)
             }
         }
+        .padding(.top, 2)
     }
 }
 
-// MARK: - Dynamic Island Compact Views (IMPROVED)
-struct TabataCompactLeading: View {
-    let context: ActivityViewContext<TabataActivityAttributes>
+// MARK: - Dynamic Island Compact
 
-    private var phaseColor: Color {
-        switch context.state.currentPhase {
-        case "work": return .green
-        case "rest": return .red
-        case "countdown": return .orange
-        case "complete": return .purple
-        default: return .orange
-        }
-    }
+struct DICompactLeading: View {
+    let context: ActivityViewContext<TabataActivityAttributes>
+    private var color: Color { LADesign.phaseColor(context.state.currentPhase) }
 
     var body: some View {
-        HStack(spacing: 3) {
-            // Animated pulse indicator
-            Circle()
-                .fill(phaseColor.gradient)
-                .frame(width: 6, height: 6)
-                .symbolEffect(.pulse, options: .repeating)
-
-            if context.state.totalRounds > 0 && context.state.currentPhase != "complete" {
-                Text("\(context.state.currentRound)")
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
-                    .foregroundStyle(phaseColor)
-                    .contentTransition(.numericText())
-            }
+        if context.state.totalRounds > 0 && context.state.currentPhase != "complete" {
+            Text("\(context.state.currentRound)")
+                .font(.system(size: 12, weight: .bold, design: .rounded))
+                .foregroundStyle(color)
+                .contentTransition(.numericText())
+        } else {
+            Image(systemName: LADesign.phaseIcon(context.state.currentPhase))
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(color)
         }
     }
 }
 
-struct TabataCompactTrailing: View {
+struct DICompactTrailing: View {
     let context: ActivityViewContext<TabataActivityAttributes>
-
-    private var phaseColor: Color {
-        switch context.state.currentPhase {
-        case "work": return .green
-        case "rest": return .red
-        case "countdown": return .orange
-        case "complete": return .purple
-        default: return .orange
-        }
-    }
+    private var color: Color { LADesign.phaseColor(context.state.currentPhase) }
 
     var body: some View {
         if context.state.currentPhase != "complete" {
             Text(timerInterval: Date()...context.state.endTime, countsDown: true)
-                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
                 .monospacedDigit()
-                .foregroundStyle(phaseColor)
+                .foregroundStyle(color)
                 .contentTransition(.numericText())
+                .fixedSize()
         } else {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 12))
-                .foregroundStyle(.green)
-                .symbolEffect(.bounce, value: context.state.currentPhase)
+            Image(systemName: "checkmark")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(color)
         }
     }
 }
 
-// MARK: - Minimal View (IMPROVED)
-struct TabataMinimalView: View {
+// MARK: - Minimal
+struct DIMinimal: View {
     let context: ActivityViewContext<TabataActivityAttributes>
-
-    private var phaseColor: Color {
-        switch context.state.currentPhase {
-        case "work": return .green
-        case "rest": return .red
-        case "countdown": return .orange
-        case "complete": return .purple
-        default: return .orange
-        }
-    }
+    private var color: Color { LADesign.phaseColor(context.state.currentPhase) }
 
     var body: some View {
         ZStack {
-            if context.state.currentPhase != "complete" {
-                // Progress ring
-                Circle()
-                    .trim(from: 0, to: context.state.progress)
-                    .stroke(phaseColor, lineWidth: 2)
-                    .frame(width: 16, height: 16)
-                    .rotationEffect(.degrees(-90))
-                    .animation(.linear(duration: 1), value: context.state.progress)
+            // Progress ring
+            Circle()
+                .stroke(color.opacity(0.25), lineWidth: 2)
+            Circle()
+                .trim(from: 0, to: context.state.progress)
+                .stroke(color, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+                .animation(.linear(duration: 1), value: context.state.progress)
 
-                // Timer seconds
-                Text("\(context.state.secondsRemaining)")
-                    .font(.system(size: 8, weight: .bold, design: .rounded))
-                    .foregroundStyle(phaseColor)
-                    .contentTransition(.numericText())
-            } else {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 14))
-                    .foregroundStyle(.green)
-                    .symbolEffect(.bounce, value: context.state.currentPhase)
-            }
+            // Phase icon
+            Image(systemName: LADesign.phaseIcon(context.state.currentPhase))
+                .font(.system(size: 9, weight: .bold))
+                .foregroundStyle(color)
         }
+        .frame(width: 22, height: 22)
     }
 }
 
 // MARK: - Previews
 #Preview("Lock Screen", as: .content, using: TabataActivityAttributes(
-    tabataName: "🔥 Infierno",
+    tabataName: "Infierno HIIT",
     tabataId: "test",
     totalRounds: 10,
     workSeconds: 30,
@@ -476,6 +347,7 @@ struct TabataMinimalView: View {
     TabataLiveActivity()
 } contentStates: {
     TabataActivityAttributes.ContentState.work(round: 3, totalRounds: 10, seconds: 18)
-    TabataActivityAttributes.ContentState.rest(round: 3, totalRounds: 10, seconds: 8)
+    TabataActivityAttributes.ContentState.rest(round: 5, totalRounds: 10, seconds: 8)
+    TabataActivityAttributes.ContentState.countdown(seconds: 5)
     TabataActivityAttributes.ContentState.complete()
 }

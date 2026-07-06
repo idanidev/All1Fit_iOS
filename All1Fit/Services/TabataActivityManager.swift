@@ -23,49 +23,9 @@ class TabataActivityManager: ObservableObject {
     // MARK: - Start Activity
     
     func startActivity(for tabata: Tabata) async throws {
-        // End any existing activity first
-        await endActivity()
-        
-        guard areActivitiesEnabled else {
-            throw TabataActivityError.activitiesNotEnabled
-        }
-        
-        let attributes = TabataActivityAttributes(
-            tabataName: tabata.name,
-            tabataId: tabata.id,
-            totalRounds: tabata.type == .intervals ? tabata.rounds : tabata.treadmillPhases?.count ?? 0,
-            workSeconds: tabata.workSeconds,
-            restSeconds: tabata.restSeconds,
-            isIntervalType: tabata.type == .intervals
-        )
-        
-        let initialState = TabataActivityAttributes.ContentState.countdown(seconds: 3)
-        
-        let content = ActivityContent(
-            state: initialState,
-            staleDate: nil,
-            relevanceScore: 100
-        )
-        
-        do {
-            let activity = try Activity.request(
-                attributes: attributes,
-                content: content,
-                pushType: nil
-            )
-            
-            currentActivity = activity
-            isActivityActive = true
-            
-            debugLog("Live Activity started: \(activity.id)", category: Log.tabata)
-            
-            // Trigger haptic
-            triggerHaptic(for: .countdown)
-            
-        } catch {
-            debugLog("Failed to start Live Activity: \(error)", category: Log.tabata)
-            throw TabataActivityError.failedToStart(error)
-        }
+        // Live Activity disabled — Dynamic Island compact pill size is iOS-fixed.
+        // Keep as no-op to preserve call sites.
+        return
     }
     
     // MARK: - Update Activity

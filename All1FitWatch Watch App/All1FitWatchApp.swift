@@ -32,8 +32,8 @@ class AppDelegate: NSObject, WKApplicationDelegate {
 
 // MARK: - Root View
 struct RootView: View {
-    @StateObject private var connectivity = WatchConnectivityService.shared
-    @StateObject private var healthKit = HealthKitService.shared
+    @ObservedObject private var connectivity = WatchConnectivityService.shared
+    @ObservedObject private var healthKit = HealthKitService.shared
 
     var body: some View {
         ContentView()

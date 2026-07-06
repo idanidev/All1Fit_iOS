@@ -1,0 +1,60 @@
+<svg viewBox="0 0 200 400" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <defs>
+    <style>
+      .muscle-base {
+        fill: rgba(255, 255, 255, 0.1);
+        stroke: rgba(255, 255, 255, 0.3);
+        stroke-width: 1;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .structure-base {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.2);
+        stroke-width: 1;
+      }
+    </style>
+  </defs>
+
+  <g id="muscle-back" class="muscle-base">
+    <path d="M60,95 L75,200 M140,95 L125,200" fill="none" stroke-width="1.5" />
+  </g>
+
+  <path id="muscle-triceps-left" d="M50,110 Q45,135 50,160" class="muscle-base" fill="none" stroke-width="1.5"/>
+  <path id="muscle-triceps-right" d="M150,110 Q155,135 150,160" class="muscle-base" fill="none" stroke-width="1.5"/>
+
+  <g class="muscle-base">
+    <circle id="head" cx="100" cy="40" r="25" />
+    <rect id="neck" x="90" y="65" width="20" height="15" />
+    <path id="hips" d="M80,205 L120,205 L130,230 L70,230 Z" />
+    <line x1="60" y1="170" x2="50" y2="220" class="structure-base" />
+    <line x1="140" y1="170" x2="150" y2="220" class="structure-base" />
+  </g>
+
+  <circle id="muscle-shoulders-left" cx="60" cy="95" r="18" class="muscle-base" />
+  <circle id="muscle-shoulders-right" cx="140" cy="95" r="18" class="muscle-base" />
+
+  <path id="muscle-chest" d="M75,85 L125,85 L115,135 L85,135 Z" class="muscle-base" />
+
+  <ellipse id="muscle-biceps-left" cx="60" cy="140" rx="12" ry="22" class="muscle-base" />
+  <ellipse id="muscle-biceps-right" cx="140" cy="140" rx="12" ry="22" class="muscle-base" />
+
+  <g id="muscle-abs" class="muscle-base">
+    <rect x="86" y="140" width="13" height="18" rx="2" />
+    <rect x="101" y="140" width="13" height="18" rx="2" />
+    <rect x="86" y="160" width="13" height="18" rx="2" />
+    <rect x="101" y="160" width="13" height="18" rx="2" />
+    <rect x="86" y="180" width="13" height="18" rx="2" />
+    <rect x="101" y="180" width="13" height="18" rx="2" />
+  </g>
+
+  <rect id="muscle-quads-left" x="70" y="235" width="28" height="85" rx="6" class="muscle-base" />
+  <rect id="muscle-quads-right" x="102" y="235" width="28" height="85" rx="6" class="muscle-base" />
+
+  <circle cx="84" cy="325" r="6" class="structure-base" />
+  <circle cx="116" cy="325" r="6" class="structure-base" />
+
+  <ellipse id="muscle-calves-left" cx="84" cy="360" rx="12" ry="28" class="muscle-base" />
+  <ellipse id="muscle-calves-right" cx="116" cy="360" rx="12" ry="28" class="muscle-base" />
+
+</svg>

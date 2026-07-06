@@ -9,6 +9,7 @@
       "subtype" : "38mm"
     },
     {
+      "filename" : "icon_55x55.png",
       "idiom" : "watch",
       "role" : "notificationCenter",
       "scale" : "2x",

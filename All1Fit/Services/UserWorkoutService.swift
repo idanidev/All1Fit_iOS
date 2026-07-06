@@ -38,6 +38,9 @@ class UserWorkoutService: ObservableObject {
                     return nil
                 }
             }
+
+            // Sync user workouts to Apple Watch
+            PhoneConnectivityService.shared.sendUserWorkoutsToWatch(userWorkouts)
         } catch {
             logger.error("Error fetching workouts: \(error.localizedDescription)")
             errorMessage = error.localizedDescription
