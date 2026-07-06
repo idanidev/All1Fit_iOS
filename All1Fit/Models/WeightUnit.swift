@@ -21,6 +21,14 @@ enum WeightUnit: String, CaseIterable {
         case .lbs: return kg * 2.20462
         }
     }
+
+    /// Inversa de `convert`: valor introducido en esta unidad → kg (unidad de almacenamiento)
+    func toKilograms(_ value: Double) -> Double {
+        switch self {
+        case .kg: return value
+        case .lbs: return value / 2.20462
+        }
+    }
 }
 
 // MARK: - App Theme
