@@ -52,9 +52,6 @@ struct GymExercise: Identifiable, Codable, Hashable {
         isCustom = try c.decodeIfPresent(Bool.self, forKey: .isCustom) ?? false
     }
 
-    /// Asset de MuscleImages para el músculo primario
-    var muscleImageName: String? { primaryMuscle.muscleImageName }
-
     /// Búsqueda sin tildes ni mayúsculas
     func matches(_ query: String) -> Bool {
         guard !query.isEmpty else { return true }
@@ -65,19 +62,6 @@ struct GymExercise: Identifiable, Codable, Hashable {
 }
 
 extension BodyPart {
-    /// Asset en Assets.xcassets/MuscleImages
-    var muscleImageName: String? {
-        switch self {
-        case .chest: return "chest"
-        case .back: return "back"
-        case .shoulders: return "shoulders"
-        case .biceps, .triceps: return "arms"
-        case .abs: return "abs"
-        case .quads, .hamstrings, .glutes, .calves: return "legs"
-        case .none: return nil
-        }
-    }
-
     var icon: String {
         switch self {
         case .chest: return "figure.arms.open"

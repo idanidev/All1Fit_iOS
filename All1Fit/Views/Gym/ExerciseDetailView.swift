@@ -183,27 +183,14 @@ struct ExerciseDetailView: View {
         VStack(spacing: 14) {
             ZStack {
                 Circle()
-                    .fill(RadialGradient(colors: [muscleColor.opacity(0.35), .clear], center: .center, startRadius: 0, endRadius: 90))
-                    .frame(width: 180, height: 180)
+                    .fill(RadialGradient(colors: [muscleColor.opacity(0.3), .clear], center: .center, startRadius: 0, endRadius: 100))
+                    .frame(width: 200, height: 200)
                     .blur(radius: 30)
 
-                if let imageName = exercise.muscleImageName {
-                    Image(imageName)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 140, height: 140)
-                        .clipShape(RoundedRectangle(cornerRadius: 20))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 20)
-                                .strokeBorder(.white.opacity(0.1), lineWidth: 1)
-                        }
-                } else {
-                    Image(systemName: exercise.equipment.icon)
-                        .font(.system(size: 64))
-                        .foregroundStyle(
-                            LinearGradient(colors: [muscleColor, muscleColor.opacity(0.6)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                        )
-                }
+                // Mapa vectorial: músculo exacto resaltado, sin marcos ni fondos
+                MuscleMapView(primary: exercise.primaryMuscle, secondary: exercise.secondaryMuscles)
+                    .scaleEffect(0.62)
+                    .frame(width: 202, height: 188)
             }
 
             Text(exercise.name)
