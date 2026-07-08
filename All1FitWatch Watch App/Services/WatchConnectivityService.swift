@@ -20,6 +20,9 @@ class WatchConnectivityService: NSObject, ObservableObject {
     @Published var activeRemoteTabata: Tabata?
     /// Sesión de gym activa espejada desde el iPhone
     @Published var activeGymSession: WatchGymSession?
+    /// Toggles locales aún no confirmados por el iPhone (setId → completed).
+    /// Evita que un espejo desfasado revierta visualmente un tap reciente.
+    private var pendingGymToggles: [String: Bool] = [:]
     
     enum SyncStatus: Equatable {
         case idle
@@ -200,14 +203,26 @@ class WatchConnectivityService: NSObject, ObservableObject {
         if let gymData = data["gymSession"] as? Data {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
-            if let gymSession = try? decoder.decode(WatchGymSession.self, from: gymData) {
+            if var gymSession = try? decoder.decode(WatchGymSession.self, from: gymData) {
                 let isNew = self.activeGymSession == nil
+                // Re-aplica toggles locales pendientes y descarta los ya confirmados
+                for (exIndex, exercise) in gymSession.exercises.enumerated() {
+                    for (setIndex, set) in exercise.sets.enumerated() {
+                        guard let pending = pendingGymToggles[set.id] else { continue }
+                        if set.completed == pending {
+                            pendingGymToggles.removeValue(forKey: set.id)   // confirmado
+                        } else {
+                            gymSession.exercises[exIndex].sets[setIndex].completed = pending
+                        }
+                    }
+                }
                 self.activeGymSession = gymSession
                 if isNew { WKInterfaceDevice.current().play(.notification) }
             }
         } else if data["gymSessionCleared"] != nil {
             if self.activeGymSession != nil {
                 self.activeGymSession = nil
+                pendingGymToggles.removeAll()
                 WKInterfaceDevice.current().play(.success)
             }
         }
@@ -336,6 +351,7 @@ class WatchConnectivityService: NSObject, ObservableObject {
     // MARK: - Gym: marcar serie desde el Watch
     /// Optimista en local; el iPhone confirma reenviando el espejo actualizado.
     func toggleGymSet(exerciseId: String, setId: String, completed: Bool) {
+        pendingGymToggles[setId] = completed
         // Update optimista local
         if var gymSession = activeGymSession,
            let exIndex = gymSession.exercises.firstIndex(where: { $0.id == exerciseId }),

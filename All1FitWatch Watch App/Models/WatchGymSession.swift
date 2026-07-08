@@ -58,9 +58,11 @@ struct WatchGymSession: Codable, Hashable {
     let routineName: String
     let startDate: Date
     var exercises: [WatchGymExercise]
+    /// Fin del descanso en curso (viaja en el espejo desde el iPhone)
+    var restEndDate: Date?
 
     enum CodingKeys: String, CodingKey {
-        case routineName, startDate, exercises
+        case routineName, startDate, exercises, restEndDate
     }
 
     init(from decoder: Decoder) throws {
@@ -68,6 +70,7 @@ struct WatchGymSession: Codable, Hashable {
         routineName = try c.decodeIfPresent(String.self, forKey: .routineName) ?? "Entreno"
         startDate = try c.decodeIfPresent(Date.self, forKey: .startDate) ?? Date()
         exercises = try c.decodeIfPresent([WatchGymExercise].self, forKey: .exercises) ?? []
+        restEndDate = try c.decodeIfPresent(Date.self, forKey: .restEndDate)
     }
 
     var totalCompletedSets: Int {

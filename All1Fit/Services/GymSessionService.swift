@@ -172,12 +172,24 @@ class GymSessionService: ObservableObject {
         PhoneConnectivityService.shared.sendGymSessionToWatch(nil)
     }
 
-    /// El Watch marca/desmarca una serie de la sesión activa
+    /// El Watch marca/desmarca una serie de la sesión activa.
+    /// Al completar arranca también el descanso (misma conducta que el logger del iPhone):
+    /// el restEndDate viaja de vuelta en el espejo y ambas pantallas lo muestran.
     func toggleSetFromWatch(exerciseId: String, setId: String, completed: Bool) {
         guard var session = activeSession,
               let exIndex = session.exercises.firstIndex(where: { $0.id == exerciseId }),
               let setIndex = session.exercises[exIndex].sets.firstIndex(where: { $0.id == setId }) else { return }
         session.exercises[exIndex].sets[setIndex].completed = completed
+
+        if completed {
+            let restSeconds = session.exercises[exIndex].restSeconds
+            if restSeconds > 0 {
+                session.restEndDate = Date().addingTimeInterval(TimeInterval(restSeconds))
+                GymRestNotifier.schedule(after: TimeInterval(restSeconds),
+                                         exerciseName: session.exercises[exIndex].exerciseName)
+            }
+        }
+
         activeSession = session
         persistActiveSnapshot()
     }

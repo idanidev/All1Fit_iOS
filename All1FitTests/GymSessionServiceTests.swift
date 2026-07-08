@@ -189,6 +189,37 @@ struct GymSessionServiceTests {
         #expect(GymSessionService.progressionIncrement(for: "NoExiste") == 0)
     }
 
+    // MARK: Toggle desde el Watch
+
+    @Test("Completar serie desde el Watch marca la serie y arranca el descanso")
+    func toggleFromWatchStartsRest() {
+        let service = makeService()
+        service.startSession(from: GymRoutine(name: "Push", exercises: [
+            RoutineExercise(exerciseName: "Press Banca", sets: 2, reps: 8, restSeconds: 120)
+        ]))
+
+        let exercise = service.activeSession!.exercises[0]
+        let set = exercise.sets[0]
+
+        service.toggleSetFromWatch(exerciseId: exercise.id, setId: set.id, completed: true)
+
+        #expect(service.activeSession?.exercises[0].sets[0].completed == true)
+        let restEnd = service.activeSession?.restEndDate
+        #expect(restEnd != nil)
+        // ~120s desde ahora (margen de 5s por ejecución)
+        let remaining = restEnd?.timeIntervalSinceNow ?? 0
+        #expect(remaining > 115 && remaining <= 120)
+
+        // Desmarcar no toca el descanso ni la marca queda puesta
+        service.toggleSetFromWatch(exerciseId: exercise.id, setId: set.id, completed: false)
+        #expect(service.activeSession?.exercises[0].sets[0].completed == false)
+        #expect(service.activeSession?.restEndDate != nil)
+
+        // IDs desconocidos no rompen nada
+        service.toggleSetFromWatch(exerciseId: "no-existe", setId: set.id, completed: true)
+        service.discardActiveSession()
+    }
+
     // MARK: Snapshot
 
     @Test("El snapshot se restaura en una instancia nueva y se limpia al descartar")

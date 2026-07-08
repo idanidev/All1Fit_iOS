@@ -1,4 +1,5 @@
 import SwiftUI
+import WatchKit
 
 // MARK: - Sesión de Gym en el Watch
 /// Espejo del logger del iPhone: marca series desde la muñeca.
@@ -25,6 +26,33 @@ struct GymSessionWatchView: View {
                                 .foregroundStyle(.secondary)
                         }
                         .listRowBackground(Color.clear)
+
+                        // Descanso en curso (espejado desde el iPhone)
+                        if let restEnd = session.restEndDate, restEnd > Date() {
+                            TimelineView(.periodic(from: .now, by: 0.5)) { context in
+                                let remaining = max(0, restEnd.timeIntervalSince(context.date))
+                                HStack(spacing: 6) {
+                                    Image(systemName: "timer")
+                                        .font(.caption.weight(.bold))
+                                    Text("Descanso")
+                                        .font(.caption2.weight(.semibold))
+                                    Spacer()
+                                    Text(String(format: "%d:%02d", Int(remaining) / 60, Int(remaining) % 60))
+                                        .font(.system(.body, design: .rounded, weight: .black))
+                                        .monospacedDigit()
+                                        .contentTransition(.numericText())
+                                }
+                                .foregroundStyle(.black)
+                                .onChange(of: remaining <= 0) { _, expired in
+                                    if expired { WKInterfaceDevice.current().play(.notification) }
+                                }
+                            }
+                            .listRowBackground(
+                                LinearGradient(colors: [.blue, .cyan], startPoint: .leading, endPoint: .trailing)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                            )
+                            .accessibilityLabel("Descanso en curso")
+                        }
                     }
 
                     // Ejercicios con sus series
