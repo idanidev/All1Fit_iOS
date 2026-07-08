@@ -6,6 +6,8 @@ struct WorkoutSummaryView: View {
     let session: GymSession
     /// Nombres de ejercicios donde se ha batido el récord de peso
     let prExercises: [String]
+    /// Ejercicios cuyo RM de la sección RMs se actualizó con el 1RM estimado de hoy
+    var rmUpdates: [String] = []
     let weightUnit: WeightUnit
     let onClose: () -> Void
 
@@ -21,6 +23,10 @@ struct WorkoutSummaryView: View {
 
                     if !prExercises.isEmpty {
                         prSection
+                    }
+
+                    if !rmUpdates.isEmpty {
+                        rmUpdatesSection
                     }
 
                     exercisesSection
@@ -124,6 +130,49 @@ struct WorkoutSummaryView: View {
                     .background(Color.yellow.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
                 }
             }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(uiColor: .secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+
+    // MARK: - RMs actualizados
+
+    private var rmUpdatesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("RMs actualizados", systemImage: "arrow.up.circle.fill")
+                .font(.headline)
+                .foregroundStyle(Color.all1FitOrange)
+
+            VStack(spacing: 8) {
+                ForEach(rmUpdates, id: \.self) { name in
+                    HStack(spacing: 12) {
+                        Image(systemName: "figure.strengthtraining.traditional")
+                            .font(.subheadline)
+                            .foregroundStyle(Color.all1FitOrange)
+                        Text(name)
+                            .font(.system(.subheadline, design: .rounded, weight: .bold))
+                        Spacer()
+                        Text("Nuevo RM")
+                            .font(.system(.caption2, design: .rounded, weight: .black))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(
+                                LinearGradient(colors: [.all1FitOrange, .all1FitRed], startPoint: .leading, endPoint: .trailing),
+                                in: Capsule()
+                            )
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(Color.all1FitOrange.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+                }
+            }
+
+            Text("Tu sección de RMs se ha actualizado con el 1RM estimado de hoy")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)

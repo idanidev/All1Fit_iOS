@@ -16,7 +16,7 @@ struct ExerciseDetailView: View {
     @AppStorage("weightUnit") private var weightUnit: WeightUnit = .kg
     @State private var chartAnimated = false
     @State private var selectedTab: DetailTab = .info
-    @State private var isFavorite = false
+    @ObservedObject private var favorites = ExerciseFavorites.shared
 
     private var muscleColor: Color { exercise.primaryMuscle.color }
 
@@ -69,17 +69,16 @@ struct ExerciseDetailView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
-                    ExerciseFavorites.toggle(exercise.name)
-                    isFavorite = ExerciseFavorites.isFavorite(exercise.name)
+                    favorites.toggle(exercise.name)
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 } label: {
-                    Image(systemName: isFavorite ? "star.fill" : "star")
-                        .foregroundStyle(isFavorite ? .yellow : .secondary)
+                    Image(systemName: favorites.isFavorite(exercise.name) ? "star.fill" : "star")
+                        .foregroundStyle(favorites.isFavorite(exercise.name) ? .yellow : .secondary)
                 }
+                .accessibilityLabel(favorites.isFavorite(exercise.name) ? "Quitar de favoritos" : "Añadir a favoritos")
             }
         }
         .onAppear {
-            isFavorite = ExerciseFavorites.isFavorite(exercise.name)
             withAnimation(.spring(duration: 0.8).delay(0.3)) { chartAnimated = true }
         }
     }

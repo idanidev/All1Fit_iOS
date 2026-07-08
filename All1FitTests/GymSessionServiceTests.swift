@@ -189,6 +189,50 @@ struct GymSessionServiceTests {
         #expect(GymSessionService.progressionIncrement(for: "NoExiste") == 0)
     }
 
+    // MARK: Conexión RMs ↔ Gym
+
+    @Test("La siembra por %1RM usa Epley inversa redondeada a 2.5")
+    func seedWeightFromRM() {
+        // 100 kg de RM a 8 reps → 100/1.2667 ≈ 78.9 → 80
+        #expect(GymSessionService.seedWeight(oneRM: 100, targetReps: 8) == 80)
+        // 100 kg a 1 rep → 100
+        #expect(GymSessionService.seedWeight(oneRM: 100, targetReps: 1) == 97.5)
+        #expect(GymSessionService.seedWeight(oneRM: 0, targetReps: 8) == 0)
+        #expect(GymSessionService.seedWeight(oneRM: 100, targetReps: 0) == 0)
+    }
+
+    @Test("Sin historial gym pero con RM registrado, el peso inicial se siembra")
+    func startSessionSeedsFromRM() {
+        let service = makeService()
+        service.rmRefs = ["press banca": GymSessionService.RMRef(documentID: "doc1", bestValor: 100)]
+
+        let routine = GymRoutine(name: "Push", exercises: [
+            RoutineExercise(exerciseName: "Press Banca", sets: 3, reps: 8)
+        ])
+        service.startSession(from: routine)
+
+        let sets = service.activeSession?.exercises.first?.sets ?? []
+        let allSeeded = sets.allSatisfy { $0.weight == 80 }
+        #expect(sets.count == 3)
+        #expect(allSeeded)
+        service.discardActiveSession()
+
+        // Con historial gym, el prefill del historial gana a la siembra por RM
+        let service2 = makeService(history: sampleHistory)
+        service2.rmRefs = ["press banca": GymSessionService.RMRef(documentID: "doc1", bestValor: 100)]
+        service2.startSession(from: routine)
+        #expect(service2.activeSession?.exercises.first?.sets.first?.weight == 100)  // del historial (calentamiento previo)
+        service2.discardActiveSession()
+    }
+
+    @Test("registeredRM busca sin distinguir mayúsculas")
+    func registeredRMLookup() {
+        let service = makeService()
+        service.rmRefs = ["press banca": GymSessionService.RMRef(documentID: "doc1", bestValor: 92.5)]
+        #expect(service.registeredRM(for: "PRESS BANCA") == 92.5)
+        #expect(service.registeredRM(for: "Sentadilla") == nil)
+    }
+
     // MARK: Toggle desde el Watch
 
     @Test("Completar serie desde el Watch marca la serie y arranca el descanso")

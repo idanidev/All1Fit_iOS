@@ -18,6 +18,7 @@ struct ActiveGymSessionView: View {
     @State private var plateCalcWeight: Double = 60
     @State private var summarySession: GymSession?
     @State private var summaryPRs: [String] = []
+    @State private var summaryRMUpdates: [String] = []
     @State private var showingSummary = false
     @State private var errorMessage: String?
     @FocusState private var inputFocused: Bool
@@ -130,7 +131,8 @@ struct ActiveGymSessionView: View {
             }
             .fullScreenCover(isPresented: $showingSummary) {
                 if let summarySession {
-                    WorkoutSummaryView(session: summarySession, prExercises: summaryPRs, weightUnit: weightUnit) {
+                    WorkoutSummaryView(session: summarySession, prExercises: summaryPRs,
+                                       rmUpdates: summaryRMUpdates, weightUnit: weightUnit) {
                         showingSummary = false
                         dismiss()
                     }
@@ -160,6 +162,7 @@ struct ActiveGymSessionView: View {
                             log: $log,
                             previousLog: sessionService.lastLog(for: $log.wrappedValue.exerciseName),
                             bestWeight: sessionService.bestWeight(for: $log.wrappedValue.exerciseName),
+                            registeredRM: sessionService.registeredRM(for: $log.wrappedValue.exerciseName),
                             weightUnit: weightUnit,
                             inputFocused: $inputFocused,
                             onSetCompleted: { restSeconds in
@@ -353,9 +356,10 @@ struct ActiveGymSessionView: View {
 
         Task {
             do {
-                try await sessionService.finishActiveSession()
+                let rmUpdates = try await sessionService.finishActiveSession()
                 summarySession = snapshot
                 summaryPRs = prs
+                summaryRMUpdates = rmUpdates
                 showingSummary = true
             } catch {
                 errorMessage = error.localizedDescription
@@ -397,6 +401,8 @@ struct ExerciseLogCard: View {
     @Binding var log: GymExerciseLog
     let previousLog: GymExerciseLog?
     let bestWeight: Double
+    /// Mejor RM del ejercicio en la sección RMs (conexión RMs↔Gym), si existe
+    var registeredRM: Double?
     let weightUnit: WeightUnit
     var inputFocused: FocusState<Bool>.Binding
     let onSetCompleted: (Int) -> Void
@@ -455,6 +461,11 @@ struct ExerciseLogCard: View {
                             .font(.system(.caption, design: .rounded, weight: .bold))
                             .foregroundStyle(Color.all1FitCyan)
                             .contentTransition(.numericText())
+                        if let registered = registeredRM, registered > 0 {
+                            Text("\(Int((rm / registered * 100).rounded()))% de tu RM")
+                                .font(.system(size: 8, weight: .semibold))
+                                .foregroundStyle(rm >= registered ? Color.all1FitSuccess : .secondary)
+                        }
                     }
                 }
 

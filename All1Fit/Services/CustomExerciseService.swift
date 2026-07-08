@@ -106,25 +106,56 @@ class CustomExerciseService: ObservableObject {
     }
 }
 
-// MARK: - Favoritos (locales, por dispositivo)
-enum ExerciseFavorites {
-    private static let key = "gymFavoriteExercises"
+// MARK: - Favoritos (Firestore + cache local)
+/// Sincronizados en `/users/{uid}/settings/exerciseFavorites` (campo `names`),
+/// con UserDefaults como cache offline y migración automática de los favoritos
+/// que antes vivían solo en el dispositivo.
+@MainActor
+final class ExerciseFavorites: ObservableObject {
+    static let shared = ExerciseFavorites()
 
-    static func all() -> Set<String> {
-        Set(UserDefaults.standard.stringArray(forKey: key) ?? [])
+    @Published private(set) var names: Set<String>
+
+    private let db = Firestore.firestore()
+    private var fetched = false
+    private static let localKey = "gymFavoriteExercises"
+
+    private init() {
+        names = Set(UserDefaults.standard.stringArray(forKey: Self.localKey) ?? [])
     }
 
-    static func isFavorite(_ name: String) -> Bool {
-        all().contains(name)
+    private func document(_ userId: String) -> DocumentReference {
+        db.collection("users").document(userId).collection("settings").document("exerciseFavorites")
     }
 
-    static func toggle(_ name: String) {
-        var favorites = all()
-        if favorites.contains(name) {
-            favorites.remove(name)
-        } else {
-            favorites.insert(name)
+    func fetch() async {
+        guard !fetched, let userId = Auth.auth().currentUser?.uid else { return }
+        fetched = true
+
+        if let snapshot = try? await document(userId).getDocument(),
+           let remote = snapshot.data()?["names"] as? [String] {
+            names = Set(remote)
+            UserDefaults.standard.set(remote, forKey: Self.localKey)
+        } else if !names.isEmpty {
+            // Migración: sube los favoritos que hasta ahora eran solo locales
+            try? await document(userId).setData(["names": Array(names)])
         }
-        UserDefaults.standard.set(Array(favorites), forKey: key)
+    }
+
+    func isFavorite(_ name: String) -> Bool {
+        names.contains(name)
+    }
+
+    func toggle(_ name: String) {
+        if names.contains(name) {
+            names.remove(name)
+        } else {
+            names.insert(name)
+        }
+        let snapshot = Array(names)
+        UserDefaults.standard.set(snapshot, forKey: Self.localKey)
+
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        Task { try? await document(userId).setData(["names": snapshot]) }
     }
 }

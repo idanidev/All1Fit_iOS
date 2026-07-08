@@ -5,10 +5,18 @@ import FirebaseAuth
 // MARK: - Gym Session Service (historial + sesión activa)
 @MainActor
 class GymSessionService: ObservableObject {
+    /// Referencia al RM registrado de un ejercicio (sección RMs)
+    struct RMRef {
+        let documentID: String
+        var bestValor: Double
+    }
+
     @Published var sessions: [GymSession] = []
     @Published var activeSession: GymSession?
     @Published var isLoading = false
     @Published var errorMessage: String?
+    /// RMs de la sección RMs indexados por nombre en minúsculas (conexión RMs↔Gym)
+    var rmRefs: [String: RMRef] = [:]
 
     private let db = Firestore.firestore()
     private var lastFetchTime: Date?
@@ -57,7 +65,62 @@ class GymSessionService: ObservableObject {
             errorMessage = error.localizedDescription
         }
 
+        await fetchRMRefs(userId: userId)
+
         isLoading = false
+    }
+
+    // MARK: - Conexión RMs ↔ Gym
+
+    /// Carga los RMs de la sección RMs para prefill por %1RM y sync de PRs
+    private func fetchRMRefs(userId: String) async {
+        guard let snapshot = try? await db.collection("users").document(userId)
+            .collection("ejercicios").getDocuments() else { return }
+
+        var refs: [String: RMRef] = [:]
+        for doc in snapshot.documents {
+            guard let ejercicio = try? doc.data(as: Ejercicio.self),
+                  let best = ejercicio.mejorRM?.valor else { continue }
+            refs[ejercicio.name.lowercased()] = RMRef(documentID: doc.documentID, bestValor: best)
+        }
+        rmRefs = refs
+    }
+
+    /// Mejor RM registrado (sección RMs) para un ejercicio, si existe
+    func registeredRM(for exerciseName: String) -> Double? {
+        rmRefs[exerciseName.lowercased()]?.bestValor
+    }
+
+    /// Peso inicial sugerido desde el 1RM (Epley inversa), redondeado a 2.5 kg
+    static func seedWeight(oneRM: Double, targetReps: Int) -> Double {
+        guard oneRM > 0, targetReps > 0 else { return 0 }
+        let raw = oneRM / (1 + Double(targetReps) / 30.0)
+        return (raw / 2.5).rounded() * 2.5
+    }
+
+    /// Si el 1RM estimado de la sesión supera el RM registrado del mismo ejercicio,
+    /// añade una entrada nueva a su historial de RMs. Devuelve los nombres actualizados.
+    private func syncRMsFromSession(_ session: GymSession, userId: String) async -> [String] {
+        var updated: [String] = []
+        for log in session.exercises {
+            guard let estimated = log.bestEstimated1RM,
+                  var ref = rmRefs[log.exerciseName.lowercased()],
+                  estimated > ref.bestValor + 0.25 else { continue }
+
+            let rounded = (estimated * 10).rounded() / 10
+            let entry: [String: Any] = ["valor": rounded, "fecha": Timestamp(date: Date())]
+            do {
+                try await db.collection("users").document(userId)
+                    .collection("ejercicios").document(ref.documentID)
+                    .updateData(["rmHistory": FieldValue.arrayUnion([entry])])
+                ref.bestValor = rounded
+                rmRefs[log.exerciseName.lowercased()] = ref
+                updated.append(log.exerciseName)
+            } catch {
+                // No bloquea el guardado de la sesión; el RM se podrá registrar a mano
+            }
+        }
+        return updated
     }
 
     // MARK: - Sesión activa
@@ -73,9 +136,16 @@ class GymSessionService: ObservableObject {
                 let increment = Self.progressionIncrement(for: ex.exerciseName)
                 let applyProgression = increment > 0 && metProgressionTarget(previous, target: ex)
 
+                // Sin historial gym pero con RM registrado del ejercicio → siembra por %1RM
+                let rmSeed: Double = {
+                    guard previous == nil, increment > 0,
+                          let oneRM = registeredRM(for: ex.exerciseName) else { return 0 }
+                    return Self.seedWeight(oneRM: oneRM, targetReps: ex.reps)
+                }()
+
                 let sets = (0..<max(ex.sets, 1)).map { i -> GymSet in
                     let prevSet = previous?.sets.indices.contains(i) == true ? previous?.sets[i] : previous?.sets.last
-                    let baseWeight = prevSet?.weight ?? 0
+                    let baseWeight = prevSet?.weight ?? rmSeed
                     let weight = (applyProgression && baseWeight > 0) ? baseWeight + increment : baseWeight
                     return GymSet(reps: prevSet?.reps ?? ex.reps, weight: weight)
                 }
@@ -127,8 +197,11 @@ class GymSessionService: ObservableObject {
         persistActiveSnapshot()
     }
 
-    /// Termina y guarda la sesión activa en Firestore
-    func finishActiveSession(notes: String? = nil) async throws {
+    /// Termina y guarda la sesión activa en Firestore.
+    /// Devuelve los nombres de ejercicios cuyo RM registrado se ha actualizado
+    /// (el 1RM estimado de la sesión superó el mejor RM de la sección RMs).
+    @discardableResult
+    func finishActiveSession(notes: String? = nil) async throws -> [String] {
         guard let userId = Auth.auth().currentUser?.uid else {
             throw GymServiceError.notAuthenticated
         }
@@ -163,6 +236,9 @@ class GymSessionService: ObservableObject {
         if let index = sessions.firstIndex(where: { $0.id == temp.id }) {
             sessions[index].id = docRef.documentID
         }
+
+        // Conexión Gym → RMs: los PRs estimados actualizan la sección RMs
+        return await syncRMsFromSession(session, userId: userId)
     }
 
     /// Descarta la sesión activa sin guardar

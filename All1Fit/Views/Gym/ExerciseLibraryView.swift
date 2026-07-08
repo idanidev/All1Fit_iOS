@@ -13,7 +13,7 @@ struct ExerciseLibraryView: View {
     @State private var selectedMuscle: BodyPart?
     @State private var selectedEquipment: GymEquipment?
     @State private var favoritesOnly = false
-    @State private var favorites: Set<String> = ExerciseFavorites.all()
+    @ObservedObject private var favorites = ExerciseFavorites.shared
     @State private var showingCustomForm = false
     @State private var errorMessage: String?
     @Environment(\.dismiss) private var dismiss
@@ -25,7 +25,7 @@ struct ExerciseLibraryView: View {
             exercise.matches(searchText)
             && (selectedMuscle == nil || exercise.primaryMuscle == selectedMuscle)
             && (selectedEquipment == nil || exercise.equipment == selectedEquipment)
-            && (!favoritesOnly || favorites.contains(exercise.name))
+            && (!favoritesOnly || favorites.isFavorite(exercise.name))
         }
     }
 
@@ -75,7 +75,10 @@ struct ExerciseLibraryView: View {
         } message: {
             Text(errorMessage ?? "")
         }
-        .task { await customService.fetchCustomExercises() }
+        .task {
+            await customService.fetchCustomExercises()
+            await favorites.fetch()
+        }
     }
 
     // MARK: - Filtros
@@ -155,26 +158,25 @@ struct ExerciseLibraryView: View {
                                 onSelect(exercise)
                                 dismiss()
                             } label: {
-                                ExerciseRowCard(exercise: exercise, showsPlus: true, isFavorite: favorites.contains(exercise.name))
+                                ExerciseRowCard(exercise: exercise, showsPlus: true, isFavorite: favorites.isFavorite(exercise.name))
                             }
                             .buttonStyle(.plain)
                         } else {
                             NavigationLink {
                                 ExerciseDetailView(exercise: exercise, sessionService: sessionService)
                             } label: {
-                                ExerciseRowCard(exercise: exercise, showsPlus: false, isFavorite: favorites.contains(exercise.name))
+                                ExerciseRowCard(exercise: exercise, showsPlus: false, isFavorite: favorites.isFavorite(exercise.name))
                             }
                             .buttonStyle(.plain)
                         }
                     }
                     .contextMenu {
                         Button {
-                            ExerciseFavorites.toggle(exercise.name)
-                            favorites = ExerciseFavorites.all()
+                            favorites.toggle(exercise.name)
                             UIImpactFeedbackGenerator(style: .light).impactOccurred()
                         } label: {
-                            Label(favorites.contains(exercise.name) ? "Quitar de favoritos" : "Añadir a favoritos",
-                                  systemImage: favorites.contains(exercise.name) ? "star.slash" : "star")
+                            Label(favorites.isFavorite(exercise.name) ? "Quitar de favoritos" : "Añadir a favoritos",
+                                  systemImage: favorites.isFavorite(exercise.name) ? "star.slash" : "star")
                         }
                         if exercise.isCustom {
                             Button(role: .destructive) {
