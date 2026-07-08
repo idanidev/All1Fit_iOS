@@ -183,14 +183,12 @@ struct ExerciseDetailView: View {
         VStack(spacing: 14) {
             ZStack {
                 Circle()
-                    .fill(RadialGradient(colors: [muscleColor.opacity(0.3), .clear], center: .center, startRadius: 0, endRadius: 100))
-                    .frame(width: 200, height: 200)
+                    .fill(RadialGradient(colors: [muscleColor.opacity(0.3), .clear], center: .center, startRadius: 0, endRadius: 130))
+                    .frame(width: 260, height: 260)
                     .blur(radius: 30)
 
-                // Mapa vectorial: músculo exacto resaltado, sin marcos ni fondos
+                // Anatomía real (MIT): músculo exacto resaltado, sin marcos ni fondos
                 MuscleMapView(primary: exercise.primaryMuscle, secondary: exercise.secondaryMuscles)
-                    .scaleEffect(0.62)
-                    .frame(width: 202, height: 188)
             }
 
             Text(exercise.name)

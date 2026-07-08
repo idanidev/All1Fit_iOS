@@ -106,6 +106,8 @@
 		6A9000000000000000000A1A /* GymPlanWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A9000000000000000000A19 /* GymPlanWizardView.swift */; };
 		6A9000000000000000000A1C /* GymPlanGeneratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A9000000000000000000A1B /* GymPlanGeneratorTests.swift */; };
 		6A9000000000000000000A1E /* MuscleMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A9000000000000000000A1D /* MuscleMapView.swift */; };
+		6A9000000000000000000A20 /* SVGPathParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A9000000000000000000A1F /* SVGPathParser.swift */; };
+		6A9000000000000000000A22 /* MuscleBodyData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A9000000000000000000A21 /* MuscleBodyData.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -298,6 +300,8 @@
 		6A9000000000000000000A19 /* GymPlanWizardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymPlanWizardView.swift; sourceTree = "<group>"; };
 		6A9000000000000000000A1B /* GymPlanGeneratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymPlanGeneratorTests.swift; sourceTree = "<group>"; };
 		6A9000000000000000000A1D /* MuscleMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MuscleMapView.swift; sourceTree = "<group>"; };
+		6A9000000000000000000A1F /* SVGPathParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SVGPathParser.swift; sourceTree = "<group>"; };
+		6A9000000000000000000A21 /* MuscleBodyData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MuscleBodyData.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -491,6 +495,8 @@
 				4BE04ADCA0E2FEFAB1E653D4 /* Logger.swift */,
 				E178DFC5CEEDD07F1895A840 /* AccessibilityHelpers.swift */,
 				49AEC5B2DD215B241B30B827 /* All1FitDesignSystem.swift */,
+				6A9000000000000000000A1F /* SVGPathParser.swift */,
+				6A9000000000000000000A21 /* MuscleBodyData.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -914,6 +920,8 @@
 				33321DFC2EFABCF900B3B102 /* BodyMapView.swift in Sources */,
 				33321DFD2EFABCF900B3B102 /* MobilityView.swift in Sources */,
 				1A0000000000000000000001 /* All1FitApp.swift in Sources */,
+				6A9000000000000000000A20 /* SVGPathParser.swift in Sources */,
+				6A9000000000000000000A22 /* MuscleBodyData.swift in Sources */,
 				6A9000000000000000000A1E /* MuscleMapView.swift in Sources */,
 				6A9000000000000000000A16 /* GymMiniPlayer.swift in Sources */,
 				6A9000000000000000000A18 /* GymPlanGenerator.swift in Sources */,
