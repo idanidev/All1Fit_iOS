@@ -258,6 +258,25 @@ class GymSessionService: ObservableObject {
         }
     }
 
+    /// Semanas consecutivas con al menos una sesión, contando hacia atrás desde la actual.
+    /// La semana en curso cuenta si ya se ha entrenado; si no, la racha empieza en la anterior.
+    var weekStreak: Int {
+        let calendar = Calendar.current
+        let trainedWeeks = Set(sessions.compactMap {
+            calendar.dateInterval(of: .weekOfYear, for: $0.startDate)?.start
+        })
+        var streak = 0
+        var cursor = calendar.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
+        if !trainedWeeks.contains(cursor) {
+            cursor = calendar.date(byAdding: .weekOfYear, value: -1, to: cursor) ?? cursor
+        }
+        while trainedWeeks.contains(cursor) {
+            streak += 1
+            cursor = calendar.date(byAdding: .weekOfYear, value: -1, to: cursor) ?? cursor
+        }
+        return streak
+    }
+
     /// Records globales: mejor 1RM estimado por ejercicio, ordenados de mayor a menor
     func topEstimated1RMs(limit: Int = 5) -> [(exerciseName: String, oneRM: Double)] {
         var best: [String: Double] = [:]

@@ -111,24 +111,8 @@ struct GymStatsView: View {
 
     // MARK: Racha semanal
 
-    /// Semanas consecutivas con al menos una sesión, contando hacia atrás desde la actual
-    private var weekStreak: Int {
-        let calendar = Calendar.current
-        let trainedWeeks = Set(sessionService.sessions.compactMap {
-            calendar.dateInterval(of: .weekOfYear, for: $0.startDate)?.start
-        })
-        var streak = 0
-        var cursor = calendar.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
-        // La semana actual cuenta si ya se ha entrenado; si no, empieza en la anterior
-        if !trainedWeeks.contains(cursor) {
-            cursor = calendar.date(byAdding: .weekOfYear, value: -1, to: cursor) ?? cursor
-        }
-        while trainedWeeks.contains(cursor) {
-            streak += 1
-            cursor = calendar.date(byAdding: .weekOfYear, value: -1, to: cursor) ?? cursor
-        }
-        return streak
-    }
+    /// Semanas consecutivas entrenando (lógica compartida en GymSessionService)
+    private var weekStreak: Int { sessionService.weekStreak }
 
     private var streakCard: some View {
         HStack(spacing: 14) {

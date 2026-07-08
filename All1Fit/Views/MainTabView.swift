@@ -19,7 +19,7 @@ struct MainTabView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             TabView(selection: $selectedTab) {
-                HomeView(selectedTab: $selectedTab)
+                HomeView(gymSessionService: gymSessionService, selectedTab: $selectedTab)
                     .environmentObject(authService)
                     .tabItem {
                         Label("Inicio", systemImage: "house.fill")
