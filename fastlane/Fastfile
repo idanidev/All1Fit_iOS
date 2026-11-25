@@ -9,6 +9,7 @@
 #   fastlane upload_only              → Sube la última .ipa sin recompilar
 #   fastlane metadata version:X.Y.Z  → Sube metadata ASO
 #   fastlane screenshots              → Sube screenshots
+#   fastlane privacy                  → Publica etiquetas de privacidad (pide Apple ID + 2FA)
 #   fastlane status                   → Estado actual en App Store Connect
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -188,6 +189,21 @@ platform :ios do
     )
 
     UI.success "Screenshots subidas al App Store."
+  end
+
+  # ── Privacidad ──────────────────────────────────────────────────────────────
+
+  desc "Sube y publica las etiquetas de privacidad desde fastlane/app_privacy_details.json"
+  lane :privacy do
+    # Esta acción NO admite la API key: pide login con Apple ID + 2FA.
+    upload_app_privacy_details_to_app_store(
+      username:       ENV["APPLE_ID"],
+      team_id:        ENV["ITC_TEAM_ID"],
+      app_identifier: BUNDLE_ID,
+      json_path:      "fastlane/app_privacy_details.json"
+    )
+
+    UI.success "Etiquetas de privacidad publicadas."
   end
 
   # ── Status ──────────────────────────────────────────────────────────────────
