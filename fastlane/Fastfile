@@ -183,7 +183,8 @@ platform :ios do
       skip_metadata:         true,
       force:                 true,
       screenshots_path:      "screenshots_appstore_6.5",
-      overwrite_screenshots: true
+      overwrite_screenshots: true,
+      precheck_include_in_app_purchases: false
     )
 
     UI.success "Screenshots subidas al App Store."
