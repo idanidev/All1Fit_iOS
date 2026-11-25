@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 
 // MARK: - Resumen Final de Entrenamiento
 /// Se muestra al terminar la sesión: totales, mejores series y PRs conseguidos.
@@ -11,6 +12,10 @@ struct WorkoutSummaryView: View {
     let weightUnit: WeightUnit
     let onClose: () -> Void
 
+    @Environment(\.requestReview) private var requestReview
+    /// Entrenos completados que cuentan para pedir reseña (throttle propio;
+    /// Apple además limita a ~3/año). Momento de éxito = mejor sitio para pedirla.
+    @AppStorage("all1fit.completedForReview") private var completedForReview = 0
     @State private var appeared = false
 
     var body: some View {
@@ -45,6 +50,8 @@ struct WorkoutSummaryView: View {
                 appeared = true
             }
             UINotificationFeedbackGenerator().notificationOccurred(.success)
+            Track.entrenoCompletado(tipo: "gym")
+            maybeAskForReview()
         }
     }
 
@@ -244,6 +251,17 @@ struct WorkoutSummaryView: View {
     }
 
     // MARK: - Helpers
+
+    /// Pide reseña en hitos (3ª, 12ª, 30ª sesión completada). Apple decide si
+    /// la muestra y la limita a ~3/año, así que estos hitos no molestan.
+    private func maybeAskForReview() {
+        completedForReview += 1
+        guard [3, 12, 30].contains(completedForReview) else { return }
+        // Un respiro tras el check de éxito y el haptic, para que no se solape.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+            requestReview()
+        }
+    }
 
     private func formatWeight(_ value: Double) -> String {
         let converted = weightUnit.convert(value)

@@ -7,6 +7,7 @@ struct RMChartView: View {
 
     @AppStorage("weightUnit") private var weightUnit: WeightUnit = .kg
     @State private var chartAnimated = false
+    @State private var porcentajesRevealed = false
     @State private var selectedTimeRange: TimeRange = .all
     @State private var showingAddRM = false
     @State private var calcReps: Int = 10
@@ -14,6 +15,7 @@ struct RMChartView: View {
     @EnvironmentObject var ejercicioService: EjercicioService
     @State private var showingEdit = false
     @State private var errorMessage: String?
+    @State private var editingEntry: RMEntry?
 
     private let calcRepOptions = [3, 5, 6, 8, 10, 12, 15, 20]
 
@@ -121,7 +123,17 @@ struct RMChartView: View {
             Text(errorMessage ?? "")
         }
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button {
+                    showingEdit = true
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                } label: {
+                    Image(systemName: "pencil.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(currentEjercicio.style.color)
+                }
+                .accessibilityLabel("Editar RM")
+
                 Button {
                     showingAddRM = true
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -130,24 +142,15 @@ struct RMChartView: View {
                         .font(.title2)
                         .foregroundStyle(currentEjercicio.style.color)
                 }
-            }
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    showingEdit = true
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                } label: {
-                    Image(systemName: "pencil.circle.fill")
-                        .font(.title2)
-                        .foregroundStyle(.secondary)
-                }
+                .accessibilityLabel("Añadir RM")
             }
         }
         .sheet(isPresented: $showingAddRM) {
-            EjercicioFormView(mode: .addRM(ejercicio: currentEjercicio)) { _, rm, _, reps in
+            EjercicioFormView(mode: .addRM(ejercicio: currentEjercicio)) { _, rm, _, reps, fecha in
                 guard let id = currentEjercicio.id else { return }
                 Task {
                     do {
-                        try await ejercicioService.addRM(ejercicioId: id, valor: rm, reps: reps)
+                        try await ejercicioService.addRM(ejercicioId: id, valor: rm, reps: reps, fecha: fecha)
                         UINotificationFeedbackGenerator().notificationOccurred(.success)
                     } catch {
                         errorMessage = error.localizedDescription
@@ -160,10 +163,18 @@ struct RMChartView: View {
             EjercicioEditSheet(ejercicio: currentEjercicio)
                 .environmentObject(ejercicioService)
         }
+        .sheet(item: $editingEntry) { entry in
+            RMEntryEditSheet(
+                entry: entry,
+                isGym: isGym,
+                onSave: { newValor, newReps, newFecha in updateHistoryEntry(entry, newValor: newValor, newReps: newReps, newFecha: newFecha) }
+            )
+        }
         .onAppear {
             withAnimation(.spring(duration: 0.8).delay(0.3)) {
                 chartAnimated = true
             }
+            porcentajesRevealed = true
         }
     }
 
@@ -353,7 +364,7 @@ struct RMChartView: View {
                 ForEach(sortedHistory) { entry in
                     LineMark(
                         x: .value("Fecha", entry.fecha),
-                        y: .value("Peso", chartAnimated ? weightUnit.convert(entry.valor) : 0)
+                        y: .value("Peso", chartAnimated ? weightUnit.convert(entry.estimated1RM) : 0)
                     )
                     .foregroundStyle(
                         LinearGradient(
@@ -367,7 +378,7 @@ struct RMChartView: View {
 
                     AreaMark(
                         x: .value("Fecha", entry.fecha),
-                        y: .value("Peso", chartAnimated ? weightUnit.convert(entry.valor) : 0)
+                        y: .value("Peso", chartAnimated ? weightUnit.convert(entry.estimated1RM) : 0)
                     )
                     .foregroundStyle(
                         LinearGradient(
@@ -380,7 +391,7 @@ struct RMChartView: View {
 
                     PointMark(
                         x: .value("Fecha", entry.fecha),
-                        y: .value("Peso", chartAnimated ? weightUnit.convert(entry.valor) : 0)
+                        y: .value("Peso", chartAnimated ? weightUnit.convert(entry.estimated1RM) : 0)
                     )
                     .foregroundStyle(currentEjercicio.style.color)
                     .symbolSize(80)
@@ -473,18 +484,19 @@ struct RMChartView: View {
                 Spacer()
 
                 if let rm = currentEjercicio.ultimoRM {
-                    Text("RM: \(formatWeight(weightUnit.convert(rm.valor))) \(weightUnit.symbol)")
+                    Text("RM: \(formatWeight(weightUnit.convert(rm.estimated1RM))) \(weightUnit.symbol)")
                         .font(.subheadline.bold())
                         .foregroundStyle(.orange)
                 }
             }
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                ForEach(currentEjercicio.porcentajes, id: \.porcentaje) { item in
+                ForEach(Array(currentEjercicio.porcentajes.enumerated()), id: \.element.porcentaje) { index, item in
+                    let color = colorForPercentage(item.porcentaje)
                     HStack {
                         Text("\(item.porcentaje)%")
                             .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                            .foregroundStyle(colorForPercentage(item.porcentaje))
+                            .foregroundStyle(color)
                             .frame(width: 44, alignment: .leading)
 
                         Spacer()
@@ -494,8 +506,23 @@ struct RMChartView: View {
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
-                    .background(colorForPercentage(item.porcentaje).opacity(0.08))
+                    .background(
+                        LinearGradient(
+                            colors: [color.opacity(0.18), color.opacity(0.06)],
+                            startPoint: .leading, endPoint: .trailing
+                        )
+                    )
                     .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .strokeBorder(color.opacity(0.22), lineWidth: 1)
+                    )
+                    .shadow(color: color.opacity(porcentajesRevealed ? 0.15 : 0), radius: 6, y: 3)
+                    .opacity(porcentajesRevealed ? 1 : 0)
+                    .scaleEffect(porcentajesRevealed ? 1 : 0.82, anchor: .center)
+                    .offset(y: porcentajesRevealed ? 0 : 16)
+                    .blur(radius: porcentajesRevealed ? 0 : 4)
+                    .animation(.spring(response: 0.5, dampingFraction: 0.68).delay(0.12 + Double(index) * 0.05), value: porcentajesRevealed)
                 }
             }
         }
@@ -504,16 +531,18 @@ struct RMChartView: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
+    /// Escala de "calor": más caliente = más cerca del RM.
+    /// Family cálida (rojo→naranja→ámbar→arena→gris), legible y sin efecto arcoíris.
     private func colorForPercentage(_ percentage: Int) -> Color {
         switch percentage {
-        case 95...100: return .red
-        case 85...94:  return .orange
-        case 75...84:  return .yellow
-        case 65...74:  return .green
-        case 55...64:  return .teal
-        case 45...54:  return .blue
-        case 35...44:  return .indigo
-        default:       return .purple
+        case 95...100: return Color(red: 1.00, green: 0.23, blue: 0.19)  // rojo intenso
+        case 85...94:  return Color(red: 1.00, green: 0.35, blue: 0.16)  // rojo-naranja
+        case 75...84:  return Color(red: 1.00, green: 0.47, blue: 0.13)  // naranja fuerte
+        case 65...74:  return Color(red: 1.00, green: 0.58, blue: 0.00)  // naranja
+        case 55...64:  return Color(red: 1.00, green: 0.69, blue: 0.20)  // ámbar
+        case 45...54:  return Color(red: 0.96, green: 0.78, blue: 0.36)  // dorado
+        case 35...44:  return Color(red: 0.80, green: 0.73, blue: 0.58)  // arena
+        default:       return Color(red: 0.60, green: 0.60, blue: 0.64)  // gris (bajo)
         }
     }
 
@@ -706,7 +735,14 @@ struct RMChartView: View {
                     }
                     .padding()
                     .background(Color(uiColor: .secondarySystemGroupedBackground))
+                    .contentShape(Rectangle())
+                    .onTapGesture { editingEntry = entry }
                     .contextMenu {
+                        Button {
+                            editingEntry = entry
+                        } label: {
+                            Label("Editar registro", systemImage: "pencil")
+                        }
                         Button(role: .destructive) {
                             deleteHistoryEntry(entry)
                         } label: {
@@ -777,6 +813,20 @@ struct RMChartView: View {
                         }
                     }
                     .padding()
+                    .contentShape(Rectangle())
+                    .onTapGesture { editingEntry = entry }
+                    .contextMenu {
+                        Button {
+                            editingEntry = entry
+                        } label: {
+                            Label("Editar registro", systemImage: "pencil")
+                        }
+                        Button(role: .destructive) {
+                            deleteHistoryEntry(entry)
+                        } label: {
+                            Label("Eliminar registro", systemImage: "trash")
+                        }
+                    }
 
                     if index < sorted.count - 1 {
                         Divider().padding(.leading, 44)
@@ -825,6 +875,19 @@ struct RMChartView: View {
             }
         }
     }
+
+    private func updateHistoryEntry(_ entry: RMEntry, newValor: Double, newReps: Int?, newFecha: Date) {
+        guard let id = currentEjercicio.id else { return }
+        Task {
+            do {
+                try await ejercicioService.updateRMEntry(ejercicioId: id, entryId: entry.id, newValor: newValor, newReps: newReps, newFecha: newFecha)
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+            } catch {
+                errorMessage = error.localizedDescription
+                UINotificationFeedbackGenerator().notificationOccurred(.error)
+            }
+        }
+    }
 }
 
 // MARK: - Time Range
@@ -846,21 +909,23 @@ struct RMStats {
     let history: [RMEntry]
     let weightUnit: WeightUnit
 
+    // Todas las métricas usan el 1RM estimado (Epley) de cada registro: si
+    // metiste 110×2, cuenta ~117. Con reps nil/1, estimated1RM == valor.
     var currentRM: Double? {
-        history.max(by: { $0.fecha < $1.fecha })?.valor
+        history.max(by: { $0.fecha < $1.fecha })?.estimated1RM
     }
 
     var bestRM: Double? {
-        history.max(by: { $0.valor < $1.valor })?.valor
+        history.max(by: { $0.estimated1RM < $1.estimated1RM })?.estimated1RM
     }
 
     var firstRM: Double? {
-        history.min(by: { $0.fecha < $1.fecha })?.valor
+        history.min(by: { $0.fecha < $1.fecha })?.estimated1RM
     }
 
     var averageRM: Double? {
         guard !history.isEmpty else { return nil }
-        return history.map(\.valor).reduce(0, +) / Double(history.count)
+        return history.map(\.estimated1RM).reduce(0, +) / Double(history.count)
     }
 
     var progressionPercent: Double? {
@@ -1034,7 +1099,7 @@ struct EjercicioEditSheet: View {
                 RMEntryEditSheet(
                     entry: entry,
                     isGym: style == .dumbbell,
-                    onSave: { newValor, newReps in updateEntry(entry, newValor: newValor, newReps: newReps) }
+                    onSave: { newValor, newReps, newFecha in updateEntry(entry, newValor: newValor, newReps: newReps, newFecha: newFecha) }
                 )
             }
         }
@@ -1076,11 +1141,11 @@ struct EjercicioEditSheet: View {
         }
     }
 
-    private func updateEntry(_ entry: RMEntry, newValor: Double, newReps: Int?) {
+    private func updateEntry(_ entry: RMEntry, newValor: Double, newReps: Int?, newFecha: Date) {
         guard let id = currentEjercicio?.id else { return }
         Task {
             do {
-                try await ejercicioService.updateRMEntry(ejercicioId: id, entryId: entry.id, newValor: newValor, newReps: newReps)
+                try await ejercicioService.updateRMEntry(ejercicioId: id, entryId: entry.id, newValor: newValor, newReps: newReps, newFecha: newFecha)
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
             } catch {
                 errorMessage = error.localizedDescription
@@ -1098,19 +1163,21 @@ struct EjercicioEditSheet: View {
 struct RMEntryEditSheet: View {
     let entry: RMEntry
     let isGym: Bool
-    let onSave: (Double, Int?) -> Void
+    let onSave: (Double, Int?, Date) -> Void
     @Environment(\.dismiss) private var dismiss
 
     @State private var valorText: String
     @State private var repsValue: Int
+    @State private var editedDate: Date
 
-    init(entry: RMEntry, isGym: Bool, onSave: @escaping (Double, Int?) -> Void) {
+    init(entry: RMEntry, isGym: Bool, onSave: @escaping (Double, Int?, Date) -> Void) {
         self.entry = entry
         self.isGym = isGym
         self.onSave = onSave
         let v = entry.valor
         self._valorText = State(initialValue: v.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(v))" : String(format: "%.1f", v))
         self._repsValue = State(initialValue: entry.reps ?? 10)
+        self._editedDate = State(initialValue: entry.fecha)
     }
 
     var body: some View {
@@ -1135,8 +1202,8 @@ struct RMEntryEditSheet: View {
                 }
 
                 Section("Fecha") {
-                    Text(entry.fecha.formatted(date: .long, time: .omitted))
-                        .foregroundStyle(.secondary)
+                    DatePicker("Fecha", selection: $editedDate, in: ...Date(), displayedComponents: .date)
+                        .datePickerStyle(.compact)
                 }
             }
             .navigationTitle("Editar registro")
@@ -1148,7 +1215,7 @@ struct RMEntryEditSheet: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Guardar") {
                         let valor = Double(valorText.replacingOccurrences(of: ",", with: ".")) ?? entry.valor
-                        onSave(valor, isGym ? repsValue : nil)
+                        onSave(valor, isGym ? repsValue : nil, editedDate)
                         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                         dismiss()
                     }

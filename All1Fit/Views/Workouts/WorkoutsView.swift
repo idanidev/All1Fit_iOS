@@ -175,6 +175,7 @@ struct WorkoutsView: View {
             }
             .searchable(text: $searchText, prompt: "Buscar entrenamiento...")
             .task {
+                Track.event("wod_biblioteca_abierto")
                 await userWorkoutService.fetchWorkouts()
                 await workoutService.fetchAllResults()
             }

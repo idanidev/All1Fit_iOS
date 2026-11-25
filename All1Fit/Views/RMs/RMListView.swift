@@ -51,10 +51,10 @@ struct RMListView: View {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
             }
             .sheet(isPresented: $showingAddSheet) {
-                EjercicioFormView(mode: .new) { name, rm, style, _ in
+                EjercicioFormView(mode: .new) { name, rm, style, _, fecha in
                     Task {
                         do {
-                            try await ejercicioService.createEjercicio(name: name, rm: rm, style: style)
+                            try await ejercicioService.createEjercicio(name: name, rm: rm, style: style, fecha: fecha)
                             UINotificationFeedbackGenerator().notificationOccurred(.success)
                         } catch {
                             errorMessage = error.localizedDescription
@@ -63,11 +63,11 @@ struct RMListView: View {
                 }
             }
             .sheet(item: $selectedEjercicio) { ejercicio in
-                EjercicioFormView(mode: .addRM(ejercicio: ejercicio)) { _, rm, _, reps in
+                EjercicioFormView(mode: .addRM(ejercicio: ejercicio)) { _, rm, _, reps, fecha in
                     Task {
                         if let id = ejercicio.id {
                             do {
-                                try await ejercicioService.addRM(ejercicioId: id, valor: rm, reps: reps)
+                                try await ejercicioService.addRM(ejercicioId: id, valor: rm, reps: reps, fecha: fecha)
                                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                             } catch {
                                 errorMessage = error.localizedDescription
@@ -456,6 +456,7 @@ struct EjercicioRowView: View {
 struct PorcentajesInlineView: View {
     let ejercicio: Ejercicio
     @AppStorage("weightUnit") private var weightUnit: WeightUnit = .kg
+    @State private var revealed = false
 
     var body: some View {
         Group {
@@ -466,6 +467,7 @@ struct PorcentajesInlineView: View {
             }
         }
         .padding(14)
+        .onAppear { revealed = true }
         .background {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color(uiColor: .secondarySystemGroupedBackground))
@@ -579,20 +581,27 @@ struct PorcentajesInlineView: View {
                 .padding(.vertical, 7)
                 .padding(.horizontal, 8)
                 .background(colorFor(item.porcentaje).opacity(0.06), in: RoundedRectangle(cornerRadius: 8))
+                .opacity(revealed ? 1 : 0)
+                .scaleEffect(revealed ? 1 : 0.92, anchor: .leading)
+                .offset(x: revealed ? 0 : -22)
+                .blur(radius: revealed ? 0 : 3)
+                .animation(.spring(response: 0.45, dampingFraction: 0.7).delay(Double(index) * 0.045), value: revealed)
             }
         }
     }
 
+    /// Escala de "calor": más caliente = más cerca del RM.
+    /// Family cálida (rojo→naranja→ámbar→arena→gris), legible y sin efecto arcoíris.
     private func colorFor(_ pct: Int) -> Color {
         switch pct {
-        case 95...100: return .red
-        case 85...94:  return .orange
-        case 75...84:  return .yellow
-        case 65...74:  return .green
-        case 55...64:  return .teal
-        case 45...54:  return .blue
-        case 35...44:  return .indigo
-        default:       return .purple
+        case 95...100: return Color(red: 1.00, green: 0.23, blue: 0.19)  // rojo intenso
+        case 85...94:  return Color(red: 1.00, green: 0.35, blue: 0.16)  // rojo-naranja
+        case 75...84:  return Color(red: 1.00, green: 0.47, blue: 0.13)  // naranja fuerte
+        case 65...74:  return Color(red: 1.00, green: 0.58, blue: 0.00)  // naranja
+        case 55...64:  return Color(red: 1.00, green: 0.69, blue: 0.20)  // ámbar
+        case 45...54:  return Color(red: 0.96, green: 0.78, blue: 0.36)  // dorado
+        case 35...44:  return Color(red: 0.80, green: 0.73, blue: 0.58)  // arena
+        default:       return Color(red: 0.60, green: 0.60, blue: 0.64)  // gris (bajo)
         }
     }
 

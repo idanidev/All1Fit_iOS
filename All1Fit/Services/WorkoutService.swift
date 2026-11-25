@@ -100,6 +100,12 @@ class WorkoutService: ObservableObject {
             results[workoutId] = []
         }
         results[workoutId]?.insert(result, at: 0)
+
+        // Analytics (#6): tipo de WOD + tirón del nicho HYROX/DEKKA
+        Track.entrenoCompletado(tipo: rounds != nil ? "amrap" : "for_time")
+        if workoutId == "hyrox" || workoutId == "dekka" {
+            Track.event("hyrox_dekka_usado", ["wod": workoutId])
+        }
     }
     
     // MARK: - Get Personal Record

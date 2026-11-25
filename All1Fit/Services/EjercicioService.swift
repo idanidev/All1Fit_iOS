@@ -55,14 +55,14 @@ class EjercicioService: ObservableObject {
     }
     
     // MARK: - Create (Optimistic)
-    func createEjercicio(name: String, rm: Double, style: EjercicioStyle = .barbell) async throws {
+    func createEjercicio(name: String, rm: Double, style: EjercicioStyle = .barbell, fecha: Date = Date()) async throws {
         guard let userId = Auth.auth().currentUser?.uid else {
             throw EjercicioError.notAuthenticated
         }
 
         let ejercicio = Ejercicio(
             name: name,
-            rmHistory: [RMEntry(valor: rm)],
+            rmHistory: [RMEntry(valor: rm, fecha: fecha)],
             style: style
         )
         
@@ -82,16 +82,19 @@ class EjercicioService: ObservableObject {
     }
     
     // MARK: - Add RM (Optimistic)
-    func addRM(ejercicioId: String, valor: Double, reps: Int? = nil) async throws {
+    func addRM(ejercicioId: String, valor: Double, reps: Int? = nil, fecha: Date = Date()) async throws {
         guard let userId = Auth.auth().currentUser?.uid else {
             throw EjercicioError.notAuthenticated
         }
 
-        let entry = RMEntry(valor: valor, reps: reps)
+        let entry = RMEntry(valor: valor, fecha: fecha, reps: reps)
 
         // Optimistic update
         if let index = ejercicios.firstIndex(where: { $0.id == ejercicioId }) {
+            let prevBest = ejercicios[index].rmHistory.map(\.valor).max() ?? 0
+            let name = ejercicios[index].name
             ejercicios[index].rmHistory.append(entry)
+            Track.rmRegistrado(ejercicio: name, superado: valor > prevBest)
         }
 
         // Persist with arrayUnion — single write, no fetch needed
@@ -152,14 +155,14 @@ class EjercicioService: ObservableObject {
     }
 
     // MARK: - Update Single RM Entry (rewrites entire array)
-    func updateRMEntry(ejercicioId: String, entryId: String, newValor: Double, newReps: Int?) async throws {
+    func updateRMEntry(ejercicioId: String, entryId: String, newValor: Double, newReps: Int?, newFecha: Date? = nil) async throws {
         guard let userId = Auth.auth().currentUser?.uid else {
             throw EjercicioError.notAuthenticated
         }
         if let exIndex = ejercicios.firstIndex(where: { $0.id == ejercicioId }),
            let entryIndex = ejercicios[exIndex].rmHistory.firstIndex(where: { $0.id == entryId }) {
             let old = ejercicios[exIndex].rmHistory[entryIndex]
-            ejercicios[exIndex].rmHistory[entryIndex] = RMEntry(valor: newValor, fecha: old.fecha, reps: newReps)
+            ejercicios[exIndex].rmHistory[entryIndex] = RMEntry(valor: newValor, fecha: newFecha ?? old.fecha, reps: newReps)
         }
         guard let exIndex = ejercicios.firstIndex(where: { $0.id == ejercicioId }) else { return }
         let historyData: [[String: Any]] = ejercicios[exIndex].rmHistory.map { e in

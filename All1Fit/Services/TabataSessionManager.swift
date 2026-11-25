@@ -147,6 +147,9 @@ class TabataSessionManager: ObservableObject {
         // Start Live Activity
         startLiveActivity(for: tabata)
 
+        // Analytics: el cronómetro es la puerta de entrada del nicho (#6)
+        Track.timerUsado(tipo: tabata.type == .intervals ? "tabata" : "treadmill")
+
         // Send to Apple Watch
         Task {
             PhoneConnectivityService.shared.sendTabataStartToWatch(tabata)
@@ -194,6 +197,11 @@ class TabataSessionManager: ObservableObject {
         }
         isPaused.toggle()
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+
+        // Congela / reanuda el contador de la Dynamic Island.
+        let paused = isPaused
+        let secs = secondsRemaining
+        Task { await activityManager.setPaused(paused, secondsRemaining: secs) }
     }
     
     // MARK: - Background Recovery
@@ -370,6 +378,8 @@ class TabataSessionManager: ObservableObject {
         phase = .complete
         isComplete = true
         playHaptic(for: .complete)
+
+        Track.entrenoCompletado(tipo: tabata.type == .intervals ? "tabata" : "treadmill")
 
         endBackgroundExecution()
 

@@ -86,6 +86,14 @@ struct RMEntry: Codable, Identifiable, Hashable {
             reps = nil
         }
     }
+
+    /// 1RM estimado (Epley) a partir del set registrado (p. ej. Clean 110×2 → ~117).
+    /// Con reps nil o 1, el `valor` ya ES el 1RM, así que se devuelve tal cual
+    /// (retro-compatible con los registros antiguos de una repetición).
+    var estimated1RM: Double {
+        guard let reps, reps > 1 else { return valor }
+        return (valor * (1.0 + Double(reps) / 30.0) * 4).rounded() / 4  // redondeo a 0.25
+    }
 }
 
 // MARK: - Ejercicio
@@ -120,9 +128,10 @@ struct Ejercicio: Codable, Identifiable {
         rmHistory.max(by: { $0.fecha < $1.fecha })
     }
     
-    /// Mejor RM histórico
+    /// Mejor RM histórico (por 1RM estimado, no por peso bruto: un 110×2 que
+    /// estima ~117 supera a un 115×1).
     var mejorRM: RMEntry? {
-        rmHistory.max(by: { $0.valor < $1.valor })
+        rmHistory.max(by: { $0.estimated1RM < $1.estimated1RM })
     }
     
     /// Fecha formateada del último RM
@@ -137,11 +146,13 @@ struct Ejercicio: Codable, Identifiable {
     /// Icon based on exercise style
     var icon: String { style.icon }
     
-    /// Tabla de porcentajes calculados (30% - 100%)
+    /// Tabla de porcentajes calculados (30% - 100%) sobre el 1RM estimado del
+    /// último registro (si metiste 110×2, los % salen del 1RM ~117, no de 110).
     var porcentajes: [(porcentaje: Int, peso: Double)] {
         guard let rm = ultimoRM else { return [] }
+        let base = rm.estimated1RM
         return [100, 90, 80, 70, 60, 50, 40, 30].map { p in
-            (porcentaje: p, peso: round((rm.valor * Double(p)) / 100.0 * 10) / 10)
+            (porcentaje: p, peso: round((base * Double(p)) / 100.0 * 10) / 10)
         }
     }
 }

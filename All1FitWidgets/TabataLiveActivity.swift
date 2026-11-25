@@ -90,6 +90,19 @@ private enum LADesign {
     }
 }
 
+// MARK: - Timer (nativo con countdown, seguro y respeta pausa)
+/// Usa el contador nativo `timerInterval` solo cuando corre y `endTime` es
+/// futuro. Si está en pausa o `endTime` ya pasó, muestra el tiempo estático:
+/// evita el crash de `Date()...endTime` con rango invertido (lowerBound > upperBound).
+@ViewBuilder
+func liveTimerText(_ state: TabataActivityAttributes.ContentState) -> some View {
+    if !state.isPaused && state.endTime > Date() {
+        Text(timerInterval: Date()...state.endTime, countsDown: true)
+    } else {
+        Text(state.formattedTime)
+    }
+}
+
 // MARK: - Lock Screen / Banner
 struct TabataLockScreenView: View {
     let context: ActivityViewContext<TabataActivityAttributes>
@@ -141,7 +154,7 @@ struct TabataLockScreenView: View {
 
             // Timer
             if !isComplete {
-                Text(timerInterval: Date()...context.state.endTime, countsDown: true)
+                liveTimerText(context.state)
                     .font(.system(size: 32, weight: .black, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(color)
@@ -199,7 +212,7 @@ struct DIExpandedTrailing: View {
     var body: some View {
         // Hero timer
         if context.state.currentPhase != "complete" {
-            Text(timerInterval: Date()...context.state.endTime, countsDown: true)
+            liveTimerText(context.state)
                 .font(.system(size: 22, weight: .black, design: .rounded))
                 .monospacedDigit()
                 .foregroundStyle(color)
@@ -296,7 +309,7 @@ struct DICompactTrailing: View {
 
     var body: some View {
         if context.state.currentPhase != "complete" {
-            Text(timerInterval: Date()...context.state.endTime, countsDown: true)
+            liveTimerText(context.state)
                 .font(.system(size: 11, weight: .semibold, design: .rounded))
                 .monospacedDigit()
                 .foregroundStyle(color)

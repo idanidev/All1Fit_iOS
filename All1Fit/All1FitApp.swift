@@ -1,7 +1,33 @@
 import SwiftUI
 import FirebaseCore
 import FirebaseFirestore
+import FirebaseAnalytics
 import GoogleSignIn
+
+// MARK: - Analytics
+/// Wrapper fino sobre Firebase Analytics. Eventos anónimos de producto para
+/// medir uso real (issue #6). IDFA desactivado en Info.plist → sin datos
+/// personales, GDPR-limpio. Único sitio para no salpicar Firebase por la app.
+enum Track {
+    static func event(_ name: String, _ params: [String: Any] = [:]) {
+        Analytics.logEvent(name, parameters: params.isEmpty ? nil : params)
+    }
+
+    /// Entreno terminado. `tipo`: "gym" | "wod" | "tabata" | "for_time" | "amrap" | "treadmill"
+    static func entrenoCompletado(tipo: String) {
+        event("entreno_completado", ["tipo": tipo])
+    }
+
+    /// El cronómetro (puerta de entrada del nicho) se ha usado.
+    static func timerUsado(tipo: String) {
+        event("timer_usado", ["tipo": tipo])
+    }
+
+    /// RM guardado. `superado` = true si mejora el récord anterior (momento de éxito).
+    static func rmRegistrado(ejercicio: String, superado: Bool) {
+        event(superado ? "rm_superado" : "rm_registrado", ["ejercicio": ejercicio])
+    }
+}
 
 // MARK: - App Delegate
 class AppDelegate: NSObject, UIApplicationDelegate {

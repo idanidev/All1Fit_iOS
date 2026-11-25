@@ -31,10 +31,11 @@ struct EjercicioFormView: View {
     @Namespace private var animation
     
     let mode: EjercicioFormMode
-    let onSave: (String, Double, EjercicioStyle, Int?) -> Void
+    let onSave: (String, Double, EjercicioStyle, Int?, Date) -> Void
 
     @State private var name = ""
     @State private var selectedStyle: EjercicioStyle = .barbell
+    @State private var rmDate = Date()
     @State private var rmValue: Double = 0
     @State private var rmText = ""
     @State private var gymReps: Int = 10
@@ -56,6 +57,15 @@ struct EjercicioFormView: View {
         case .addRM(let ejercicio): return ejercicio.style == .dumbbell
         case .new: return selectedStyle == .dumbbell
         }
+    }
+
+    /// Reps se piden para gym y haltero (en haltero, reps=1 = 1RM real).
+    private var showsReps: Bool { true }
+
+    /// 1RM estimado en vivo desde el peso + reps introducidos (Epley).
+    private var liveEstimate1RM: Double? {
+        guard gymReps > 1, rmValue > 0 else { return nil }
+        return (rmValue * (1.0 + Double(gymReps) / 30.0) * 4).rounded() / 4
     }
 
     /// Fórmula de Epley: 1RM ≈ peso × (1 + reps/30)
@@ -96,8 +106,11 @@ struct EjercicioFormView: View {
                         // Form fields
                         formFields
 
-                        // Rep calculator (only for 1RM-based exercises)
-                        if !isGymStyle { repCalculatorSection }
+                        // 1RM estimado (aparece al meter reps > 1)
+                        estimate1RMSection
+
+                        // Fecha del registro
+                        dateSection
 
                         // Quick increment buttons
                         quickIncrementSection
@@ -140,10 +153,17 @@ struct EjercicioFormView: View {
                 }
             }
             .onAppear {
+                // Reps por defecto: haltero = 1 (1RM real), gym = 10
+                gymReps = isGymStyle ? 10 : 1
+                gymRepsText = "\(gymReps)"
                 // Delay focus to avoid sheet animation lag
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     focusedField = mode.showNameField ? .name : .rm
                 }
+            }
+            .onChange(of: selectedStyle) { _, newStyle in
+                gymReps = newStyle == .dumbbell ? 10 : 1
+                gymRepsText = "\(gymReps)"
             }
         }
         // Sheet presentation - height based on content
@@ -161,13 +181,19 @@ struct EjercicioFormView: View {
             if let currentRM = ejercicio.ultimoRM {
                 HStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("RM Actual")
+                        Text((currentRM.reps ?? 1) > 1 ? "1RM estimado" : "RM Actual")
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        
-                        Text("\(Int(currentRM.valor)) kg")
+
+                        Text("\(formatValue(currentRM.estimated1RM)) kg")
                             .font(.title.bold())
                             .foregroundStyle(.orange)
+
+                        if let r = currentRM.reps, r > 1 {
+                            Text("\(formatValue(currentRM.valor)) kg × \(r)")
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                        }
                     }
                     
                     Spacer()
@@ -285,8 +311,8 @@ struct EjercicioFormView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16))
             }
 
-            // Reps field — only for Gym style
-            if isGymStyle {
+            // Reps field — gym y haltero. Con reps > 1 se estima el 1RM (Epley).
+            if showsReps {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Repeticiones")
                         .font(.subheadline)
@@ -512,6 +538,54 @@ struct EjercicioFormView: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
+    // MARK: - Estimated 1RM
+    @ViewBuilder
+    private var estimate1RMSection: some View {
+        if let est = liveEstimate1RM {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Label("1RM estimado", systemImage: "function")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text("desde \(formatValue(rmValue)) kg × \(gymReps)")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+                Spacer()
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(formatValue(est))
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundStyle(
+                            LinearGradient(colors: [.orange, .red], startPoint: .leading, endPoint: .trailing)
+                        )
+                    Text("kg")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding()
+            .background(Color.orange.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+        }
+    }
+
+    // MARK: - Date Section
+    private var dateSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Fecha")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+            DatePicker("", selection: $rmDate, in: ...Date(), displayedComponents: .date)
+                .datePickerStyle(.compact)
+                .labelsHidden()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding()
+                .background(Color(uiColor: .secondarySystemGroupedBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+        }
+    }
+
     // MARK: - Quick Increment Section
     private var quickIncrementSection: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -635,7 +709,7 @@ struct EjercicioFormView: View {
             
             // Delay save for smooth transition
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                onSave(name, rmValue, selectedStyle, isGymStyle ? gymReps : nil)
+                onSave(name, rmValue, selectedStyle, gymReps, rmDate)
             }
         }
     }
@@ -650,9 +724,9 @@ struct EjercicioFormView: View {
 }
 
 #Preview("New") {
-    EjercicioFormView(mode: .new) { _, _, _, _ in }
+    EjercicioFormView(mode: .new) { _, _, _, _, _ in }
 }
 
 #Preview("Add RM") {
-    EjercicioFormView(mode: .addRM(ejercicio: .sample)) { _, _, _, _ in }
+    EjercicioFormView(mode: .addRM(ejercicio: .sample)) { _, _, _, _, _ in }
 }

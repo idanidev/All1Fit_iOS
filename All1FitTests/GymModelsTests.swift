@@ -225,3 +225,40 @@ struct BodyMeasurementTests {
         #expect(measurement.filledFields[0].unit == "kg")
     }
 }
+
+// MARK: - RM estimado (haltero: se guarda el set real y se deriva el 1RM)
+@Suite("RM estimado")
+struct EstimatedRMTests {
+
+    @Test("Sin reps o con 1 rep, el valor ya es el 1RM")
+    func singleRepIsOneRM() {
+        #expect(RMEntry(valor: 115).estimated1RM == 115)
+        #expect(RMEntry(valor: 115, reps: 1).estimated1RM == 115)
+    }
+
+    @Test("110×2 estima ~117 por Epley, redondeado a 0.25")
+    func epleyFromRealSet() {
+        // 110 × (1 + 2/30) = 117.33 → 117.25
+        #expect(RMEntry(valor: 110, reps: 2).estimated1RM == 117.25)
+    }
+
+    @Test("El mejor RM se elige por 1RM estimado, no por peso bruto")
+    func bestByEstimate() {
+        let ejercicio = Ejercicio(name: "Clean", rmHistory: [
+            RMEntry(valor: 115, fecha: Date(timeIntervalSince1970: 1000), reps: 1),
+            RMEntry(valor: 110, fecha: Date(timeIntervalSince1970: 2000), reps: 2)
+        ], style: .barbell)
+        #expect(ejercicio.mejorRM?.valor == 110)
+    }
+
+    @Test("Los porcentajes salen del 1RM estimado del último registro")
+    func percentagesFromEstimate() {
+        // 100 × (1 + 3/30) = 110
+        let ejercicio = Ejercicio(name: "Snatch", rmHistory: [
+            RMEntry(valor: 100, reps: 3)
+        ], style: .barbell)
+        let tabla = Dictionary(uniqueKeysWithValues: ejercicio.porcentajes.map { ($0.porcentaje, $0.peso) })
+        #expect(tabla[100] == 110)
+        #expect(tabla[50] == 55)
+    }
+}

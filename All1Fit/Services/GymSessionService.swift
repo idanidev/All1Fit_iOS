@@ -80,7 +80,7 @@ class GymSessionService: ObservableObject {
         var refs: [String: RMRef] = [:]
         for doc in snapshot.documents {
             guard let ejercicio = try? doc.data(as: Ejercicio.self),
-                  let best = ejercicio.mejorRM?.valor else { continue }
+                  let best = ejercicio.mejorRM?.estimated1RM else { continue }
             refs[ejercicio.name.lowercased()] = RMRef(documentID: doc.documentID, bestValor: best)
         }
         rmRefs = refs
@@ -162,6 +162,7 @@ class GymSessionService: ObservableObject {
         }
         activeSession = GymSession(routineName: routine?.name ?? "Entreno libre", exercises: logs)
         persistActiveSnapshot()
+        Track.event("entreno_iniciado", ["tipo": "gym"])
     }
 
     // MARK: - Doble progresión

@@ -122,6 +122,7 @@ class AuthService: ObservableObject {
     // ...
     
     func completeOnboarding() async {
+        Track.event("onboarding_completado")
         guard let userId = user?.uid else {
             // If not logged in, just save locally
             UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")

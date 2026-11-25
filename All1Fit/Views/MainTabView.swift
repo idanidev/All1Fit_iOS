@@ -4,6 +4,18 @@ import FirebaseAuth
 import FirebaseFirestore
 import FirebaseStorage
 
+// MARK: - App Store
+/// Enlaces a la ficha real de All1Fit. Único sitio para el ID: antes estaba
+/// hardcodeado con un id inexistente (id6744387668 → 404), por eso "Valorar
+/// no iba" y "Compartir" abría un enlace roto. ID real de App Store Connect.
+enum AppStore {
+    static let appID = "6757203320"
+    static var listing: URL { URL(string: "https://apps.apple.com/app/id\(appID)")! }
+    /// Abre directamente el compositor de reseña. Un botón manual "Valorar"
+    /// debe usar esto, NO `requestReview()` (que Apple limita y suele no mostrar).
+    static var writeReview: URL { URL(string: "https://apps.apple.com/app/id\(appID)?action=write-review")! }
+}
+
 // MARK: - Main Tab View (iOS 26 Liquid Glass TabBar)
 struct MainTabView: View {
     @EnvironmentObject var authService: AuthService
@@ -104,7 +116,7 @@ struct MainTabView: View {
             Button("Cancelar", role: .cancel) {}
         }
         .sheet(isPresented: $showingAddRM) {
-            EjercicioFormView(mode: .new) { _, _, _, _ in }
+            EjercicioFormView(mode: .new) { _, _, _, _, _ in }
         }
         .sheet(isPresented: $showingAddWorkout) {
             WorkoutFormView()
@@ -116,7 +128,7 @@ struct MainTabView: View {
 // MARK: - Settings View
 struct SettingsView: View {
     @EnvironmentObject var authService: AuthService
-    @Environment(\.requestReview) private var requestReview
+    @Environment(\.openURL) private var openURL
     @AppStorage("appTheme") private var appTheme: AppTheme = .system
     @AppStorage("weightUnit") private var weightUnit: WeightUnit = .kg
     @State private var showingLogoutConfirmation = false
@@ -253,7 +265,7 @@ struct SettingsView: View {
     private var supportSection: some View {
         Section("Soporte") {
             Button {
-                requestReview()
+                openURL(AppStore.writeReview)
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
             } label: {
                 Label("Valorar All1Fit", systemImage: "star.fill")
@@ -261,7 +273,7 @@ struct SettingsView: View {
             }
 
             ShareLink(
-                item: URL(string: "https://apps.apple.com/app/all1fit/id6744387668")!,
+                item: AppStore.listing,
                 subject: Text("All1Fit - Tu gimnasio en el bolsillo"),
                 message: Text("Trackea tus RMs, entrenos WOD y tabatas con All1Fit. Gratis para iPhone y Apple Watch.")
             ) {
