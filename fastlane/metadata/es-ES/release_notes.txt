@@ -1,5 +1,12 @@
-Novedades en v2.0:
-- Dynamic Island y Live Activity rediseñados para Tabata
-- Onboarding optimizado para iPad
-- Nuevo diseño premium del temporizador en pantalla de bloqueo
+Novedades en v2.1:
+- Nueva sección Gym: rutinas, registro de series, doble progresión, PRs y plan a medida según tu objetivo
+- Mapa muscular con anatomía real en cada ejercicio
+- Nueva pantalla de Inicio con racha semanal y tu próximo entreno
+- Registra tus series de gym desde el Apple Watch
+- Los entrenos se guardan en Apple Salud
+- Halterofilia: mete tu serie real (p. ej. 110 kg × 2) y calculamos tu 1RM estimado
+- Elige la fecha al registrar o editar un RM
+- Toca un registro del historial para editarlo
+- Dynamic Island del Tabata de vuelta, con pausa real
+- El botón Valorar ya abre la App Store correctamente
 - Correcciones de estabilidad y rendimiento

@@ -1,5 +1,12 @@
-What's new in v2.0:
-- Redesigned Dynamic Island and Live Activity for Tabata
-- iPad-optimized onboarding
-- New premium Lock Screen timer design
+What's new in v2.1:
+- New Gym section: routines, set logging, double progression, PRs and a custom plan for your goal
+- Real-anatomy muscle map on every exercise
+- New Home screen with weekly streak and your next workout
+- Log your gym sets from Apple Watch
+- Workouts are saved to Apple Health
+- Weightlifting: enter your real set (e.g. 110 kg × 2) and we estimate your 1RM
+- Pick the date when logging or editing an RM
+- Tap any history entry to edit it
+- Tabata Dynamic Island is back, with proper pause
+- The Rate button now opens the App Store correctly
 - Stability and performance fixes

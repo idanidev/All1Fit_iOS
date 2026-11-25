@@ -1,1 +1,1 @@
-crossfit,fitness,entreno,pesas,cronometro,mancuerna,amrap,rutina,ejercicio,barra,kettlebell,musculo
+crossfit,hyrox,cronometro,amrap,emom,hiit,fuerza,gimnasio,halterofilia,kettlebell,dekka,funcional
