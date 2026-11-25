@@ -4,10 +4,25 @@
 # Saltar en emergencias: git push --no-verify
 
 set -e
+# Sin pipefail, `xcodebuild | tail` devuelve el código de tail (siempre 0)
+# y un test en rojo dejaba pasar el push.
+set -o pipefail
 
 echo "🧪 Ejecutando tests antes del push..."
 
-DESTINATION="platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5"
+# Primer iPhone simulador disponible en esta máquina (un nombre fijo fallaba
+# en Macs sin ese simulador y, con el bug de arriba, se daba por bueno).
+SIM_ID=$(xcrun simctl list devices available \
+    | grep -m1 "iPhone" \
+    | grep -oE '[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}' || true)
+
+if [ -z "$SIM_ID" ]; then
+    echo "❌ No hay ningún simulador de iPhone disponible: push cancelado."
+    echo "   Crea uno en Xcode o usa 'git push --no-verify' si es una emergencia."
+    exit 1
+fi
+
+DESTINATION="id=$SIM_ID"
 
 if ! xcodebuild test \
     -scheme "All1Fit" \
